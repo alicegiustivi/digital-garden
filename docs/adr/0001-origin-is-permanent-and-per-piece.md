@@ -1,0 +1,5 @@
+# Origin is permanent and per piece; AI prose never becomes the owner's
+
+Every field value, Tag, Connection and block of text in the Garden records its Origin (Source, AI or Owner), and for AI pieces also the role, model and date. Approving a Suggestion keeps its AI Origin. Editing a short value (a title, a field, a Tag name) makes the result the owner's. AI-written text (AI Notes) can never be edited or copied into an Object's body as the owner's words; the owner can only start a Thought from it.
+
+We chose this over tracking Origin per whole Object (too coarse: a Source mixes captured text, AI Tags and the owner's notes) and over letting approved or lightly edited AI text count as the owner's (it would let AI prose quietly become "the owner's view", which breaks the core principle that the AI supports the owner's thinking and never replaces it). The cost is that every stored piece carries Origin metadata, and the Researcher must be shown it in every prompt. Changing this later means guessing Origins for data that never recorded them.
