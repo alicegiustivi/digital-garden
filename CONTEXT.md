@@ -16,6 +16,28 @@ _Avoid_: Note, entry, record, card, page
 The kind an Object belongs to (Source, Concept, Thought, Person, …), which decides what fields it has.
 _Avoid_: Category, class, template
 
+### Core Object Types
+
+**Source**:
+An Object for something the owner reads, watches, listens to or looks at, such as a book, article, video, podcast, web page, image or document.
+_Avoid_: Reference, resource, bookmark
+
+**Concept**:
+An Object for an area of ideas that the owner deliberately creates once enough material has gathered to explore it, with many Sources and Thoughts connected to it.
+_Avoid_: Topic, theme, idea
+
+**Thought**:
+An Object for the owner's own reflection, insight, question or observation. A Thought is always the owner's words, never the AI's.
+_Avoid_: Note, idea, journal entry
+
+**Person**:
+An Object for an individual who matters to the owner's Garden, either personally or through their work.
+_Avoid_: Contact, author, people
+
+**Tag**:
+A light, global label any Object can carry, costing nothing to add. A Tag can later be turned into a Concept.
+_Avoid_: Topic, label, category, keyword
+
 **Connection**:
 A link between two Objects in the Garden.
 _Avoid_: Relationship, relation, edge, backlink
