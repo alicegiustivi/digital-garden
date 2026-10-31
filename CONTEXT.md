@@ -39,8 +39,20 @@ A light, global label any Object can carry, costing nothing to add. A Tag can la
 _Avoid_: Topic, label, category, keyword
 
 **Connection**:
-A link between two Objects in the Garden.
+A link between two Objects in the Garden, of one Connection Kind, visible from both Objects. Two Objects have at most one Connection between them. A Tag on an Object is not a Connection.
 _Avoid_: Relationship, relation, edge, backlink
+
+**Connection Kind**:
+How two connected Objects relate, chosen from a fixed list: related (the default), supports, contradicts, builds on, inspired by, mentions, authored by. Directed kinds read differently from each end (supports / supported by).
+_Avoid_: Link type, relation type, predicate
+
+**Mention**:
+A reference to another Object written inside an Object's body. It creates a Connection of kind "mentions", which lasts only as long as the reference stays in the text, unless the owner gives that Connection another kind. Inside a paragraph it reads as a quiet link; on a line of its own it shows as an Object Card.
+_Avoid_: Inline link, wikilink, @-link
+
+**Object Card**:
+A compact view of an Object shown where a Mention stands on its own line: its title, Object Type, Tags, the kind of Connection that links it to the Object being read, and how many Connections it has.
+_Avoid_: Embed, preview, block link
 
 ### AI
 
