@@ -35,7 +35,7 @@ An Object for an individual who matters to the owner's Garden, either personally
 _Avoid_: Contact, author, people
 
 **Tag**:
-A light, global label any Object can carry, costing nothing to add. A Tag can later be turned into a Concept.
+A light, global label any Object can carry, costing nothing to add. It means whatever the owner wants it to, a status such as "to do" included; the Garden gives no Tag special behaviour. A Tag can later be turned into a Concept.
 _Avoid_: Topic, label, category, keyword
 
 **Connection**:
