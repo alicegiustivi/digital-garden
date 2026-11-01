@@ -91,7 +91,7 @@ The owner accepting a Suggestion as it is. It takes effect and joins the Garden'
 _Avoid_: Endorse, accept, confirm
 
 **Private**:
-Marks an Object that no AI role may ever read, and whose content is never sent to any outside service. The AI does not learn a Private Object exists, even where another Object mentions it. Private belongs to one Object only and is never inherited through Connections. The owner's own search and linking still work on Private Objects.
+Marks an Object that no AI role may ever read, and whose content the Garden itself never sends to any outside service. Content the owner sends into the Garden through an outside route, such as a message to the phone Capture bot, has already passed through that route; Private protects it from the moment it arrives. The AI does not learn a Private Object exists, even where another Object mentions it. Private belongs to one Object only and is never inherited through Connections. The owner's own search and linking still work on Private Objects.
 _Avoid_: Hidden, locked, secret
 
 ### CODE stages
