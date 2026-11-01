@@ -1,0 +1,641 @@
+<title>Garden Look Directions</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<!-- PROTOTYPE (throwaway) for issue 10 "Editorial look and feel", round 2.
+     Brief from the owner (issue 13): Capacities' clean finish and colouring, a personal icon set,
+     editorial like a personal magazine but elegant and minimal; every Object Type and every Tag has its own colour.
+     So Origin marks use glyphs and lines, never hue. Three directions share content and marks; they differ in layout and voice.
+     Each direction is a deliberate light look; dark versions come later. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Playfair+Display:ital,wght@0,400;0,500;1,400;1,500&display=swap">
+<style>
+/* Layout concept: one Garden, three ways of holding it.
+   1 Sheet  = Capacities-like shell: sidebar, a white sheet, a second pane with graph
+   2 Issue  = a personal magazine: top nav, a cover band in the type's colour, contents page
+   3 Folio  = an open spread: the Object on the left page, what it connects to on the right */
+:root{
+  --ink:#1d1d1b; --mute:#77756f; --faint:#a9a7a0; --line:#e7e5df; --ground:#f4f3ef; --sheet:#ffffff;
+  /* Object Type colours */
+  --t-source:#2d7a99; --t-concept:#7657c2; --t-thought:#c08414; --t-person:#cf5c45;
+  /* Tag colours */
+  --g-blue:#3d7fb8; --g-rose:#c4567a; --g-olive:#7d8a2e; --g-amber:#b7791f; --g-sky:#2f95b5; --g-lilac:#8a6bc9; --g-green:#3f8f5b; --g-peach:#d07a4a; --g-indigo:#5560c4;
+  --bar-bg:#1d1d1b; --bar-fg:#f4f3ef; --bar-mute:#9c9a94;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{min-height:100vh;padding-bottom:110px;background:var(--ground);color:var(--ink);font-family:'Geist',system-ui,sans-serif;font-size:15px;line-height:1.55}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;padding:0}
+:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.wrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+svg.ic{width:1em;height:1em;flex:none;vertical-align:-.12em;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+[data-tip]{cursor:help}
+
+/* ---------- Shared: type chips, tags, Origin marks ---------- */
+.chip{display:inline-flex;align-items:center;gap:6px;padding:2px 9px 2px 7px;border-radius:999px;font-size:12.5px;font-weight:500;color:var(--c);background:color-mix(in srgb,var(--c) 11%,white)}
+.ico{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:8px;color:var(--c);background:color-mix(in srgb,var(--c) 12%,white);flex:none}
+.tag{display:inline-flex;align-items:center;gap:4px;padding:1px 8px;border-radius:6px;font-size:12.5px;color:color-mix(in srgb,var(--c) 80%,black);background:color-mix(in srgb,var(--c) 13%,white);white-space:nowrap}
+.tags{display:flex;flex-wrap:wrap;gap:5px}
+.mention{color:inherit;text-decoration:underline 1px var(--faint);text-underline-offset:3px;white-space:nowrap}
+.mention svg{color:var(--c);margin-right:3px}
+/* AI: a small star and a dotted underline. Approved AI: an outlined star, no underline. Source: an opening quote mark and italics.
+   None of these use hue, so they read on top of any type or Tag colour. */
+.o-ai{text-decoration:underline dotted 1.5px color-mix(in srgb,currentColor 55%,transparent);text-underline-offset:4px}
+.o-ai::after{content:"✦";font-size:.62em;vertical-align:.45em;margin-left:.18em;font-style:normal;text-decoration:none;display:inline-block}
+.o-ai.appr{text-decoration:none}
+.o-ai.appr::after{content:"✧";opacity:.75}
+.o-src{font-style:italic}
+.o-src::before{content:"❝";font-style:normal;font-size:.7em;vertical-align:.3em;margin-right:.2em;opacity:.7}
+.tag.o-ai{text-decoration:none}
+.b-src{position:relative;margin:1.5em 0;padding:2px 0 2px 1.3em;border-left:1.5px solid var(--ink);font-style:italic}
+.b-src::before{content:"❝";position:absolute;left:-.62em;top:-.55em;font-style:normal;font-size:1.35em;line-height:1;background:var(--sheet);padding-bottom:2px}
+.b-src p{margin:0 0 .35em}
+.b-src cite{font-style:normal;font-size:13px;color:var(--mute)}
+.b-ai{border:1px dashed color-mix(in srgb,var(--ink) 35%,transparent);border-radius:12px;padding:14px 16px;background:var(--sheet)}
+.b-ai .lbl{display:flex;gap:6px;align-items:center;font-size:12px;color:var(--mute);margin-bottom:6px}
+.b-ai .lbl b{font-weight:600;color:var(--ink)}
+.b-ai p{margin:0 0 10px}
+.acts{display:flex;flex-wrap:wrap;gap:8px}
+.btn{font-size:12.5px;padding:4px 11px;border-radius:8px;border:1px solid var(--line);background:var(--sheet)}
+.btn:hover{border-color:var(--ink)}
+.btn.dark{background:var(--ink);color:var(--sheet);border-color:var(--ink)}
+.sugg{border:1px dashed color-mix(in srgb,var(--ink) 35%,transparent);border-radius:12px;padding:12px 14px;display:grid;gap:6px;background:var(--sheet)}
+.sugg .why{font-size:13px;color:var(--mute)}
+.gone{font-size:13px;color:var(--mute)}
+.private-line{font-size:13px;color:var(--mute)}
+.firstline{color:var(--mute);font-style:italic}
+.ocard{display:grid;grid-template-columns:auto minmax(0,1fr);gap:2px 12px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:1.3em 0;background:var(--sheet);max-width:30rem}
+.ocard .ico{grid-row:span 2}
+.ocard .oc-title{font-weight:500}
+.ocard .oc-meta{font-size:12.5px;color:var(--mute);display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center}
+.conn{display:grid;grid-template-columns:auto minmax(0,1fr);gap:2px 10px;padding:10px 0;border-top:1px solid var(--line)}
+.conn .ico{width:22px;height:22px;border-radius:7px;font-size:12px}
+.conn .k{font-size:12px;color:var(--mute)}
+.conn .t{font-weight:500}
+.conn .s{grid-column:2;font-size:13px;color:var(--mute);line-height:1.45}
+.key{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12.5px;color:var(--mute)}
+.key span{color:var(--ink)}
+.graph{width:100%;height:auto;display:block}
+.graph text{font:500 11px 'Geist',system-ui,sans-serif;fill:var(--ink)}
+.graph .k{font-size:10px;fill:var(--mute);font-weight:400}
+
+/* ---------- Tooltip ---------- */
+#tip{position:fixed;z-index:60;max-width:290px;background:var(--ink);color:#f4f3ef;font:13px/1.45 'Geist',system-ui,sans-serif;padding:10px 12px;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.2);pointer-events:none}
+#tip b{display:block;font-weight:600;margin-bottom:2px}
+#tip span{display:block;color:#c9c7c0}
+
+/* ---------- Peek window ---------- */
+#peek{position:fixed;inset:0;z-index:45;background:rgba(29,29,27,.28);display:grid;place-items:center;padding:24px max(16px,env(safe-area-inset-left,0px)) 100px}
+#peek .pk{width:min(760px,100%);max-height:100%;overflow:auto;background:var(--sheet);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.18);padding:22px 40px 36px}
+#peek .pk-top{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:12.5px;color:var(--mute);margin-bottom:14px}
+#peek h2{font-family:var(--title-font,'Newsreader'),Georgia,serif;font-weight:500;font-size:2.1rem;line-height:1.1;margin:.3em 0 .4em}
+
+/* ---------- Switcher (not part of any design) ---------- */
+#bar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:50;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px 14px;max-width:calc(100% - 32px);background:var(--bar-bg);color:var(--bar-fg);font:13px/1 system-ui,-apple-system,sans-serif;padding:8px 10px;border-radius:999px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+#bar .dir{display:flex;align-items:center;gap:4px}
+#bar .arrow{width:30px;height:30px;border-radius:50%;font-size:15px}
+#bar .arrow:hover{background:#34332f}
+#bar .name{min-width:130px;text-align:center;font-weight:600}
+#bar .name small{color:var(--bar-mute);font-weight:400}
+#bar .views{display:flex;gap:2px;background:#2f2e2b;border-radius:999px;padding:3px}
+#bar .views button{padding:7px 12px;border-radius:999px;color:var(--bar-mute)}
+#bar .views button[aria-pressed="true"]{background:var(--bar-fg);color:var(--bar-bg)}
+@media (max-width:640px){#bar{border-radius:18px}}
+
+/* =====================================================================
+   1 — SHEET
+   ===================================================================== */
+.d1{display:grid;grid-template-columns:236px minmax(0,1fr) 330px;gap:12px;padding-block:12px;min-height:calc(100vh - 110px)}
+.d1.no-pane{grid-template-columns:236px minmax(0,1fr)}
+.d1 .side{display:flex;flex-direction:column;gap:2px;font-size:14px;padding:6px 4px}
+.d1 .side .space{font-weight:600;padding:6px 8px 12px;display:flex;gap:8px;align-items:center}
+.d1 .side .space i{width:22px;height:22px;border-radius:7px;background:var(--ink);color:var(--sheet);display:grid;place-items:center;font-style:normal;font-size:12px}
+.d1 .side .new{display:flex;gap:6px;margin-bottom:10px}
+.d1 .side .new span{flex:1;border:1px solid var(--line);background:var(--sheet);border-radius:9px;padding:6px 10px}
+.d1 .side .new kbd{border:1px solid var(--line);background:var(--sheet);border-radius:9px;padding:6px 9px;font:12px 'Geist',sans-serif;color:var(--mute)}
+.d1 .side a{display:flex;align-items:center;gap:9px;padding:5px 8px;border-radius:8px;color:inherit;text-decoration:none}
+.d1 .side a.on{background:color-mix(in srgb,var(--ink) 7%,transparent)}
+.d1 .side a .n{margin-left:auto;font-size:12px;color:var(--mute);font-variant-numeric:tabular-nums}
+.d1 .side a svg{color:var(--c)}
+.d1 .side a .dot{width:9px;height:9px;border-radius:3px;background:var(--c);margin:0 3px}
+.d1 .side .h{font-size:12px;color:var(--mute);padding:14px 8px 4px}
+.d1 .sheet{background:var(--sheet);border:1px solid var(--line);border-radius:16px;min-width:0;overflow:hidden}
+.d1 .sheet .bar2{display:flex;align-items:center;gap:8px;padding:12px 18px;border-bottom:1px solid var(--line);font-size:13px;color:var(--mute)}
+.d1 .sheet .bar2 b{color:var(--ink);font-weight:500}
+.d1 .doc{max-width:44rem;margin:0 auto;padding:40px 32px 56px}
+.d1 h1{font-family:'Newsreader',Georgia,serif;font-weight:500;font-size:2.9rem;line-height:1.08;letter-spacing:-.01em;margin:.35em 0 .3em;text-wrap:balance}
+.d1 .props{display:grid;grid-template-columns:120px minmax(0,1fr);gap:7px 14px;font-size:14px;margin:18px 0 22px}
+.d1 .props dt{color:var(--mute)}
+.d1 .props dd{margin:0}
+.d1 .captured{font-size:14.5px;color:#4b4a46;padding:14px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin-bottom:26px}
+.d1 .body{font-size:16.5px;line-height:1.7}
+.d1 .body p{margin:0 0 1em}
+.d1 .sec{margin-top:40px}
+.d1 .sec h3{font-size:13px;font-weight:600;margin:0 0 8px;display:flex;gap:8px;align-items:center}
+.d1 .sec h3 span{color:var(--mute);font-weight:400}
+.d1 .aiarea{display:grid;gap:10px}
+.d1 .pane{background:var(--sheet);border:1px solid var(--line);border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:14px;min-width:0;align-self:start;position:sticky;top:12px}
+.d1 .pane .tabs{display:flex;gap:4px;font-size:13px}
+.d1 .pane .tabs span{padding:4px 10px;border-radius:8px;color:var(--mute)}
+.d1 .pane .tabs span.on{background:color-mix(in srgb,var(--ink) 7%,transparent);color:var(--ink)}
+.d1 .list{padding:12px 0}
+.d1 .list h4{font-size:12.5px;color:var(--mute);font-weight:500;margin:18px 22px 6px}
+.d1 .row{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:2px 12px;align-items:center;padding:10px 22px;border-top:1px solid var(--line);cursor:pointer}
+.d1 .row:hover{background:#faf9f6}
+.d1 .row .ico{grid-row:span 2}
+.d1 .row .t{font-weight:500}
+.d1 .row .m{grid-column:2/4;display:flex;flex-wrap:wrap;gap:5px 10px;align-items:center;font-size:12.5px;color:var(--mute)}
+.d1 .row .w{font-size:12.5px;color:var(--mute);font-variant-numeric:tabular-nums}
+@media (max-width:1150px){.d1,.d1.no-pane{grid-template-columns:minmax(0,1fr)}.d1 .side{display:none}.d1 .pane{position:static}}
+
+/* =====================================================================
+   2 — ISSUE
+   ===================================================================== */
+.d2{--sheet:#fffefb;background:#fffefb;min-height:calc(100vh - 110px)}
+body.b2{background:#fffefb}
+.d2 .mast{display:flex;align-items:center;gap:26px;flex-wrap:wrap;padding-block:16px;border-bottom:1px solid var(--line);max-width:1200px;margin:0 auto}
+.d2 .mast .wm{font-family:'Fraunces',Georgia,serif;font-size:24px;font-weight:600;letter-spacing:-.02em}
+.d2 .mast nav{display:flex;gap:18px;flex-wrap:wrap;font-size:14px;color:var(--mute)}
+.d2 .mast nav span{display:inline-flex;gap:6px;align-items:center}
+.d2 .mast nav svg{color:var(--c)}
+.d2 .mast nav b{color:var(--ink);font-weight:500}
+.d2 .mast .s{margin-left:auto;font-size:13px;color:var(--mute);border:1px solid var(--line);border-radius:999px;padding:5px 14px}
+.d2 .cover{background:color-mix(in srgb,var(--c) 9%,#fffefb);border-bottom:1px solid color-mix(in srgb,var(--c) 18%,#fffefb)}
+.d2 .cover .in{max-width:1200px;margin:0 auto;padding-block:52px 40px;display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:40px;align-items:end}
+.d2 .kicker{display:flex;gap:8px;align-items:center;font-size:13px;color:var(--c);font-weight:500;letter-spacing:.02em}
+.d2 .kicker .big{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:#fffefb;color:var(--c);font-size:22px}
+.d2 h1{font-family:'Fraunces',Georgia,serif;font-weight:400;font-size:clamp(2.8rem,6vw,4.6rem);line-height:1;letter-spacing:-.025em;margin:.3em 0 .25em;text-wrap:balance}
+.d2 .standfirst{font-family:'Fraunces',Georgia,serif;font-size:1.3rem;line-height:1.4;color:#45443f;max-width:40rem;margin:0}
+.d2 .byline{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:14px;margin-top:22px}
+.d2 .byline dt{display:inline;color:var(--mute);margin-right:5px}
+.d2 .byline dd{display:inline;margin:0}
+.d2 .cover .tags{justify-content:flex-start}
+.d2 .art{max-width:1200px;margin:0 auto;padding-block:44px;display:grid;grid-template-columns:minmax(0,40rem) minmax(0,1fr);gap:64px}
+.d2 .body{font-family:'Fraunces',Georgia,serif;font-size:19px;line-height:1.65}
+.d2 .body p{margin:0 0 1em}
+.d2 .body > p:first-child::first-letter{float:left;font-size:3.6em;line-height:.85;padding:6px 8px 0 0;font-weight:600;color:var(--c)}
+.d2 .body .ocard{font-family:'Geist',system-ui,sans-serif;font-size:15px}
+.d2 .b-src{font-size:1.15em}
+.d2 .margin{display:flex;flex-direction:column;gap:30px;font-size:14px}
+.d2 .margin h3{font-family:'Fraunces',Georgia,serif;font-size:19px;font-weight:600;margin:0 0 6px}
+.d2 .ai-end{max-width:1200px;margin:0 auto;padding-block:8px 48px}
+.d2 .ai-end .hd{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;border-top:2px solid var(--ink);padding-top:14px;margin-bottom:18px}
+.d2 .ai-end .hd h2{font-family:'Fraunces',Georgia,serif;font-weight:600;font-size:24px;margin:0}
+.d2 .ai-end .hd span{color:var(--mute);font-size:14px}
+.d2 .ai-end .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.d2 .contents{max-width:1200px;margin:0 auto;padding-block:40px}
+.d2 .contents .vol{display:flex;justify-content:space-between;align-items:baseline;border-bottom:2px solid var(--ink);padding-bottom:10px;margin-bottom:28px;gap:16px;flex-wrap:wrap}
+.d2 .contents .vol h2{font-family:'Fraunces',Georgia,serif;font-weight:400;font-size:clamp(2.4rem,5vw,3.6rem);letter-spacing:-.02em;margin:0;line-height:1}
+.d2 .contents .vol span{color:var(--mute);font-size:14px}
+.d2 .lead{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:40px;padding-bottom:30px;border-bottom:1px solid var(--line);cursor:pointer}
+.d2 .lead > *{min-width:0}
+.d2 .lead h3,.d2 h1{overflow-wrap:break-word}
+.d2 .lead .wash{background:color-mix(in srgb,var(--c) 10%,#fffefb);border-radius:14px;padding:30px;display:flex;flex-direction:column;justify-content:space-between;gap:30px;min-height:240px}
+.d2 .lead .wash .big{font-size:56px;color:var(--c)}
+.d2 .lead h3{font-family:'Fraunces',Georgia,serif;font-weight:400;font-size:2.4rem;line-height:1.05;margin:.2em 0 .3em;letter-spacing:-.02em}
+.d2 .lead p{font-family:'Fraunces',Georgia,serif;font-size:1.1rem;color:#45443f;margin:0 0 14px}
+.d2 .stories{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:26px 30px;padding:28px 0}
+.d2 .story{border-top:3px solid var(--c);padding-top:12px;display:grid;gap:6px;align-content:start;cursor:pointer}
+.d2 .story .kk{font-size:12px;color:var(--c);font-weight:500;display:flex;gap:6px;align-items:center}
+.d2 .story h4{font-family:'Fraunces',Georgia,serif;font-weight:400;font-size:1.45rem;line-height:1.15;margin:0}
+.d2 .story .m{font-size:12.5px;color:var(--mute);display:flex;flex-wrap:wrap;gap:5px 10px;align-items:center}
+.d2 #peek{--title-font:'Fraunces'}
+@media (max-width:980px){.d2 .cover .in,.d2 .art,.d2 .lead{grid-template-columns:minmax(0,1fr)}}
+
+/* ---- Issue, refined for the owner: SF Pro for text, Playfair Display (regular + italic) for titles, softer and rounder ---- */
+body.b2{--sf:-apple-system,BlinkMacSystemFont,'SF Pro Text','SF Pro Display','Helvetica Neue',system-ui,sans-serif;--pf:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',system-ui,sans-serif;
+  --sheet:#fffdf9;--line:#ece8e1;background:#f8f6f1;font-family:var(--sf);font-size:15px;-webkit-font-smoothing:antialiased}
+.d2{background:transparent;font-family:var(--sf)}
+.d2 .mast{border-bottom:0;padding-block:18px 8px}
+.d2 .mast .wm{font-family:var(--pf);font-weight:500;font-style:italic;font-size:27px;letter-spacing:0}
+.d2 .mast nav{gap:4px}
+.d2 .mast nav span{padding:6px 12px;border-radius:999px}
+.d2 .mast nav b{font-weight:500}
+.d2 .mast nav span:has(b){background:#fff;box-shadow:0 1px 3px rgba(60,50,30,.08)}
+.d2 .mast .s{background:#fff;border-color:transparent;box-shadow:0 1px 3px rgba(60,50,30,.08);padding:7px 16px}
+.d2 .cover{width:min(1240px,calc(100% - 32px));margin:12px auto 0;border:0;border-radius:32px;background:color-mix(in srgb,var(--c) 10%,#fffdf9)}
+.d2 .cover .in{padding:52px 48px 42px;max-width:none}
+.d2 .kicker{font-weight:500;letter-spacing:0}
+.d2 .kicker .big{border-radius:16px;box-shadow:0 1px 3px rgba(60,50,30,.08)}
+.d2 h1{font-family:var(--pf);font-weight:400;letter-spacing:-.01em;line-height:1.04}
+.d2 .standfirst{font-family:var(--pf);font-size:1.32rem;line-height:1.45}
+.d2 .byline{font-size:13.5px;gap:8px}
+.d2 .byline > div{display:inline-flex !important;gap:6px;background:rgba(255,255,255,.7);border-radius:999px;padding:4px 12px}
+.d2 .byline dt{margin:0}
+.d2 .art{gap:56px}
+.d2 .body{font-family:var(--sf);font-size:17px;line-height:1.72;color:#2a2925}
+.d2 .body > p:first-child::first-letter{font-family:var(--pf);font-weight:400;font-size:3.9em;padding:4px 10px 0 0}
+.d2 .b-src{border-left:0;padding:20px 24px 18px 52px;border-radius:22px;background:#f2efe8;font-family:var(--pf);font-size:1.2em;line-height:1.5}
+.d2 .b-src::before{left:20px;top:14px;background:none;font-size:1.6em}
+.d2 .b-src cite{font-family:var(--sf)}
+.d2 .ocard{border-radius:20px;border-color:transparent;box-shadow:0 1px 4px rgba(60,50,30,.08),0 0 0 1px var(--line)}
+.d2 .ico{border-radius:10px}
+.d2 .chip,.d2 .tag{border-radius:999px;padding:2px 10px}
+.d2 .margin{gap:22px}
+.d2 .margin > div{background:#fff;border-radius:24px;padding:18px 20px;box-shadow:0 1px 4px rgba(60,50,30,.06)}
+.d2 .margin h3,.d2 .ai-end .hd h2{font-family:var(--pf);font-style:italic;font-weight:400;font-size:22px}
+.d2 .conn:first-of-type{border-top:0}
+.d2 .ai-end{width:min(1240px,calc(100% - 32px));margin:0 auto 32px;background:#fff;border-radius:32px;padding:30px 36px 36px;box-shadow:0 1px 4px rgba(60,50,30,.06)}
+.d2 .ai-end .hd{border-top:0;padding-top:0}
+.d2 .b-ai,.d2 .sugg{border-radius:20px;background:#faf8f4}
+.d2 .btn{border-radius:999px;padding:5px 14px}
+.d2 .contents .vol{border-bottom:0;padding-bottom:0;margin-bottom:22px}
+.d2 .contents .vol h2{font-family:var(--pf);font-weight:400;letter-spacing:-.01em}
+.d2 .contents .vol h2 em{font-style:italic}
+.d2 .lead{border-bottom:0;background:#fff;border-radius:32px;padding:20px;gap:32px;box-shadow:0 1px 4px rgba(60,50,30,.06)}
+.d2 .lead .wash{border-radius:24px}
+.d2 .lead h3{font-family:var(--pf);font-weight:400;letter-spacing:-.01em}
+.d2 .lead p{font-family:var(--pf)}
+.d2 .stories{gap:18px}
+.d2 .story{border-top:0;background:#fff;border-radius:24px;padding:18px 20px;box-shadow:0 1px 4px rgba(60,50,30,.06);transition:transform .15s ease,box-shadow .15s ease}
+.d2 .story:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(60,50,30,.1)}
+.d2 .story .kk{background:color-mix(in srgb,var(--c) 11%,#fff);border-radius:999px;padding:3px 10px;justify-self:start}
+.d2 .story h4{font-family:var(--pf);font-weight:400;font-size:1.4rem}
+.d2 .lead .story{background:none;box-shadow:none;padding:0}
+.d2 .lead .story:hover{transform:none;box-shadow:none}
+body.b2 #peek .pk{border-radius:28px;font-family:var(--sf)}
+body.b2 #peek h2{font-family:var(--pf)}
+body.b2 #peek h2{font-weight:400}
+body.b2 #tip{border-radius:14px;font-family:var(--sf)}
+/* Everything in SF Pro: titles get weight and tighter tracking instead of a second face */
+.d2 h1,.d2 .lead h3,.d2 .contents .vol h2{font-weight:600;letter-spacing:-.035em}
+.d2 .story h4,body.b2 #peek h2{font-weight:600;letter-spacing:-.02em}
+.d2 .mast .wm{font-weight:600;font-style:normal;letter-spacing:-.02em}
+.d2 .margin h3,.d2 .ai-end .hd h2{font-weight:600;font-style:normal;font-size:19px;letter-spacing:-.01em}
+.d2 .contents .vol h2 em{font-style:normal;color:var(--mute)}
+.d2 .standfirst,.d2 .lead p{font-size:1.2rem;letter-spacing:-.01em}
+.d2 .b-src{font-size:1.1em}
+.d2 .body > p:first-child::first-letter{font-weight:600}
+@media (prefers-reduced-motion:reduce){.d2 .story{transition:none}}
+@media (max-width:700px){.d2 .cover .in{padding:32px 22px 28px}.d2 .ai-end{padding:22px 18px}}
+
+/* =====================================================================
+   3 — FOLIO
+   ===================================================================== */
+.d3{display:grid;grid-template-columns:60px minmax(0,1fr);gap:14px;padding-block:14px;min-height:calc(100vh - 110px)}
+.d3 .rail{display:flex;flex-direction:column;align-items:center;gap:8px;padding-top:4px}
+.d3 .rail .me{width:36px;height:36px;border-radius:11px;background:var(--ink);color:var(--sheet);display:grid;place-items:center;font-family:'Bricolage Grotesque',sans-serif;font-weight:700;margin-bottom:10px}
+.d3 .rail .ico{width:36px;height:36px;border-radius:11px;font-size:17px}
+.d3 .rail .ico.on{box-shadow:0 0 0 2px var(--c)}
+.d3 .rail hr{width:24px;border:0;border-top:1px solid var(--line);margin:6px 0}
+.d3 .rail .dot{width:12px;height:12px;border-radius:4px;background:var(--c)}
+.d3 .spread{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);background:var(--sheet);border:1px solid var(--line);border-radius:18px;overflow:hidden;min-width:0;box-shadow:0 1px 0 var(--line)}
+.d3 .page{padding:34px 40px 48px;min-width:0}
+.d3 .page.r{background:#fbfaf7;border-left:1px solid var(--line);box-shadow:inset 14px 0 18px -16px rgba(0,0,0,.12)}
+.d3 .run{display:flex;justify-content:space-between;gap:10px;font-size:12px;color:var(--mute);letter-spacing:.04em;text-transform:uppercase;margin-bottom:26px}
+.d3 h1{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:2.7rem;line-height:1.02;letter-spacing:-.03em;margin:.4em 0 .35em;text-wrap:balance}
+.d3 h2.rh{font-family:'Bricolage Grotesque',sans-serif;font-weight:500;font-size:1.25rem;letter-spacing:-.01em;margin:0 0 10px;display:flex;gap:8px;align-items:center}
+.d3 .props{display:flex;flex-wrap:wrap;gap:8px 22px;font-size:13.5px;padding:12px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin:16px 0 20px}
+.d3 .props dt{font-size:11.5px;color:var(--mute)}
+.d3 .props dd{margin:0}
+.d3 .captured{font-family:'Newsreader',Georgia,serif;font-size:17px;color:#4b4a46;margin:0 0 22px}
+.d3 .body{font-family:'Newsreader',Georgia,serif;font-size:19px;line-height:1.62}
+.d3 .body p{margin:0 0 1em}
+.d3 .body .ocard,.d3 .body .b-src cite{font-family:'Geist',system-ui,sans-serif;font-size:15px}
+.d3 .sec{margin-top:28px}
+.d3 .sec h3{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);font-weight:500;margin:0 0 8px}
+.d3 .aiarea{display:grid;gap:10px}
+.d3 .idx .r{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:2px 12px;align-items:center;padding:11px 10px;border-top:1px solid var(--line);border-radius:10px;cursor:pointer}
+.d3 .idx .r.on{background:color-mix(in srgb,var(--c) 9%,white);border-top-color:transparent}
+.d3 .idx .r .ico{grid-row:span 2}
+.d3 .idx .r .t{font-family:'Bricolage Grotesque',sans-serif;font-weight:500;font-size:1.05rem}
+.d3 .idx .r .m{grid-column:2/4;display:flex;flex-wrap:wrap;gap:5px 10px;align-items:center;font-size:12.5px;color:var(--mute)}
+.d3 .idx .r .w{font-size:12.5px;color:var(--mute)}
+.d3 .idx h4{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);font-weight:500;margin:22px 10px 6px}
+@media (max-width:1000px){.d3{grid-template-columns:minmax(0,1fr)}.d3 .rail{display:none}.d3 .spread{grid-template-columns:minmax(0,1fr)}.d3 .page.r{border-left:0;border-top:1px solid var(--line)}.d3 .page{padding:26px 20px 36px}}
+</style>
+
+<div id="app"></div>
+<div id="peek" hidden></div>
+<div id="tip" hidden></div>
+<nav id="bar" aria-label="Prototype switcher">
+  <div class="dir">
+    <button class="arrow" id="prev" aria-label="Previous direction">←</button>
+    <div class="name" id="dirname"></div>
+    <button class="arrow" id="next" aria-label="Next direction">→</button>
+  </div>
+  <div class="views" role="group" aria-label="Screen">
+    <button data-view="list">Objects</button>
+    <button data-view="object">A Source</button>
+    <button data-view="private">A Private Thought</button>
+  </div>
+</nav>
+
+<script>
+/* ---------------- Personal icon set (drawn for the Garden) ---------------- */
+const ICON = {
+  Source: '<path d="M2 3.5h4.2A1.8 1.8 0 0 1 8 5.3v8.2a1.6 1.6 0 0 0-1.6-1.6H2zM14 3.5H9.8A1.8 1.8 0 0 0 8 5.3v8.2a1.6 1.6 0 0 1 1.6-1.6H14z"/>',
+  Concept: '<circle cx="3.6" cy="4.4" r="1.4"/><circle cx="12.4" cy="5" r="1.4"/><circle cx="7.6" cy="12.2" r="1.4"/><path d="M5 4.5l6 .4M4.3 5.7l2.6 5.2M11.7 6.3l-3.2 4.8"/>',
+  Thought: '<path d="M8 2.2c3.3 2.2 4.4 5.4 2.4 8.6C9.3 12.6 8 13.8 8 13.8s-1.3-1.2-2.4-3C3.6 7.6 4.7 4.4 8 2.2z"/><path d="M8 13.8V7"/>',
+  Person: '<circle cx="8" cy="5.4" r="2.6"/><path d="M3 14c.8-3 2.7-4.6 5-4.6s4.2 1.6 5 4.6"/>',
+};
+const TCOL = {Source:'var(--t-source)', Concept:'var(--t-concept)', Thought:'var(--t-thought)', Person:'var(--t-person)'};
+const PLURAL = {Source:'Sources', Concept:'Concepts', Thought:'Thoughts', Person:'People'};
+const svg = t => `<svg class="ic" viewBox="0 0 16 16" aria-hidden="true">${ICON[t]}</svg>`;
+const ico = t => `<span class="ico" style="--c:${TCOL[t]}">${svg(t)}</span>`;
+const chip = (t, sub) => `<span class="chip" style="--c:${TCOL[t]}">${svg(t)}${t}${sub?' · '+sub:''}</span>`;
+const mention = (t, name) => `<a class="mention" href="#" style="--c:${TCOL[t]}">${svg(t)}${name}</a>`;
+
+/* ---------------- Origin helpers ---------------- */
+const ARCH = {role:'Archivist', model:'google/gemma-4-31b-it:free', date:'28 Oct 2026'};
+const RES  = {role:'Researcher', model:'nvidia/nemotron-nano-9b-v2:free', date:'30 Oct 2026'};
+const esc = s => s.replace(/"/g,'&quot;');
+const aiTip = (who, appr) => esc(['AI', who.role, who.model, who.date, appr ? 'Approved by you on '+appr : 'Not approved yet'].join('|'));
+const ai = (text, who=ARCH, appr=null) => `<span class="o-ai${appr?' appr':''}" tabindex="0" data-tip="${aiTip(who, appr)}">${text}</span>`;
+const src = (text, from) => `<span class="o-src" tabindex="0" data-tip="${esc('Source|'+from+'|Captured 28 Oct 2026')}">${text}</span>`;
+const TAGC = {cognition:'--g-blue','embodied-mind':'--g-rose','note-taking':'--g-olive',writing:'--g-amber',planning:'--g-sky',memory:'--g-lilac',garden:'--g-green',habits:'--g-peach',attention:'--g-indigo','to-read':'--g-rose'};
+function tag(name, who){
+  const st = `style="--c:var(${TAGC[name]})"`;
+  return who ? `<span class="tag o-ai" ${st} tabindex="0" data-tip="${aiTip(who)}">#${name}</span>` : `<span class="tag" ${st}>#${name}</span>`;
+}
+
+/* ---------------- Sample Garden (made up) ---------------- */
+const LIST = [
+  {id:'skull', type:'Source', sub:'Book', title:ai('Thinking Outside the Skull'), tags:[tag('cognition'), tag('embodied-mind',ARCH), tag('note-taking',ARCH)], n:4, when:'Today', week:'Today',
+   stand:'A science writer on how gestures, rooms and other people extend the mind.'},
+  {type:'Thought', title:ai('Notes are where thinking happens', ARCH, '29 Oct 2026'), tags:[tag('writing')], n:4, when:'Yesterday', week:'This week'},
+  {type:'Thought', title:'<span class="firstline">I keep reorganizing instead of reading. Maybe the…</span>', tags:[tag('to-read')], n:0, when:'Yesterday', week:'This week', note:'Title suggestion waiting'},
+  {type:'Person', title:ai('Mara Ellison', ARCH, '29 Oct 2026'), tags:[], n:2, when:'29 Oct', week:'This week'},
+  {type:'Source', sub:'Image', title:'Whiteboard from Sunday', tags:[tag('planning')], n:2, when:'27 Oct', week:'This week'},
+  {type:'Source', sub:'Article', title:ai('Why handwriting helps you remember'), tags:[tag('memory',ARCH)], n:1, when:'26 Oct', week:'Earlier', wait:1},
+  {type:'Concept', title:'Thinking with things', tags:[tag('cognition')], n:9, when:'25 Oct', week:'Earlier'},
+  {id:'priv', type:'Thought', title:'Why I left Capacities', tags:[tag('garden'), tag('habits')], n:2, when:'12 Oct', week:'Earlier', priv:true},
+  {type:'Source', sub:'Podcast', title:ai('Walking meetings, revisited'), tags:[tag('attention',ARCH)], n:0, when:'10 Oct', week:'Earlier', wait:2},
+  {type:'Concept', title:'Attention', tags:[], n:6, when:'8 Oct', week:'Earlier'},
+];
+const S = {
+  fields: [['Format', ai('Book')], ['Author', ai('Mara Ellison')], ['Published', '2021'], ['Publisher', ai('Harrow &amp; Lyle')], ['Link', src('harrowlyle.com/skull','Captured link')], ['Captured','28 Oct 2026']],
+  tags: [tag('cognition'), tag('embodied-mind',ARCH), tag('note-taking',ARCH)],
+  captured: src('A science writer gathers research on how gestures, rooms and other people extend the mind, and what that means for how we learn and work.', 'Publisher’s description, read from the page'),
+  conns: [
+    {kind:'authored by', to:ai('Mara Ellison', ARCH, '29 Oct 2026'), type:'Person', s:'Suggested by the Archivist from the page’s author field.'},
+    {kind:'built on by', to:'Notes are where thinking happens', type:'Thought', s:'“…the same thing Ellison says about notebooks: the page does part of the thinking.”'},
+    {kind:'mentions', to:'Thinking with things', type:'Concept', s:'“This is close to Thinking with things, and to what I noticed on Sunday…”'},
+    {kind:'mentions', to:'Whiteboard from Sunday', type:'Source', s:'“…when the plan only made sense once it was on the whiteboard.”'},
+  ],
+};
+const SUGG = [
+  {id:'s1', kind:'related', to:'Why handwriting helps you remember', type:'Source', why:'Both treat writing as part of thinking, not a record of it.'},
+  {id:'s2', kind:'related', to:'Attention', type:'Concept', why:'Chapter 4 is about how rooms shape attention.'},
+];
+const NOTES = [
+  {id:'n1', who:ARCH, kind:'Summary', text:'Argues that thinking draws on the body, on physical spaces and on other people, not on the brain alone. The chapters move from gesture and movement, to rooms and nature, to thinking in groups.'},
+  {id:'n2', who:RES, kind:'Suggested question', text:'Two of your Sources say writing by hand helps memory. This one says where you write matters too. Which matches what you noticed with the whiteboard?'},
+];
+const card = (type, sub, title, kind, n, tags) => `<div class="ocard">${ico(type)}<div class="oc-title">${title}</div>
+  <div class="oc-meta"><span>${type}${sub?' · '+sub:''}</span><span>${kind}</span><span>${n} Connections</span>${tags.join('')}</div></div>`;
+const BODY = `
+  <p>Ellison’s claim is that the brain is not the only place thinking happens. Gestures, rooms and other people do part of the work. I recognise this: I only understand an idea once I have written it down twice.</p>
+  <blockquote class="b-src" tabindex="0" data-tip="${esc('Source|Quote from Thinking Outside the Skull, p. 112|Captured 28 Oct 2026')}">
+    <p>A notebook is not a record of thought. It is one of the places where thought takes place.</p>
+    <cite>From ${mention('Source','Thinking Outside the Skull')}, p. 112</cite>
+  </blockquote>
+  <p>This is close to ${mention('Concept','Thinking with things')}, and to what I noticed on Sunday, when the plan only made sense once it was on the whiteboard:</p>
+  ${card('Source','Image','Whiteboard from Sunday','mentions',2,[tag('planning')])}
+  <p>Next: write the first draft of the talk on paper and see whether it changes what I say.</p>
+  ${card('Thought','',ai('Notes are where thinking happens', ARCH, '29 Oct 2026'),'builds on this',4,[tag('writing')])}`;
+const P = {
+  title:'Why I left Capacities', fields:[['Created','12 Oct 2026'],['Last changed','31 Oct 2026']],
+  tags:[tag('garden'), tag('habits')],
+  conns:[{kind:'builds on', to:'Notes are where thinking happens', type:'Thought', s:'“…somewhere I can drop things and come back to them when I’m ready to think.”'},
+         {kind:'related', to:'Attention', type:'Concept', s:'Linked by you on 14 Oct.'}],
+  body:`<p>I spent more evenings fixing the structure than reading. Every new note asked me which folder, which type, which template. By the end I had a tidy system and nothing I had thought in months.</p>
+  <p>What I want now is somewhere I can drop things and come back to them when I’m ready to think. If the Garden starts asking me to organize, I should notice.</p>`,
+};
+const PRIVATE_LINE = 'Private: no AI reads this.';
+
+/* ---------------- State + shared pieces ---------------- */
+const state = {dir:2, view:'object', sugg:{s1:'wait', s2:'wait'}, notes:{n1:true, n2:true}};
+const NAMES = {1:'Sheet', 2:'Issue', 3:'Folio'};
+const pending = () => SUGG.filter(s => state.sugg[s.id]==='wait').length;
+function allConns(){
+  return S.conns.concat(SUGG.filter(s => state.sugg[s.id]==='yes').map(s => ({kind:s.kind, to:ai(s.to, ARCH, 'today'), type:s.type, s:s.why})));
+}
+const connList = cs => cs.map(c => `<div class="conn">${ico(c.type)}<div><div class="k">${c.kind}</div><div class="t">${c.to}</div></div><div class="s">${c.s}</div></div>`).join('');
+function suggItems(){
+  return SUGG.map(s => {
+    const st = state.sugg[s.id];
+    if (st==='gone') return `<div class="gone">Rejected. The Archivist won’t suggest this again.</div>`;
+    if (st==='yes') return '';
+    return `<div class="sugg"><div>${ai(s.kind+' → '+s.to)}</div><span class="why">${s.why}</span>
+      <div class="acts"><button class="btn dark" data-approve="${s.id}">Approve</button><button class="btn" data-reject="${s.id}">Reject</button></div></div>`;
+  }).join('') || '<div class="gone">No Suggestions waiting.</div>';
+}
+function noteItems(){
+  return NOTES.filter(n => state.notes[n.id]).map(n => `<div class="b-ai" tabindex="0" data-tip="${aiTip(n.who)}">
+    <div class="lbl"><b>✦ AI Note</b> · ${n.kind} · ${n.who.role}</div><p>${n.text}</p>
+    <div class="acts"><button class="btn">Start a Thought from this</button><button class="btn" data-del="${n.id}">Delete</button></div></div>`).join('')
+    || '<div class="gone">No AI Notes.</div>';
+}
+const fieldsDl = (fs, cls) => `<dl class="${cls}">${fs.map(([k,v]) => `<div style="display:contents"><dt>${k}</dt><dd>${v}</dd></div>`).join('')}</dl>`;
+const KEY = `<div class="key">Your words: <span>plain</span> · ${src('From a Source','Example')} · ${ai('From the AI')} · ${ai('AI, approved',ARCH,'29 Oct 2026')} · <em>hover a mark</em></div>`;
+
+// Small labelled graph of one Object and its Connections (pending Suggestions dashed)
+function graph(priv){
+  const C = {x:170, y:120};
+  const nodes = priv
+    ? [{t:'Thought', n:'Notes are where…', x:60, y:46, k:'builds on'}, {t:'Concept', n:'Attention', x:285, y:190, k:'related'}]
+    : [{t:'Person', n:'Mara Ellison', x:52, y:52, k:'authored by', ai:1},
+       {t:'Thought', n:'Notes are where…', x:290, y:44, k:'built on by'},
+       {t:'Concept', n:'Thinking with things', x:300, y:192, k:'mentions'},
+       {t:'Source', n:'Whiteboard', x:48, y:196, k:'mentions'}]
+      .concat(SUGG.filter(s => state.sugg[s.id]!=='gone').map((s,i) => ({t:s.type, n:s.to.split(' ').slice(0,2).join(' ')+'…', x:i?172:172, y:i?232:12, k:s.kind, wait:state.sugg[s.id]==='wait', ai:1})));
+  const col = t => getComputedStyle(document.documentElement).getPropertyValue({Source:'--t-source',Concept:'--t-concept',Thought:'--t-thought',Person:'--t-person'}[t]).trim();
+  const cType = priv ? 'Thought' : 'Source';
+  return `<svg class="graph" viewBox="-36 0 412 256" role="img" aria-label="Connections of this Object">
+    ${nodes.map(n => `<line x1="${C.x}" y1="${C.y}" x2="${n.x}" y2="${n.y}" stroke="${n.wait?'#a9a7a0':'#cfcdc6'}" stroke-width="1.2" ${n.wait?'stroke-dasharray="4 4"':''} ${n.ai&&!n.wait?'stroke-dasharray="1.5 3"':''}/>`).join('')}
+    ${nodes.map(n => `<g opacity="${n.wait?.6:1}"><circle cx="${n.x}" cy="${n.y}" r="9" fill="${col(n.t)}" fill-opacity=".16" stroke="${col(n.t)}" stroke-width="1.4" ${n.wait?'stroke-dasharray="3 2"':''}/>
+      <text x="${n.x}" y="${n.y+22}" text-anchor="middle">${n.n}${n.ai?(n.wait?' ✦':' ✧'):''}</text>
+      <text class="k" x="${(n.x+C.x)/2}" y="${(n.y+C.y)/2-4}" text-anchor="middle">${n.k}</text></g>`).join('')}
+    <circle cx="${C.x}" cy="${C.y}" r="13" fill="${col(cType)}" stroke="#fff" stroke-width="2"/>
+    <text x="${C.x}" y="${C.y+28}" text-anchor="middle" font-weight="600">${priv?'Why I left Capacities':'Thinking Outside the Skull'}</text>
+  </svg>`;
+}
+
+/* ---------------- 1: Sheet ---------------- */
+function d1Side(on){
+  const c = t => LIST.filter(o=>o.type===t).length;
+  return `<aside class="side"><div class="space"><i>G</i>Garden</div>
+    <div class="new"><span>+ New</span><kbd>⌘K</kbd></div>
+    <a href="#" class="${on==='list'?'on':''}">All Objects<span class="n">${LIST.length}</span></a>
+    <a href="#">Unreviewed<span class="n">3</span></a>
+    <div class="h">Object Types</div>
+    ${['Source','Concept','Thought','Person'].map(t => `<a href="#" style="--c:${TCOL[t]}">${svg(t)}${PLURAL[t]}<span class="n">${c(t)}</span></a>`).join('')}
+    <div class="h">Tags</div>
+    ${['cognition','writing','memory','garden','to-read'].map(g => `<a href="#" style="--c:var(${TAGC[g]})"><span class="dot"></span>${g}</a>`).join('')}
+  </aside>`;
+}
+function d1List(){
+  const groups = ['Today','This week','Earlier'];
+  return `<div class="d1 no-pane wrap">${d1Side('list')}<section class="sheet"><div class="bar2"><b>All Objects</b> · newest first · click the first one to peek</div><div class="list">` +
+    groups.map(g => `<h4>${g}</h4>` + LIST.filter(o=>o.week===g).map(o => `
+      <div class="row" ${o.id?`data-peek="${o.id}"`:''}>${ico(o.type)}<div class="t">${o.title}</div><div class="w">${o.when}</div>
+        <div class="m"><span>${o.type}${o.sub?' · '+o.sub:''}</span><span>${o.n} Connections</span>${o.tags.join('')}
+        ${o.priv?'<span>Private</span>':''}${o.wait?`<span>✦ ${o.wait} waiting</span>`:''}${o.note?`<span>${o.note}</span>`:''}</div></div>`).join('')).join('') +
+    `<div style="padding:20px 22px 4px">${KEY}</div></div></section></div>`;
+}
+function d1Object(){
+  return `<div class="d1 wrap">${d1Side()}<section class="sheet"><div class="bar2">${svg('Source')}<b>Thinking Outside the Skull</b></div><div class="doc">
+    ${chip('Source','Book')}<h1>${ai('Thinking Outside the Skull')}</h1>
+    <div class="tags">${S.tags.join('')}</div>
+    ${fieldsDl(S.fields,'props')}
+    <div class="captured">${S.captured}</div>
+    <div class="body">${BODY}</div>
+    <div class="sec"><h3>Connections <span>${allConns().length}</span></h3>${connList(allConns())}</div>
+    <div class="sec"><h3>✦ From the AI <span>${pending()} waiting</span></h3><div class="aiarea">${suggItems()}${noteItems()}</div></div>
+    <div class="sec">${KEY}</div>
+  </div></section>
+  <aside class="pane"><div class="tabs"><span class="on">Graph</span><span>Connections</span><span>Open beside…</span></div>${graph(false)}
+    <div class="key" style="font-size:12px">Dotted line: AI, approved ✧ · Dashed: Suggestion waiting ✦</div></aside></div>`;
+}
+function d1Private(){
+  return `<div class="d1 wrap">${d1Side()}<section class="sheet"><div class="bar2">${svg('Thought')}<b>${P.title}</b></div><div class="doc">
+    ${chip('Thought')}<h1>${P.title}</h1><div class="tags">${P.tags.join('')}</div>
+    ${fieldsDl(P.fields,'props')}<p class="private-line">${PRIVATE_LINE}</p>
+    <div class="body">${P.body}</div>
+    <div class="sec"><h3>Connections <span>${P.conns.length}</span></h3>${connList(P.conns)}</div>
+  </div></section><aside class="pane"><div class="tabs"><span class="on">Graph</span><span>Connections</span></div>${graph(true)}</aside></div>`;
+}
+
+/* ---------------- 2: Issue ---------------- */
+function d2Mast(on){
+  return `<div class="wrap"><header class="mast"><span class="wm">Garden</span>
+    <nav><span>${on==='list'?'<b>This week</b>':'This week'}</span>${['Source','Concept','Thought','Person'].map(t=>`<span style="--c:${TCOL[t]}">${svg(t)}${PLURAL[t]}</span>`).join('')}<span># Tags</span></nav>
+    <span class="s">Search ⌘K</span></header></div>`;
+}
+function d2List(){
+  const lead = LIST[0], rest = LIST.slice(1);
+  return `<div class="d2">${d2Mast('list')}<main class="contents wrap"><div class="vol"><h2>This week in <em>your Garden</em></h2><span>No. 44 · 1 November 2026 · ${LIST.length} Objects</span></div>
+    <article class="lead" data-peek="skull" style="--c:${TCOL.Source}"><div class="wash"><span class="big">${svg('Source')}</span><div class="tags">${lead.tags.join('')}</div></div>
+      <div><div class="story" style="border:0;padding:0"><span class="kk">${svg('Source')} Source · Book · ${lead.when}</span></div><h3>${lead.title}</h3><p>${src(lead.stand,'Publisher’s description')}</p>
+      <div class="story" style="border:0;padding:0"><span class="m">${lead.n} Connections · ✦ 2 Suggestions waiting · click to peek</span></div></div></article>
+    <div class="stories">${rest.map(o => `<article class="story" style="--c:${TCOL[o.type]}" ${o.id?`data-peek="${o.id}"`:''}>
+      <span class="kk">${svg(o.type)} ${o.type}${o.sub?' · '+o.sub:''}</span><h4>${o.title}</h4>
+      <div class="m"><span>${o.when}</span><span>${o.n} Connections</span>${o.priv?'<span>Private</span>':''}${o.wait?`<span>✦ ${o.wait} waiting</span>`:''}${o.note?`<span>${o.note}</span>`:''}</div>
+      ${o.tags.length?`<div class="tags">${o.tags.join('')}</div>`:''}</article>`).join('')}</div>${KEY}</main></div>`;
+}
+function d2Object(){
+  return `<div class="d2">${d2Mast()}
+    <section class="cover" style="--c:${TCOL.Source}"><div class="in wrap"><div>
+      <div class="kicker"><span class="big">${svg('Source')}</span>Source · Book</div>
+      <h1>${ai('Thinking Outside the Skull')}</h1><p class="standfirst">${S.captured}</p>
+      ${fieldsDl(S.fields,'byline')}</div>
+      <div class="tags">${S.tags.join('')}</div></div></section>
+    <main class="art wrap" style="--c:${TCOL.Source}"><div class="body">${BODY}</div>
+      <aside class="margin"><div><h3>Connections</h3>${connList(allConns())}</div><div><h3>Map</h3>${graph(false)}</div></aside></main>
+    <section class="ai-end wrap"><div class="hd"><h2>✦ From the AI</h2><span>Kept apart from your words. ${pending()} Suggestion${pending()===1?'':'s'} waiting.</span></div>
+      <div class="grid">${suggItems()}${noteItems()}</div><div style="margin-top:24px">${KEY}</div></section></div>`;
+}
+function d2Private(){
+  return `<div class="d2">${d2Mast()}
+    <section class="cover" style="--c:${TCOL.Thought}"><div class="in wrap"><div>
+      <div class="kicker"><span class="big">${svg('Thought')}</span>Thought</div><h1>${P.title}</h1>
+      ${fieldsDl(P.fields,'byline')}<p class="private-line" style="margin-top:14px">${PRIVATE_LINE}</p></div>
+      <div class="tags">${P.tags.join('')}</div></div></section>
+    <main class="art wrap" style="--c:${TCOL.Thought}"><div class="body">${P.body}</div>
+      <aside class="margin"><div><h3>Connections</h3>${connList(P.conns)}</div><div><h3>Map</h3>${graph(true)}</div></aside></main></div>`;
+}
+
+/* ---------------- 3: Folio ---------------- */
+function d3Rail(on){
+  return `<nav class="rail"><span class="me">G</span>${['Source','Concept','Thought','Person'].map(t => `<span class="ico${t===on?' on':''}" style="--c:${TCOL[t]}" title="${PLURAL[t]}">${svg(t)}</span>`).join('')}
+    <hr>${['cognition','writing','memory','garden'].map(g => `<span class="dot" style="--c:var(${TAGC[g]})" title="#${g}"></span>`).join('')}</nav>`;
+}
+function d3SourceLeft(){
+  return `<div class="run"><span>Sources</span><span>Captured 28 Oct</span></div>
+    ${chip('Source','Book')}<h1>${ai('Thinking Outside the Skull')}</h1><div class="tags">${S.tags.join('')}</div>
+    ${fieldsDl(S.fields,'props')}<p class="captured">${S.captured}</p><div class="body">${BODY}</div>`;
+}
+function d3SourceRight(){
+  return `<div class="run"><span>Around this Source</span><span>${allConns().length} Connections</span></div>
+    <h2 class="rh">Map</h2>${graph(false)}
+    <div class="sec"><h3>Connections</h3>${connList(allConns())}</div>
+    <div class="sec"><h3>✦ From the AI · ${pending()} waiting</h3><div class="aiarea">${suggItems()}${noteItems()}</div></div>
+    <div class="sec">${KEY}</div>`;
+}
+function d3List(){
+  const groups = ['Today','This week','Earlier'];
+  return `<div class="d3 wrap">${d3Rail()}<div class="spread"><section class="page"><div class="run"><span>Index</span><span>${LIST.length} Objects</span></div>
+    <h1 style="font-size:2.2rem">Everything, newest first</h1><div class="idx">` +
+    groups.map(g => `<h4>${g}</h4>` + LIST.filter(o=>o.week===g).map(o => `
+      <div class="r${o.id==='skull'?' on':''}" style="--c:${TCOL[o.type]}">${ico(o.type)}<div class="t">${o.title}</div><div class="w">${o.when}</div>
+      <div class="m"><span>${o.type}${o.sub?' · '+o.sub:''}</span><span>${o.n} Connections</span>${o.tags.join('')}${o.priv?'<span>Private</span>':''}${o.wait?`<span>✦ ${o.wait} waiting</span>`:''}${o.note?`<span>${o.note}</span>`:''}</div></div>`).join('')).join('') +
+    `</div></section><section class="page r"><div class="run"><span>Selected</span><span>Opens here, beside the list</span></div>
+      ${chip('Source','Book')}<h1 style="font-size:2rem">${ai('Thinking Outside the Skull')}</h1><div class="tags">${S.tags.join('')}</div>
+      <p class="captured" style="margin-top:16px">${S.captured}</p>${graph(false)}<div class="sec">${KEY}</div></section></div></div>`;
+}
+function d3Object(){ return `<div class="d3 wrap">${d3Rail('Source')}<div class="spread"><section class="page">${d3SourceLeft()}</section><section class="page r">${d3SourceRight()}</section></div></div>`; }
+function d3Private(){
+  return `<div class="d3 wrap">${d3Rail('Thought')}<div class="spread"><section class="page"><div class="run"><span>Thoughts</span><span>12 Oct</span></div>
+    ${chip('Thought')}<h1>${P.title}</h1><div class="tags">${P.tags.join('')}</div>${fieldsDl(P.fields,'props')}<div class="body">${P.body}</div></section>
+    <section class="page r"><div class="run"><span>Around this Thought</span><span>${P.conns.length} Connections</span></div>
+    <p class="private-line">${PRIVATE_LINE}</p><h2 class="rh">Map</h2>${graph(true)}<div class="sec"><h3>Connections</h3>${connList(P.conns)}</div></section></div></div>`;
+}
+
+/* ---------------- Peek window (directions 1 and 2) ---------------- */
+const peek = document.getElementById('peek');
+function openPeek(id){
+  const priv = id==='priv';
+  peek.innerHTML = `<div class="pk" role="dialog" aria-label="Peek"><div class="pk-top"><span>${priv?chip('Thought'):chip('Source','Book')}</span>
+    <span>1 / ${LIST.length} · <button class="btn" data-full="1">Open full page</button> <button class="btn" data-close="1">Close</button></span></div>
+    <h2>${priv?P.title:ai('Thinking Outside the Skull')}</h2><div class="tags">${priv?P.tags.join(''):S.tags.join('')}</div>
+    ${priv?`<p class="private-line">${PRIVATE_LINE}</p>`:`<p style="margin:16px 0">${S.captured}</p>`}
+    <div class="body" style="font-size:16px;line-height:1.65">${priv?P.body:BODY}</div></div>`;
+  peek.hidden = false;
+}
+function closePeek(){ peek.hidden = true; peek.innerHTML = ''; }
+peek.addEventListener('click', e => {
+  if (e.target===peek || e.target.closest('[data-close]')) closePeek();
+  if (e.target.closest('[data-full]')) { closePeek(); state.view='object'; render(); }
+  if (e.target.closest('a[href="#"]')) e.preventDefault();
+});
+
+/* ---------------- Render + switcher ---------------- */
+const R = {1:{list:d1List, object:d1Object, private:d1Private}, 2:{list:d2List, object:d2Object, private:d2Private}, 3:{list:d3List, object:d3Object, private:d3Private}};
+const app = document.getElementById('app'), tip = document.getElementById('tip');
+function render(){
+  document.body.className = 'b'+state.dir;
+  app.innerHTML = R[state.dir][state.view]();
+  document.getElementById('dirname').innerHTML = `${state.dir} · ${NAMES[state.dir]} <small>of 3</small>`;
+  document.querySelectorAll('#bar [data-view]').forEach(b => b.setAttribute('aria-pressed', b.dataset.view===state.view));
+  try { history.replaceState(null,'','#d'+state.dir+'-'+state.view); } catch(e) {}
+  tip.hidden = true;
+}
+function go(d){ closePeek(); state.dir = ((state.dir-1+d+3)%3)+1; render(); }
+document.getElementById('prev').onclick = () => go(-1);
+document.getElementById('next').onclick = () => go(1);
+document.querySelectorAll('#bar [data-view]').forEach(b => b.onclick = () => { closePeek(); state.view = b.dataset.view; render(); });
+document.addEventListener('keydown', e => {
+  if (e.target.closest('input,textarea,[contenteditable]')) return;
+  if (e.key==='Escape') closePeek();
+  else if (e.key==='ArrowLeft') go(-1);
+  else if (e.key==='ArrowRight') go(1);
+  else if (['1','2','3'].includes(e.key)) { closePeek(); state.dir = +e.key; render(); }
+});
+app.addEventListener('click', e => {
+  if (e.target.closest('a[href="#"]')) e.preventDefault();
+  const a = e.target.closest('[data-approve]'), r = e.target.closest('[data-reject]'), d = e.target.closest('[data-del]'), p = e.target.closest('[data-peek]');
+  if (a) { state.sugg[a.dataset.approve]='yes'; render(); }
+  else if (r) { state.sugg[r.dataset.reject]='gone'; render(); }
+  else if (d) { state.notes[d.dataset.del]=false; render(); }
+  else if (p) openPeek(p.dataset.peek);
+});
+function showTip(el){
+  const p = el.dataset.tip.split('|');
+  tip.innerHTML = p[0]==='AI'
+    ? `<b>✦ Added by the AI</b><span>Role: ${p[1]}</span><span>Model: ${p[2]}</span><span>Date: ${p[3]}</span><span>${p[4]}</span>`
+    : `<b>❝ From a Source</b><span>${p[1]}</span><span>${p[2]}</span>`;
+  tip.hidden = false;
+  const rc = el.getBoundingClientRect(), tw = tip.offsetWidth, th = tip.offsetHeight;
+  let x = Math.min(Math.max(8, rc.left), innerWidth-tw-8), y = rc.bottom+8;
+  if (y+th > innerHeight-90) y = rc.top-th-8;
+  tip.style.left = x+'px'; tip.style.top = y+'px';
+}
+document.addEventListener('mouseover', e => { const el = e.target.closest && e.target.closest('[data-tip]'); if (el) showTip(el); else tip.hidden = true; });
+document.addEventListener('focusin', e => { const el = e.target.closest('[data-tip]'); if (el) showTip(el); });
+document.addEventListener('focusout', () => { tip.hidden = true; });
+addEventListener('scroll', () => { tip.hidden = true; }, {passive:true});
+
+const m = /^#d([123])-(list|object|private)$/.exec(location.hash);
+if (m) { state.dir = +m[1]; state.view = m[2]; }
+render();
+</script>
