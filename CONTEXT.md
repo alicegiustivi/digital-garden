@@ -65,8 +65,12 @@ Who put a piece of content into the Garden: **Source** (it came from outside, su
 _Avoid_: Author, provenance, source (for the Origin, as opposed to the Object Type)
 
 **AI Note**:
-A piece of AI-written text, such as a summary, interpretation, suggested question or Researcher answer, kept beside an Object's body and never inside it. It always keeps AI Origin, can be deleted, and cannot be edited into the owner's words; the owner can only start a Thought from it.
+A piece of AI-written text, such as a summary, interpretation, suggested question or Researcher answer, kept beside an Object's body and never inside it. A Researcher answer stays in its Inquiry until the owner keeps it on one or more Objects. It always keeps AI Origin, can be deleted, and cannot be edited into the owner's words; the owner can only start a Thought from it.
 _Avoid_: AI summary, AI comment, annotation
+
+**Inquiry**:
+A question the owner puts to the Researcher, together with its follow-up questions and the answers. It is never an Object, and the Researcher never treats an earlier Inquiry as evidence.
+_Avoid_: Chat, conversation, session, query
 
 ### AI
 
