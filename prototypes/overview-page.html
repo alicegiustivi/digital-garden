@@ -1,0 +1,634 @@
+<title>Garden Overview Directions</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<!-- PROTOTYPE (throwaway) for issue 18. Round 2: the owner picked "B with C linking", shown first as D.
+      "Overview page: what the whole Garden looks like".
+     Three structurally different Overviews in the settled "Issue" look (issue 10), behind the settled top bar (issue 17).
+     A Contents  = the Overview as a magazine's table of contents: one section per Concept, then the shelf, then Tags.
+     B Islands   = Concepts as blocks sized by how much is connected to them; "bridges" for Objects in several Concepts;
+                   the shelf is a column beside them. In the first weeks, Tags stand in as dashed, not-yet islands.
+     C Desk      = a linking desk: the "Not connected yet" shelf is the main list; pick one and the Concepts that
+                   share its Tags line up beside it with Connect. Concepts sit in that column when nothing is picked.
+     Switch with the bottom bar (←/→ or keys 1–3); the second control swaps a small Garden for one with no Concepts yet.
+     All data is made up. Nothing is saved. A deliberate light look only: the dark version is still open (issue 10). -->
+<style>
+/* Layout concept: the Issue look (soft rounded magazine in SF Pro) with one shared top bar; each direction owns the page below it. */
+:root{
+  --ink:#1d1d1b; --mute:#77756f; --faint:#a9a7a0; --line:#ece8e1; --ground:#f8f6f1; --sheet:#fffdf9; --white:#ffffff; --wash:#f2efe8;
+  --t-source:#2d7a99; --t-concept:#7657c2; --t-thought:#c08414; --t-person:#cf5c45;
+  --g-blue:#3d7fb8; --g-rose:#c4567a; --g-olive:#7d8a2e; --g-amber:#b7791f; --g-sky:#2f95b5; --g-lilac:#8a6bc9; --g-green:#3f8f5b; --g-peach:#d07a4a; --g-indigo:#5560c4;
+  --bar-bg:#1d1d1b; --bar-fg:#f4f3ef; --bar-mute:#9c9a94; --bar-hi:#34332f; --scrim:rgba(29,29,27,.28);
+  --shadow:0 1px 4px rgba(60,50,30,.07); --shadow-up:0 6px 18px rgba(60,50,30,.1);
+  --sf:-apple-system,BlinkMacSystemFont,'SF Pro Text','SF Pro Display','Helvetica Neue',system-ui,sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+body{min-height:100vh;padding-bottom:120px;background:var(--ground);color:var(--ink);font-family:var(--sf);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;padding:0;text-align:inherit}
+:focus-visible{outline:2px solid var(--ink);outline-offset:2px;border-radius:6px}
+.wrap{max-width:1240px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+svg.ic{width:1em;height:1em;flex:none;vertical-align:-.12em;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+h1,h2,h3,h4{font-weight:600;letter-spacing:-.02em;text-wrap:balance;margin:0}
+.num{font-variant-numeric:tabular-nums}
+
+/* ---- shared marks ---- */
+.chip{display:inline-flex;align-items:center;gap:6px;padding:2px 10px 2px 8px;border-radius:999px;font-size:12.5px;font-weight:500;color:var(--c);background:color-mix(in srgb,var(--c) 11%,var(--white));white-space:nowrap}
+.ico{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:10px;color:var(--c);background:color-mix(in srgb,var(--c) 12%,var(--white));flex:none}
+.tag{display:inline-flex;align-items:center;gap:4px;padding:2px 10px;border-radius:999px;font-size:12.5px;color:color-mix(in srgb,var(--c) 80%,var(--ink));background:color-mix(in srgb,var(--c) 13%,var(--white));white-space:nowrap}
+.tags{display:flex;flex-wrap:wrap;gap:5px}
+.o-ai{text-decoration:underline dotted 1.5px color-mix(in srgb,currentColor 55%,transparent);text-underline-offset:4px}
+.o-ai::after{content:"✦";font-size:.62em;vertical-align:.45em;margin-left:.18em;display:inline-block;text-decoration:none}
+.o-ai.appr{text-decoration:none}.o-ai.appr::after{content:"✧";opacity:.75}
+.tag.o-ai{text-decoration:none}
+.firstline{color:var(--mute);font-style:italic;font-weight:400}
+.meta{font-size:12.5px;color:var(--mute);display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center}
+.unrev{display:inline-flex;align-items:center;gap:5px}
+.unrev::before{content:"";width:6px;height:6px;border-radius:50%;border:1.5px solid var(--mute)}
+.lock{color:var(--mute)}
+.btn{font-size:12.5px;padding:5px 14px;border-radius:999px;background:var(--white);box-shadow:0 0 0 1px var(--line);white-space:nowrap}
+.btn:hover{box-shadow:0 0 0 1px var(--ink)}
+.btn.dark{background:var(--ink);color:var(--sheet);box-shadow:none}
+.link{color:var(--ink);text-decoration:underline 1px var(--faint);text-underline-offset:3px}
+.link:hover{text-decoration-color:var(--ink)}
+.kick{font-size:12px;color:var(--mute);letter-spacing:.06em;text-transform:uppercase;font-weight:500}
+.hit{cursor:pointer}
+
+/* ---- top bar (settled in issue 17) ---- */
+.mast{display:flex;align-items:center;gap:8px 18px;flex-wrap:wrap;padding-block:16px 6px}
+.mast .wm{font-weight:600;font-size:24px;letter-spacing:-.02em}
+.mast nav{display:flex;gap:2px;flex-wrap:wrap;font-size:14px;color:var(--mute)}
+.mast nav span{display:inline-flex;gap:6px;align-items:center;padding:6px 11px;border-radius:999px}
+.mast nav svg{color:var(--c)}
+.mast nav .on{background:var(--white);box-shadow:var(--shadow);color:var(--ink);font-weight:500}
+.mast nav .n{background:var(--ink);color:var(--sheet);border-radius:999px;font-size:11px;padding:0 6px;font-weight:600}
+.mast .right{margin-left:auto;display:flex;align-items:center;gap:12px;font-size:13px;color:var(--mute);flex-wrap:wrap}
+.mast .s{background:var(--white);box-shadow:var(--shadow);border-radius:999px;padding:6px 16px}
+
+.pagehead{display:flex;justify-content:space-between;align-items:end;gap:10px 24px;flex-wrap:wrap;padding-block:30px 22px}
+.pagehead h1{font-size:clamp(2.2rem,5vw,3.3rem);letter-spacing:-.035em;line-height:1}
+.pagehead p{margin:8px 0 0;color:var(--mute);font-size:15px}
+.counts{display:flex;gap:6px 14px;flex-wrap:wrap;font-size:13.5px}
+.counts span{display:inline-flex;gap:6px;align-items:center}
+.counts svg{color:var(--c)}
+
+/* =================== A — Contents =================== */
+.A .sec{display:grid;grid-template-columns:minmax(0,300px) minmax(0,1fr);gap:20px 36px;background:var(--white);border-radius:28px;padding:24px 26px;box-shadow:var(--shadow);margin-bottom:14px}
+.A .sec.quiet{background:transparent;box-shadow:0 0 0 1px var(--line)}
+.A .sec .hd{display:grid;gap:10px;align-content:start}
+.A .sec h2{font-size:1.65rem;line-height:1.08;letter-spacing:-.03em;display:flex;gap:10px;align-items:baseline}
+.A .sec h2 svg{color:var(--t-concept);font-size:.8em}
+.A .tally{display:flex;flex-wrap:wrap;gap:6px}
+.A .when{font-size:13px;color:var(--mute)}
+.A .lately{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.A .mini{background:var(--sheet);border-radius:18px;padding:14px 16px;display:grid;gap:6px;align-content:start;box-shadow:0 0 0 1px var(--line);transition:transform .15s ease}
+.A .mini:hover{transform:translateY(-2px)}
+.A .mini h4{font-size:1.02rem;line-height:1.25;font-weight:600}
+.A .also{font-size:12.5px;color:var(--t-concept)}
+.A .nolately{color:var(--mute);font-size:14px;align-self:center}
+.A .partlabel{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;margin:40px 0 14px}
+.A .partlabel h2{font-size:1.6rem;letter-spacing:-.03em}
+.A .partlabel p{margin:4px 0 0;color:var(--mute);font-size:14px}
+.A .shelf{display:flex;gap:12px;overflow-x:auto;padding:4px 2px 14px;scroll-snap-type:x proximity}
+.A .shelf .mini{flex:0 0 220px;scroll-snap-align:start;background:var(--white);box-shadow:var(--shadow)}
+.A .shelf .more{flex:0 0 170px;border-radius:18px;display:grid;place-items:center;text-align:center;padding:16px;box-shadow:0 0 0 1px var(--line);color:var(--mute);font-size:14px}
+.A .tagwall{display:flex;flex-wrap:wrap;gap:10px}
+.A .tagwall .tg{display:inline-flex;align-items:center;gap:10px;background:var(--white);border-radius:999px;padding:6px 8px 6px 6px;box-shadow:var(--shadow)}
+.A .tagwall .tg .meta{gap:6px}
+.A .seed{background:var(--white);border-radius:28px;padding:28px;box-shadow:var(--shadow)}
+.A .seed > p{max-width:42rem;color:var(--mute);margin:8px 0 20px;font-size:15px}
+.A .seedrow{display:grid;grid-template-columns:minmax(0,220px) minmax(0,1fr) auto;gap:12px 24px;align-items:center;padding:14px 0;border-top:1px solid var(--line)}
+.A .seedrow .ex{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:14px;min-width:0}
+@media (max-width:820px){.A .sec{grid-template-columns:minmax(0,1fr)}.A .seedrow{grid-template-columns:minmax(0,1fr)}}
+
+/* =================== B — Islands =================== */
+.B .layout{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:24px;align-items:start}
+.B .sea{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:minmax(150px,auto);gap:14px}
+.B .isle{border-radius:30px;padding:20px 22px;display:flex;flex-direction:column;gap:10px;background:color-mix(in srgb,var(--t-concept) calc(var(--w)*1%),var(--white));box-shadow:var(--shadow);transition:transform .15s ease,box-shadow .15s ease;min-width:0}
+.B .isle:hover{transform:translateY(-2px);box-shadow:var(--shadow-up)}
+.B .isle.big{grid-column:span 2;grid-row:span 2}
+.B .isle.wide{grid-column:span 2}
+.B .isle h2{line-height:1.08;letter-spacing:-.03em;font-size:1.25rem}
+.B .isle.big h2{font-size:2.2rem}
+.B .isle.wide h2{font-size:1.6rem}
+.B .isle .total{font-size:13px;color:var(--mute)}
+.B .mix{display:flex;height:8px;border-radius:999px;overflow:hidden;background:var(--line)}
+.B .mix i{display:block;background:var(--c)}
+.B .mixkey{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12.5px;color:var(--mute)}
+.B .mixkey b{color:var(--ink);font-weight:500}
+.B .weeks{display:flex;gap:4px;align-items:center;font-size:11.5px;color:var(--mute)}
+.B .weeks i{width:10px;height:10px;border-radius:50%;background:var(--t-concept);opacity:var(--o)}
+.B .weeks i.z{background:transparent;box-shadow:inset 0 0 0 1px var(--faint);opacity:1}
+.B .isle ul{list-style:none;margin:auto 0 0;padding:0;display:grid;gap:6px;font-size:14px}
+.B .isle li{display:flex;gap:8px;align-items:center;min-width:0}
+.B .isle li span.t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.B .ghost{border-radius:30px;padding:18px 20px;display:flex;flex-direction:column;gap:8px;border:1.5px dashed color-mix(in srgb,var(--c) 55%,transparent);background:color-mix(in srgb,var(--c) 5%,var(--sheet));min-width:0}
+.B .ghost h2{font-size:1.3rem;color:color-mix(in srgb,var(--c) 80%,var(--ink))}
+.B .ghost.big h2{font-size:1.9rem}
+.B .ghost.big{grid-column:span 2;grid-row:span 2}.B .ghost.wide{grid-column:span 2}
+.B .ghost .ex{font-size:13.5px;color:var(--mute);display:grid;gap:3px;margin-top:auto}
+.B .bridges{margin-top:18px;background:var(--white);border-radius:24px;padding:18px 20px;box-shadow:var(--shadow)}
+.B .bridges h3{font-size:1.05rem;margin-bottom:4px}
+.B .bridges > p{margin:0 0 10px;color:var(--mute);font-size:13.5px}
+.B .br{display:grid;grid-template-columns:auto minmax(0,1fr);gap:2px 10px;align-items:center;padding:9px 0;border-top:1px solid var(--line)}
+.B .br .ico{grid-row:span 2;width:24px;height:24px;font-size:12px}
+.B .br .via{font-size:12.5px;color:var(--mute);display:flex;flex-wrap:wrap;gap:4px 6px;align-items:center}
+.B .br .via b{color:var(--t-concept);font-weight:500}
+.B .side{display:grid;gap:14px;position:sticky;top:14px}
+.B .panel{background:var(--white);border-radius:24px;padding:18px 18px 12px;box-shadow:var(--shadow)}
+.B .panel h3{font-size:1.15rem;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.B .panel h3 small{font-size:13px;color:var(--mute);font-weight:400}
+.B .panel .typesplit{display:flex;gap:10px;flex-wrap:wrap;font-size:12.5px;color:var(--mute);margin:6px 0 8px}
+.B .panel .typesplit span{display:inline-flex;gap:4px;align-items:center}.B .panel .typesplit svg{color:var(--c)}
+.B .row{display:grid;grid-template-columns:auto minmax(0,1fr);gap:1px 10px;align-items:center;padding:8px 6px;border-radius:12px}
+.B .row:hover{background:var(--wash)}
+.B .row .ico{grid-row:span 2;width:24px;height:24px;font-size:12px}
+.B .row .t{font-size:14px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.B .panel .foot{font-size:13px;padding:8px 6px 4px}
+.B .tgrow{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 6px;border-radius:12px}
+.B .tgrow:hover{background:var(--wash)}
+.B .tgrow .meta{font-size:12px}
+@media (max-width:1050px){.B .layout{grid-template-columns:minmax(0,1fr)}.B .side{position:static}}
+@media (max-width:700px){.B .sea{grid-template-columns:repeat(2,minmax(0,1fr))}.B .isle.big,.B .ghost.big{grid-row:span 1}}
+
+/* =================== C — Desk =================== */
+.C .desk{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:22px;align-items:start}
+.C .col{background:var(--white);border-radius:28px;padding:20px;box-shadow:var(--shadow);min-width:0}
+.C .col > h2{font-size:1.35rem;display:flex;justify-content:space-between;gap:8px;align-items:baseline;flex-wrap:wrap}
+.C .col > h2 small{font-size:13px;color:var(--mute);font-weight:400}
+.C .col > p.sub{margin:4px 0 12px;color:var(--mute);font-size:13.5px}
+.C .filt{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.C .filt button{font-size:12.5px;padding:4px 12px;border-radius:999px;color:var(--mute);box-shadow:0 0 0 1px var(--line)}
+.C .filt button[aria-pressed="true"]{background:var(--ink);color:var(--sheet);box-shadow:none}
+.C .item{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:2px 12px;align-items:center;padding:11px 12px;border-radius:16px;width:100%}
+.C .item:hover{background:var(--wash)}
+.C .item[aria-pressed="true"]{background:color-mix(in srgb,var(--t-concept) 9%,var(--white));box-shadow:0 0 0 1.5px color-mix(in srgb,var(--t-concept) 45%,transparent)}
+.C .item .ico{grid-row:span 2}
+.C .item .t{font-weight:500;font-size:14.5px;min-width:0}
+.C .item .meta{grid-column:2/4}
+.C .item .peekbtn{font-size:12.5px;color:var(--mute)}
+.C .item .peekbtn:hover{color:var(--ink)}
+.C .done{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:10px 12px;border-radius:16px;background:var(--wash);font-size:13.5px;color:var(--mute)}
+.C .sticky{position:sticky;top:14px}
+.C .fit{display:grid;gap:10px}
+.C .fitrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;align-items:center;padding:14px 16px;border-radius:18px;background:var(--sheet);box-shadow:0 0 0 1px var(--line)}
+.C .fitrow h3{font-size:1.05rem;display:flex;gap:8px;align-items:center}
+.C .fitrow h3 svg{color:var(--t-concept)}
+.C .fitrow .why{grid-column:1;font-size:13px;color:var(--mute)}
+.C .fitrow.weak{background:transparent}
+.C .crow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 12px;padding:13px 6px;border-top:1px solid var(--line);align-items:center}
+.C .crow:first-of-type{border-top:0}
+.C .crow h3{font-size:1.08rem;display:flex;gap:8px;align-items:center}
+.C .crow h3 svg{color:var(--t-concept)}
+.C .crow .meta{grid-column:1/3}
+.C .crow .n{font-size:13px;color:var(--mute)}
+.C .tagsbelow{margin-top:18px;background:var(--white);border-radius:28px;padding:20px;box-shadow:var(--shadow)}
+.C .tagsbelow h2{font-size:1.2rem}
+.C .tagsbelow p{margin:4px 0 12px;color:var(--mute);font-size:13.5px}
+.C .tagline{display:flex;flex-wrap:wrap;gap:8px}
+.C .tagline .tg{display:inline-flex;align-items:center;gap:8px;padding:5px 6px 5px 5px;border-radius:999px;box-shadow:0 0 0 1px var(--line)}
+@media (max-width:900px){.C .desk{grid-template-columns:minmax(0,1fr)}.C .sticky{position:static}}
+
+
+/* =================== D — Islands + Desk (owner's pick: B's islands with C's linking) =================== */
+.D .isle{cursor:default}
+.D .isle:hover{transform:none}
+.D .isle h2.hit:hover,.D .ghost h2.hit:hover{text-decoration:underline 1px var(--faint);text-underline-offset:4px}
+.D .isle.fit,.D .ghost.fit{box-shadow:0 0 0 2px var(--t-concept),var(--shadow-up)}
+.D .ghost.fit{box-shadow:0 0 0 2px var(--c),var(--shadow-up)}
+.D .isle.dim,.D .ghost.dim{opacity:.55}
+.D .fitwhy{font-size:13px;color:var(--ink);display:flex;flex-wrap:wrap;gap:5px;align-items:center}
+.D .isle .cta,.D .ghost .cta{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:auto;padding-top:6px}
+.D .banner{display:flex;justify-content:space-between;align-items:center;gap:10px 16px;flex-wrap:wrap;background:var(--white);border-radius:22px;padding:12px 14px 12px 18px;box-shadow:var(--shadow);margin-bottom:14px}
+.D .banner .what{display:flex;gap:10px;align-items:center;min-width:0;flex-wrap:wrap}
+.D .banner .what b{font-weight:600}
+.D .banner .others{flex-basis:100%;font-size:13px;color:var(--mute);display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center}
+.D .panel .item{padding:9px 8px}
+.D .panel .item .t{font-size:14px}
+
+/* ---- peek window ---- */
+#peek{position:fixed;inset:0;z-index:45;background:var(--scrim);display:grid;place-items:center;padding:24px max(16px,env(safe-area-inset-left,0px)) 110px}
+#peek .pk{width:min(640px,100%);max-height:100%;overflow:auto;background:var(--sheet);border-radius:28px;box-shadow:0 20px 60px rgba(0,0,0,.18);padding:22px 32px 30px}
+#peek .pk-top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
+#peek h2{font-size:2rem;line-height:1.08;letter-spacing:-.03em;margin:.3em 0 .4em}
+#peek p{color:var(--mute);margin:0 0 14px}
+#peek .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
+#peek ul{list-style:none;padding:0;margin:10px 0 0;display:grid;gap:6px;font-size:14px}
+#peek li{display:flex;gap:8px;align-items:center}
+#peek .toast{margin-top:14px;font-size:13.5px;color:var(--mute)}
+
+/* ---- switcher (not part of any design) ---- */
+#bar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:50;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px 14px;max-width:calc(100% - 32px);background:var(--bar-bg);color:var(--bar-fg);font:13px/1 system-ui,-apple-system,sans-serif;padding:8px 10px;border-radius:999px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+#bar .dir{display:flex;align-items:center;gap:4px}
+#bar .arrow{width:30px;height:30px;border-radius:50%;font-size:15px;text-align:center}
+#bar .arrow:hover{background:var(--bar-hi)}
+#bar .name{min-width:130px;text-align:center;font-weight:600}
+#bar .views{display:flex;gap:2px;background:var(--bar-hi);border-radius:999px;padding:3px}
+#bar .views button{padding:7px 12px;border-radius:999px;color:var(--bar-mute)}
+#bar .views button[aria-pressed="true"]{background:var(--bar-fg);color:var(--bar-bg)}
+@media (max-width:640px){#bar{border-radius:18px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div id="app"></div>
+<div id="peek" hidden></div>
+<nav id="bar" aria-label="Prototype switcher">
+  <div class="dir">
+    <button class="arrow" id="prev" aria-label="Previous direction">←</button>
+    <div class="name" id="dirname"></div>
+    <button class="arrow" id="next" aria-label="Next direction">→</button>
+  </div>
+  <div class="views" role="group" aria-label="Which Garden">
+    <button data-g="small">Small Garden</button>
+    <button data-g="first">First weeks, no Concepts</button>
+  </div>
+</nav>
+
+<script>
+/* ---------------- icons, colours, marks (same as the issue 10 prototype) ---------------- */
+const ICON = {
+  Source:'<path d="M2 3.5h4.2A1.8 1.8 0 0 1 8 5.3v8.2a1.6 1.6 0 0 0-1.6-1.6H2zM14 3.5H9.8A1.8 1.8 0 0 0 8 5.3v8.2a1.6 1.6 0 0 1 1.6-1.6H14z"/>',
+  Concept:'<circle cx="3.6" cy="4.4" r="1.4"/><circle cx="12.4" cy="5" r="1.4"/><circle cx="7.6" cy="12.2" r="1.4"/><path d="M5 4.5l6 .4M4.3 5.7l2.6 5.2M11.7 6.3l-3.2 4.8"/>',
+  Thought:'<path d="M8 2.2c3.3 2.2 4.4 5.4 2.4 8.6C9.3 12.6 8 13.8 8 13.8s-1.3-1.2-2.4-3C3.6 7.6 4.7 4.4 8 2.2z"/><path d="M8 13.8V7"/>',
+  Person:'<circle cx="8" cy="5.4" r="2.6"/><path d="M3 14c.8-3 2.7-4.6 5-4.6s4.2 1.6 5 4.6"/>',
+  Lock:'<rect x="3.5" y="7" width="9" height="6.5" rx="1.6"/><path d="M5.5 7V5.2a2.5 2.5 0 0 1 5 0V7"/>',
+};
+const TCOL = {Source:'var(--t-source)',Concept:'var(--t-concept)',Thought:'var(--t-thought)',Person:'var(--t-person)'};
+const PL = {Source:'Sources',Concept:'Concepts',Thought:'Thoughts',Person:'People'};
+const svg = t => `<svg class="ic" viewBox="0 0 16 16" aria-hidden="true">${ICON[t]}</svg>`;
+const ico = t => `<span class="ico" style="--c:${TCOL[t]}">${svg(t)}</span>`;
+const chip = (t,sub) => `<span class="chip" style="--c:${TCOL[t]}">${svg(t)}${t}${sub?' · '+sub:''}</span>`;
+const ai = (s,appr) => `<span class="o-ai${appr?' appr':''}">${s}</span>`;
+const lock = `<span class="lock" title="Private">${svg('Lock')}</span>`;
+const TAGC = {cognition:'--g-blue','embodied-mind':'--g-rose','note-taking':'--g-olive',writing:'--g-amber',planning:'--g-sky',memory:'--g-lilac',garden:'--g-green',habits:'--g-peach',attention:'--g-indigo','to-read':'--g-rose',sleep:'--g-sky'};
+const AITAGS = new Set(['embodied-mind']);
+const tag = n => `<span class="tag${AITAGS.has(n)?' o-ai':''}" style="--c:var(${TAGC[n]})">#${n}</span>`;
+const plural = (n,t) => `${n} ${n===1?t:PL[t]}`;
+
+/* ---------------- the small Garden (made up) ---------------- */
+const CONCEPTS = [
+  {id:'twt', title:'Thinking with things', n:{Source:9,Thought:4,Person:2}, fresh:3, since:'25 Oct', weeks:[0,1,2,1,3,2,1,3], tags:['cognition','embodied-mind'],
+   lately:[{type:'Source',sub:'Book',title:ai('Thinking Outside the Skull'),when:'Today',unrev:true},
+           {type:'Thought',title:ai('Notes are where thinking happens',1),when:'Yesterday',also:'Writing by hand'},
+           {type:'Source',sub:'Image',title:'Whiteboard from Sunday',when:'27 Oct'}]},
+  {id:'att', title:'Attention', n:{Source:5,Thought:3,Person:1}, fresh:1, since:'8 Oct', weeks:[2,3,1,0,1,0,1,1], tags:['attention','habits'],
+   lately:[{type:'Source',sub:'Podcast',title:ai('Walking meetings, revisited'),when:'Tuesday',also:'Thinking with things'},
+           {type:'Thought',title:'Why I left Capacities',when:'12 Oct',priv:true}]},
+  {id:'wbh', title:'Writing by hand', n:{Source:3,Thought:2,Person:0}, fresh:1, since:'19 Oct', weeks:[0,0,0,0,1,2,1,1], tags:['note-taking','writing','memory'],
+   lately:[{type:'Source',sub:'Article',title:ai('Why handwriting helps you remember'),when:'26 Oct'}]},
+  {id:'slow', title:'Slow productivity', n:{Source:2,Thought:0,Person:1}, fresh:0, since:'2 Sep', quiet:'Nothing added since 3 Sep', weeks:[3,2,0,0,0,0,0,0], tags:['planning'], lately:[]},
+];
+const BRIDGES = [
+  {type:'Thought', title:ai('Notes are where thinking happens',1), via:['Thinking with things','Writing by hand']},
+  {type:'Source', sub:'Podcast', title:ai('Walking meetings, revisited'), via:['Attention','Thinking with things']},
+  {type:'Person', title:ai('Mara Ellison',1), via:['Thinking with things','Attention']},
+];
+const LOOSE = [
+  {id:'l1', type:'Source',sub:'Article',title:ai('The extended mind, 25 years on'),when:'Today',tags:['cognition','embodied-mind'],unrev:true,words:'extended, gestures'},
+  {id:'l2', type:'Source',sub:'Video',title:'How Sönke Ahrens takes notes',when:'Today',tags:['note-taking'],unrev:true},
+  {id:'l3', type:'Thought',title:'<span class="firstline">The best ideas this month came on walks, not at the…</span>',when:'Yesterday',tags:['habits']},
+  {id:'l4', type:'Source',sub:'Article',title:'Deep work is a luxury good',when:'Yesterday',tags:['attention']},
+  {id:'l5', type:'Source',sub:'Post',title:'Thread on index cards',when:'30 Oct',tags:['note-taking']},
+  {id:'l6', type:'Source',sub:'Article',title:ai('Sleep and memory consolidation'),when:'30 Oct',tags:['memory','sleep']},
+  {id:'l7', type:'Source',sub:'Image',title:'Bookshop shelf in Lisbon',when:'29 Oct',tags:['to-read']},
+  {id:'l8', type:'Thought',title:'Do I take notes to remember or to think?',when:'28 Oct',tags:['writing']},
+  {id:'l9', type:'Source',sub:'Podcast',title:ai('Episode 212: Rooms that think'),when:'27 Oct',tags:['embodied-mind']},
+  {id:'l10',type:'Person',title:ai('Sönke Ahrens'),when:'27 Oct',tags:[]},
+  {id:'l11',type:'Source',sub:'Book',title:'The Shallows',when:'24 Oct',tags:['attention','to-read']},
+  {id:'l12',type:'Source',sub:'Article',title:'Calendar blocking, a year later',when:'21 Oct',tags:['planning','habits']},
+  {id:'l13',type:'Source',sub:'Image',title:'Screenshot of a slip box',when:'18 Oct',tags:['note-taking']},
+  {id:'l14',type:'Thought',title:'Maybe Tags are enough for now',when:'15 Oct',tags:['garden'],priv:true},
+];
+const LOOSE_TOTAL = 26, LOOSE_SPLIT = {Source:21,Thought:4,Person:1};
+const TAGS_OPEN = [ // Tags not yet turned into Concepts
+  {name:'to-read',n:11,loose:7,ex:['The Shallows','Bookshop shelf in Lisbon']},
+  {name:'memory',n:7,loose:4,ex:['Sleep and memory consolidation','Why we forget names']},
+  {name:'note-taking',n:6,loose:4,ex:['Thread on index cards','How Sönke Ahrens takes notes','Screenshot of a slip box']},
+  {name:'embodied-mind',n:6,loose:2,ex:['The extended mind, 25 years on','Episode 212: Rooms that think']},
+  {name:'habits',n:5,loose:2,ex:['Calendar blocking, a year later']},
+  {name:'sleep',n:2,loose:1,ex:['Sleep and memory consolidation']},
+];
+/* ---------------- the same Garden in its first weeks: no Concepts yet ---------------- */
+const FIRST = {objects:31, connected:7, split:{Source:24,Thought:6,Person:1},
+  tags:[
+    {name:'note-taking',n:8,loose:6,ex:['Thread on index cards','How Sönke Ahrens takes notes','Screenshot of a slip box']},
+    {name:'memory',n:6,loose:4,ex:['Sleep and memory consolidation','Why handwriting helps you remember']},
+    {name:'attention',n:5,loose:3,ex:['Deep work is a luxury good','The Shallows']},
+    {name:'to-read',n:5,loose:5,ex:['The Shallows','Bookshop shelf in Lisbon']},
+    {name:'embodied-mind',n:4,loose:2,ex:['Thinking Outside the Skull','Episode 212: Rooms that think']},
+    {name:'habits',n:3,loose:2,ex:['Calendar blocking, a year later']},
+  ]};
+const LOOSE_FIRST_TOTAL = 24;
+
+/* ---------------- state ---------------- */
+const NAMES = {D:'D · Islands + Desk', A:'A · Contents', B:'B · Islands', C:'C · Desk'};
+const ORDER = ['D','A','B','C'];
+const state = {v:'D', g:'small', pick:null, filter:'all', connected:{}};
+try{ const s = JSON.parse(localStorage.getItem('overview-proto-2')||'{}'); if (ORDER.includes(s.v)) state.v=s.v; if (s.g==='first'||s.g==='small') state.g=s.g; }catch(e){}
+const save = () => { try{ localStorage.setItem('overview-proto-2', JSON.stringify({v:state.v,g:state.g})); }catch(e){} };
+const first = () => state.g==='first';
+const looseNow = () => LOOSE.filter(o => !state.connected[o.id]);
+
+/* ---------------- shared pieces ---------------- */
+const P = []; // peek payloads, referenced by index
+const pk = obj => `data-peek="${P.push(obj)-1}"`;
+function mast(){
+  const nav = [['This week'],['Sources','Source'],['Concepts','Concept'],['Thoughts','Thought'],['People','Person'],['Tags']]
+    .map(([l,t]) => `<span${t?` style="--c:${TCOL[t]}"`:''}>${t?svg(t):''}${l}</span>`).join('');
+  return `<header class="wrap mast"><div class="wm">Garden</div>
+    <nav aria-label="Garden">${nav}<span>Unreviewed <span class="n">4</span></span><span class="on">More · Overview ▾</span></nav>
+    <div class="right"><span class="s">Search ⌘K</span><span>AI · 612 calls left · 2 waiting</span></div></header>`;
+}
+function head(sub){
+  const c = first()
+    ? {Source:FIRST.split.Source,Thought:FIRST.split.Thought,Person:FIRST.split.Person,Concept:0}
+    : {Concept:4,Source:40,Thought:13,Person:5};
+  const counts = ['Concept','Source','Thought','Person'].map(t => `<span style="--c:${TCOL[t]}">${svg(t)}<b class="num">${c[t]}</b> ${PL[t]}</span>`).join('');
+  return `<div class="wrap pagehead"><div><div class="kick">Overview</div><h1>Your Garden, all of it</h1><p>${sub}</p></div><div class="counts">${counts}</div></div>`;
+}
+const tally = n => ['Source','Thought','Person'].filter(t => n[t]).map(t => `<span class="chip" style="--c:${TCOL[t]}">${svg(t)}${n[t]} ${n[t]===1?t:PL[t]}</span>`).join('');
+const objMeta = o => `<div class="meta"><span>${o.type}${o.sub?' · '+o.sub:''}</span><span>${o.when}</span>${o.priv?lock:''}${o.unrev?'<span class="unrev">Unreviewed</span>':''}${(o.tags||[]).map(tag).join('')}</div>`;
+const peekObj = o => pk({kind:'obj',o});
+const conceptByTitle = t => CONCEPTS.find(c => c.title===t);
+
+/* =================== A — Contents =================== */
+function A(){
+  let h = '';
+  if (!first()){
+    h += head('Your Concepts, newest activity first. Then what isn’t connected to anything yet.');
+    h += `<main class="wrap A">` + CONCEPTS.map(c => `
+      <section class="sec${c.quiet?' quiet':''}">
+        <div class="hd"><h2 class="hit" ${pk({kind:'concept',c})}>${svg('Concept')}${c.title}</h2>
+          <div class="tally">${tally(c.n)}</div>
+          <div class="when">${c.quiet ? c.quiet : (c.fresh ? `${c.fresh} added this week` : '')} · Concept since ${c.since}</div></div>
+        ${c.lately.length ? `<div class="lately">${c.lately.map(o => `<button class="mini" ${peekObj(o)}>${chip(o.type,o.sub)}<h4>${o.title}</h4>${objMeta({...o,tags:[]})}${o.also?`<div class="also">Also in ${o.also}</div>`:''}</button>`).join('')}</div>`
+          : `<div class="nolately">Nothing added lately. <button class="link" ${pk({kind:'concept',c})}>See its ${c.n.Source+c.n.Thought+c.n.Person} Objects</button></div>`}
+      </section>`).join('');
+  } else {
+    h += head('No Concepts yet. That’s normal for the first weeks: a Concept is something you create once enough has gathered.');
+    h += `<main class="wrap A"><section class="seed"><h2 style="font-size:1.6rem">Where material is gathering</h2>
+      <p>Your Tags with the most Objects. When one starts to feel like an area you want to think about, turn it into a Concept and its Objects connect to it.</p>
+      ${FIRST.tags.map(t => `<div class="seedrow"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">${tag(t.name)}<span class="meta">${t.n} Objects · ${t.loose} not connected</span></div>
+        <div class="ex">${t.ex.map(x => `<button class="link" ${pk({kind:'obj',o:{type:'Source',title:x,when:'This month',tags:[t.name]}})}>${x}</button>`).join('')}</div>
+        <button class="btn" ${pk({kind:'tag',t})}>Turn into Concept</button></div>`).join('')}
+    </section>`;
+  }
+  const total = first()?LOOSE_FIRST_TOTAL:LOOSE_TOTAL;
+  h += `<div class="partlabel"><div><h2>Not connected yet</h2><p>${total} Objects with no Connections, newest first. Open one to connect it.</p></div>
+        <button class="link" ${pk({kind:'list',total})}>See all ${total} in Sources, Thoughts and People</button></div>
+      <div class="shelf">${LOOSE.slice(0,9).map(o => `<button class="mini" ${peekObj(o)}>${chip(o.type,o.sub)}<h4>${o.title}</h4>${objMeta(o)}</button>`).join('')}
+        <button class="more" ${pk({kind:'list',total})}>${total-9} more<br>See all</button></div>`;
+  if (!first()){
+    h += `<div class="partlabel"><div><h2>Tags that aren’t Concepts</h2><p>Biggest first. A Tag that keeps growing may deserve a Concept.</p></div></div>
+      <div class="tagwall">${TAGS_OPEN.map(t => `<button class="tg" ${pk({kind:'tag',t})}>${tag(t.name)}<span class="meta"><b class="num" style="color:var(--ink)">${t.n}</b> Objects · ${t.loose} not connected</span></button>`).join('')}</div>`;
+  }
+  return h + `</main>`;
+}
+
+/* =================== B — Islands =================== */
+function B(){
+  const total = first()?LOOSE_FIRST_TOTAL:LOOSE_TOTAL;
+  let sea;
+  if (!first()){
+    const max = Math.max(...CONCEPTS.flatMap(c => c.weeks));
+    sea = CONCEPTS.map(c => {
+      const sum = c.n.Source+c.n.Thought+c.n.Person;
+      const size = sum>=12?'big':sum>=7?'wide':'';
+      const w = Math.round(4 + sum*0.9);
+      const mix = ['Source','Thought','Person'].map(t => c.n[t] ? `<i style="--c:${TCOL[t]};width:${c.n[t]/sum*100}%"></i>` : '').join('');
+      const weeks = c.weeks.map(x => x ? `<i style="--o:${(0.25+0.75*x/max).toFixed(2)}" title="${x} added"></i>` : `<i class="z" title="nothing added"></i>`).join('');
+      const items = c.lately.slice(0, size==='big'?3:size==='wide'?2:1);
+      return `<button class="isle ${size}" style="--w:${w}" ${pk({kind:'concept',c})}>
+        <h2>${c.title}</h2><div class="total"><b class="num" style="color:var(--ink)">${sum}</b> connected · ${c.quiet?c.quiet:c.fresh+' this week'}</div>
+        <div class="mix" aria-hidden="true">${mix}</div>
+        <div class="mixkey">${['Source','Thought','Person'].map(t => `<span><b>${c.n[t]}</b> ${PL[t]}</span>`).join('')}</div>
+        <div class="weeks" title="Last 8 weeks, oldest on the left">${weeks}<span style="margin-left:4px">8 weeks</span></div>
+        ${items.length?`<ul>${items.map(o => `<li>${ico(o.type)}<span class="t">${o.title}</span></li>`).join('')}</ul>`:''}
+      </button>`;
+    }).join('');
+  } else {
+    sea = FIRST.tags.slice(0,5).map((t,i) => {
+      const size = i===0?'big':i<3?'wide':'';
+      return `<button class="ghost ${size}" style="--c:var(${TAGC[t.name]})" ${pk({kind:'tag',t})}>
+        <h2>#${t.name}</h2><div class="meta">${t.n} Objects · ${t.loose} not connected · not a Concept yet</div>
+        <div class="ex">${t.ex.slice(0, size==='big'?3:size==='wide'?2:1).map(x => `<span>${x}</span>`).join('')}</div>
+        <span class="btn" style="align-self:start;margin-top:6px">Turn into Concept</span></button>`;
+    }).join('');
+  }
+  const bridges = first() ? '' : `<section class="bridges"><h3>In more than one Concept</h3><p>Objects that link your Concepts to each other.</p>
+    ${BRIDGES.map(b => `<button class="br hit" style="width:100%" ${peekObj({...b,when:'',tags:[]})}>${ico(b.type)}<span class="t" style="font-weight:500">${b.title}</span>
+      <span class="via">${b.via.map(v => `<b>${v}</b>`).join('<span>and</span>')}</span></button>`).join('')}</section>`;
+  const split = first()?{Source:20,Thought:4,Person:0}:LOOSE_SPLIT;
+  const side = `<aside class="side">
+    <section class="panel"><h3>Not connected yet <small class="num">${total}</small></h3>
+      <div class="typesplit">${['Source','Thought','Person'].filter(t=>split[t]).map(t => `<span style="--c:${TCOL[t]}">${svg(t)}${split[t]} ${split[t]===1?t:PL[t]}</span>`).join('')}</div>
+      ${LOOSE.slice(0,8).map(o => `<button class="row" style="width:100%" ${peekObj(o)}>${ico(o.type)}<span class="t">${o.title}</span>${objMeta({...o,tags:[]})}</button>`).join('')}
+      <div class="foot"><button class="link" ${pk({kind:'list',total})}>${total-8} more, see all</button></div></section>
+    ${first()?'':`<section class="panel"><h3>Tags, not Concepts</h3>
+      ${TAGS_OPEN.map(t => `<button class="tgrow" style="width:100%" ${pk({kind:'tag',t})}>${tag(t.name)}<span class="meta num">${t.n} · ${t.loose} loose</span></button>`).join('')}</section>`}
+  </aside>`;
+  return head(first()
+      ? 'No Concepts yet. The dashed islands are your biggest Tags: material that could become a Concept when you’re ready.'
+      : 'Each island is a Concept, sized by how much is connected to it. Darker means more.')
+    + `<main class="wrap B"><div class="layout"><div><div class="sea">${sea}</div>${bridges}</div>${side}</div></main>`;
+}
+
+/* =================== C — Desk =================== */
+function fitsFor(o){
+  if (first()) {
+    const others = LOOSE.filter(x => x.id!==o.id && x.tags.some(t => o.tags.includes(t))).slice(0,3);
+    return {mode:'objects', others};
+  }
+  const fits = CONCEPTS.map(c => ({c, shared:o.tags.filter(t => c.tags.includes(t))})).filter(f => f.shared.length);
+  return {mode:'concepts', fits, rest:CONCEPTS.filter(c => !fits.some(f => f.c===c))};
+}
+function C(){
+  const items = looseNow().filter(o => state.filter==='all' || o.type===state.filter);
+  const total = (first()?LOOSE_FIRST_TOTAL:LOOSE_TOTAL) - Object.keys(state.connected).length;
+  const done = Object.entries(state.connected).map(([id,to]) => {
+    const o = LOOSE.find(x => x.id===id);
+    return `<div class="done"><span>${o.title} → ${to}</span><button class="link" data-undo="${id}">Undo</button></div>`;
+  }).join('');
+  const left = `<section class="col"><h2>Not connected yet <small class="num">${total} Objects</small></h2>
+    <p class="sub">Newest first. Pick one to see where it might belong.</p>
+    <div class="filt" role="group" aria-label="Type">${['all','Source','Thought','Person'].map(f => `<button data-filter="${f}" aria-pressed="${state.filter===f}">${f==='all'?'All':PL[f]}</button>`).join('')}</div>
+    <div style="display:grid;gap:4px">${done}${items.map(o => `<div class="item hit" role="button" tabindex="0" data-pick="${o.id}" aria-pressed="${state.pick===o.id}">${ico(o.type)}<span class="t">${o.title}</span>
+      <button class="peekbtn" ${peekObj(o)}>Peek</button>${objMeta(o)}</div>`).join('')}</div>
+    <div style="padding:10px 12px 0;font-size:13px"><button class="link" ${pk({kind:'list',total})}>See all ${total}</button></div></section>`;
+  const o = looseNow().find(x => x.id===state.pick);
+  let right;
+  if (o){
+    const f = fitsFor(o);
+    let body;
+    if (f.mode==='concepts'){
+      body = (f.fits.length ? f.fits.map(x => `<div class="fitrow"><h3 class="hit" ${pk({kind:'concept',c:x.c})}>${svg('Concept')}${x.c.title}</h3>
+          <button class="btn dark" data-connect="${o.id}" data-to="${x.c.title}">Connect</button>
+          <div class="why">Shares ${x.shared.map(tag).join(' ')} · ${tally(x.c.n).replace(/class="chip"/g,'class="chip" style="font-size:11.5px"')}</div></div>`).join('')
+          : `<p class="sub" style="color:var(--mute)">No Concept shares a Tag with this one.</p>`)
+        + (f.rest.length ? `<div class="kick" style="margin:8px 0 2px">Other Concepts</div>` + f.rest.map(c => `<div class="fitrow weak"><h3 class="hit" ${pk({kind:'concept',c})}>${svg('Concept')}${c.title}</h3>
+          <button class="btn" data-connect="${o.id}" data-to="${c.title}">Connect</button></div>`).join('') : '');
+    } else {
+      body = `<p class="sub" style="color:var(--mute);margin:0 0 6px">No Concepts yet, so it can only join other Objects for now. These share its Tags:</p>`
+        + (f.others.length ? f.others.map(x => `<div class="fitrow"><h3 class="hit" ${peekObj(x)}>${ico(x.type)}${x.title}</h3>
+          <button class="btn dark" data-connect="${o.id}" data-to="${x.title.replace(/"/g,'&quot;')}">Connect</button><div class="why">Shares ${x.tags.filter(t=>o.tags.includes(t)).map(tag).join(' ')}</div></div>`).join('')
+          : `<p class="sub">Nothing shares its Tags yet.</p>`)
+        + (o.tags[0] ? `<div class="fitrow weak"><div><h3>${tag(o.tags[0])}</h3><div class="why">Or make this Tag a Concept, and connect everything under it.</div></div><button class="btn" ${pk({kind:'tag',t:FIRST.tags.find(t=>t.name===o.tags[0])||{name:o.tags[0],n:2,loose:2,ex:[]}})}>Turn into Concept</button></div>` : '');
+    }
+    right = `<section class="col sticky"><div class="kick">Where could this go?</div>
+      <h2 style="margin:6px 0 4px;font-size:1.4rem">${o.title}</h2>${objMeta(o)}
+      <div class="fit" style="margin-top:16px">${body}</div>
+      <p class="sub" style="margin:14px 0 0">Ranked by shared Tags, worked out on your Mac. No AI.</p></section>`;
+  } else if (!first()){
+    right = `<section class="col sticky"><h2>Your Concepts <small>${CONCEPTS.length}</small></h2><p class="sub">Pick something on the left to connect it.</p>
+      ${CONCEPTS.map(c => `<div class="crow"><h3 class="hit" ${pk({kind:'concept',c})}>${svg('Concept')}${c.title}</h3><span class="n">${c.quiet?'quiet':c.fresh+' this week'}</span><div class="meta">${tally(c.n)}</div></div>`).join('')}</section>`;
+  } else {
+    right = `<section class="col sticky"><h2>No Concepts yet</h2><p class="sub">Pick something on the left to connect it to another Object, or turn a Tag below into your first Concept.</p></section>`;
+  }
+  const tagsList = first()?FIRST.tags:TAGS_OPEN;
+  const tags = `<section class="tagsbelow"><h2>${first()?'Tags that could become your first Concepts':'Tags that aren’t Concepts'}</h2>
+    <p>Biggest first, with how many of their Objects aren’t connected yet.</p>
+    <div class="tagline">${tagsList.map(t => `<button class="tg" ${pk({kind:'tag',t})}>${tag(t.name)}<span class="meta num">${t.n} · ${t.loose} loose</span></button>`).join('')}</div></section>`;
+  return head(first()
+      ? 'No Concepts yet. Start from what isn’t connected, or from the Tags gathering the most.'
+      : `${CONCEPTS.length} Concepts. ${total} Objects aren’t connected to anything yet.`)
+    + `<main class="wrap C"><div class="desk">${left}${right}</div>${tags}</main>`;
+}
+
+
+/* =================== D — Islands + Desk =================== */
+function D(){
+  const total = (first()?LOOSE_FIRST_TOTAL:LOOSE_TOTAL) - Object.keys(state.connected).length;
+  const o = looseNow().find(x => x.id===state.pick);
+  const shares = tags => o ? o.tags.filter(t => tags.includes(t)) : [];
+  let sea, banner = '';
+  if (!first()){
+    const max = Math.max(...CONCEPTS.flatMap(c => c.weeks));
+    sea = CONCEPTS.map(c => {
+      const sum = c.n.Source+c.n.Thought+c.n.Person;
+      const size = sum>=12?'big':sum>=7?'wide':'';
+      const sh = shares(c.tags), st = o ? (sh.length?' fit':' dim') : '';
+      const mix = ['Source','Thought','Person'].map(t => c.n[t] ? `<i style="--c:${TCOL[t]};width:${c.n[t]/sum*100}%"></i>` : '').join('');
+      const weeks = c.weeks.map(x => x ? `<i style="--o:${(0.25+0.75*x/max).toFixed(2)}" title="${x} added"></i>` : `<i class="z" title="nothing added"></i>`).join('');
+      const items = c.lately.slice(0, size==='big'?3:size==='wide'?2:1);
+      const cta = o ? `<div class="cta">${sh.length?`<span class="fitwhy">Shares ${sh.map(tag).join(' ')}</span>`:''}
+          <button class="btn${sh.length?' dark':''}" data-connect="${o.id}" data-to="${c.title}">Connect here</button></div>`
+        : (items.length?`<ul>${items.map(x => `<li>${ico(x.type)}<span class="t">${x.title}</span></li>`).join('')}</ul>`:'');
+      return `<div class="isle ${size}${st}" style="--w:${Math.round(4+sum*0.9)}">
+        <h2 class="hit" tabindex="0" ${pk({kind:'concept',c})}>${c.title}</h2><div class="total"><b class="num" style="color:var(--ink)">${sum}</b> connected · ${c.quiet?c.quiet:c.fresh+' this week'}</div>
+        <div class="mix" aria-hidden="true">${mix}</div>
+        <div class="mixkey">${['Source','Thought','Person'].map(t => `<span><b>${c.n[t]}</b> ${PL[t]}</span>`).join('')}</div>
+        <div class="weeks" title="Last 8 weeks, oldest on the left">${weeks}<span style="margin-left:4px">8 weeks</span></div>${cta}</div>`;
+    }).join('');
+    if (o) banner = `<div class="banner"><div class="what"><span class="kick">Connecting</span>${ico(o.type)}<b>${o.title}</b></div>
+      <div style="display:flex;gap:8px"><button class="btn" ${peekObj(o)}>Peek</button><button class="btn" data-pick="${o.id}">Cancel</button></div>
+      <div class="others">Outlined islands share its Tags (worked out on your Mac, no AI). Any island can take it.</div></div>`;
+  } else {
+    sea = FIRST.tags.slice(0,5).map((t,i) => {
+      const size = i===0?'big':i<3?'wide':'';
+      const fit = o && o.tags.includes(t.name), st = o ? (fit?' fit':' dim') : '';
+      return `<div class="ghost ${size}${st}" style="--c:var(${TAGC[t.name]})">
+        <h2 class="hit" tabindex="0" ${pk({kind:'tag',t})}>#${t.name}</h2><div class="meta">${t.n} Objects · ${t.loose} not connected · not a Concept yet</div>
+        <div class="ex">${t.ex.slice(0, size==='big'?3:size==='wide'?2:1).map(x => `<span>${x}</span>`).join('')}</div>
+        <div class="cta"><button class="btn${fit?' dark':''}" ${pk({kind:'tag',t})}>Turn into Concept</button></div></div>`;
+    }).join('');
+    if (o){
+      const others = LOOSE.filter(x => x.id!==o.id && !state.connected[x.id] && x.tags.some(t => o.tags.includes(t))).slice(0,3);
+      banner = `<div class="banner"><div class="what"><span class="kick">Connecting</span>${ico(o.type)}<b>${o.title}</b></div>
+        <div style="display:flex;gap:8px"><button class="btn" ${peekObj(o)}>Peek</button><button class="btn" data-pick="${o.id}">Cancel</button></div>
+        <div class="others">${others.length ? `No Concepts yet. Connect it to an Object that shares its Tags: ${others.map(x => `<button class="btn" data-connect="${o.id}" data-to="${x.title.replace(/"/g,'&quot;')}">${x.title}</button>`).join('')}` : 'No Concepts yet, and nothing else shares its Tags.'} Or turn its Tag into your first Concept.</div></div>`;
+    }
+  }
+  const bridges = first() ? '' : `<section class="bridges"><h3>In more than one Concept</h3><p>Objects that link your Concepts to each other.</p>
+    ${BRIDGES.map(b => `<button class="br hit" style="width:100%" ${peekObj({...b,when:'',tags:[]})}>${ico(b.type)}<span class="t" style="font-weight:500">${b.title}</span>
+      <span class="via">${b.via.map(v => `<b>${v}</b>`).join('<span>and</span>')}</span></button>`).join('')}</section>`;
+  const done = Object.entries(state.connected).map(([id,to]) => {
+    const x = LOOSE.find(y => y.id===id);
+    return `<div class="done"><span>${x.title} → ${to}</span><button class="link" data-undo="${id}">Undo</button></div>`;
+  }).join('');
+  const split = first()?{Source:20,Thought:4,Person:0}:LOOSE_SPLIT;
+  const side = `<aside class="side">
+    <section class="panel"><h3>Not connected yet <small class="num">${total}</small></h3>
+      <div class="typesplit">${['Source','Thought','Person'].filter(t=>split[t]).map(t => `<span style="--c:${TCOL[t]}">${svg(t)}${split[t]} ${split[t]===1?t:PL[t]}</span>`).join('')}</div>
+      <p style="margin:0 0 8px;font-size:13px;color:var(--mute)">Pick one to see where it fits.</p>
+      <div style="display:grid;gap:2px">${done}${looseNow().slice(0,8).map(x => `<div class="item hit" role="button" tabindex="0" data-pick="${x.id}" aria-pressed="${state.pick===x.id}">${ico(x.type)}<span class="t">${x.title}</span>
+        <button class="peekbtn" ${peekObj(x)}>Peek</button>${objMeta({...x,tags:x.tags})}</div>`).join('')}</div>
+      <div class="foot"><button class="link" ${pk({kind:'list',total})}>See all ${total}</button></div></section>
+    ${first()?'':`<section class="panel"><h3>Tags, not Concepts</h3>
+      ${TAGS_OPEN.map(t => `<button class="tgrow" style="width:100%" ${pk({kind:'tag',t})}>${tag(t.name)}<span class="meta num">${t.n} · ${t.loose} loose</span></button>`).join('')}</section>`}
+  </aside>`;
+  return head(first()
+      ? 'No Concepts yet. The dashed islands are your biggest Tags: material that could become a Concept when you’re ready.'
+      : 'Each island is a Concept, sized by how much is connected to it. Pick something not connected yet to place it.')
+    + `<main class="wrap B C D"><div class="layout"><div>${banner}<div class="sea">${sea}</div>${bridges}</div>${side}</div></main>`;
+}
+
+/* ---------------- peek window ---------------- */
+function peekHTML(p){
+  if (p.kind==='obj'){
+    const o = p.o;
+    return `<div class="pk-top">${chip(o.type,o.sub)}<button class="btn" data-close>Close</button></div>
+      <h2>${o.title}</h2>${objMeta(o)}
+      <p style="margin-top:14px">${o.via?`Connected to ${o.via.join(' and ')}.`:o.also?`Also in ${o.also}.`:'No Connections yet.'}</p>
+      <div class="acts"><button class="btn dark" data-close>Open full page</button><button class="btn" data-toast="Connect… opens the quick search, from issue 17.">Connect…</button></div><div class="toast" id="toast"></div>`;
+  }
+  if (p.kind==='concept'){
+    const c = p.c, sum = c.n.Source+c.n.Thought+c.n.Person;
+    return `<div class="pk-top">${chip('Concept')}<button class="btn" data-close>Close</button></div>
+      <h2>${c.title}</h2><div class="tally" style="display:flex;gap:6px;flex-wrap:wrap">${tally(c.n)}</div>
+      <p style="margin-top:14px">${sum} Objects connected. Concept since ${c.since}. ${c.quiet||c.fresh+' added this week.'}</p>
+      ${c.lately.length?`<div class="kick">Added lately</div><ul>${c.lately.map(o => `<li>${ico(o.type)}${o.title}</li>`).join('')}</ul>`:''}
+      <div class="acts"><button class="btn dark" data-close>Open full page</button></div>`;
+  }
+  if (p.kind==='tag'){
+    const t = p.t;
+    return `<div class="pk-top">${tag(t.name)}<button class="btn" data-close>Close</button></div>
+      <h2>#${t.name}</h2><p>${t.n} Objects carry this Tag. ${t.loose} of them aren’t connected to anything yet.</p>
+      ${t.ex&&t.ex.length?`<ul>${t.ex.map(x => `<li>${ico('Source')}${x}</li>`).join('')}</ul>`:''}
+      <div class="acts"><button class="btn dark" data-toast="Here you’d name the new Concept; its ${t.n} Objects get a Connection to it.">Turn into Concept</button><button class="btn" data-close>Open the Tag’s list</button></div><div class="toast" id="toast"></div>`;
+  }
+  if (p.kind==='list'){
+    return `<div class="pk-top"><span class="kick">Goes to a list</span><button class="btn" data-close>Close</button></div>
+      <h2>${p.total} not connected</h2><p>This opens the Sources list with the “No Connections yet” filter on (from issue 17), where you can switch to Thoughts or People.</p>
+      <div class="acts"><button class="btn dark" data-close>OK</button></div>`;
+  }
+}
+const peekEl = document.getElementById('peek');
+function openPeek(i){ peekEl.innerHTML = `<div class="pk" role="dialog" aria-modal="true">${peekHTML(P[i])}</div>`; peekEl.hidden=false; peekEl.querySelector('[data-close]').focus(); }
+function closePeek(){ peekEl.hidden=true; }
+
+/* ---------------- render + wiring ---------------- */
+const VIEWS = {A,B,C,D};
+function render(){
+  P.length = 0;
+  document.getElementById('app').innerHTML = mast() + VIEWS[state.v]();
+  document.getElementById('dirname').textContent = NAMES[state.v];
+  document.querySelectorAll('#bar [data-g]').forEach(b => b.setAttribute('aria-pressed', b.dataset.g===state.g));
+  save();
+}
+function go(d){ state.v = ORDER[(ORDER.indexOf(state.v)+d+ORDER.length)%ORDER.length]; render(); }
+document.getElementById('prev').onclick = () => go(-1);
+document.getElementById('next').onclick = () => go(1);
+document.querySelectorAll('#bar [data-g]').forEach(b => b.onclick = () => { state.g=b.dataset.g; state.connected={}; state.pick=null; render(); });
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-peek],[data-close],[data-pick],[data-connect],[data-undo],[data-filter],[data-toast]');
+  if (!t){ if (e.target===peekEl) closePeek(); return; }
+  if (t.dataset.toast){ const el=document.getElementById('toast'); if (el) el.textContent=t.dataset.toast; return; }
+  if (t.dataset.close!==undefined) return closePeek();
+  if (t.dataset.peek!==undefined){ e.stopPropagation(); return openPeek(+t.dataset.peek); }
+  if (t.dataset.connect){ state.connected[t.dataset.connect]=t.dataset.to; const next=looseNow()[0]; state.pick=(state.v==='C'&&next)?next.id:null; return render(); }
+  if (t.dataset.undo){ delete state.connected[t.dataset.undo]; return render(); }
+  if (t.dataset.filter){ state.filter=t.dataset.filter; return render(); }
+  if (t.dataset.pick){ state.pick = state.pick===t.dataset.pick?null:t.dataset.pick; render();
+    // When the side column stacks under the islands (narrow windows), bring the islands into view
+    if (state.v==='D' && state.pick && window.innerWidth<=1050) document.querySelector('.D .banner')?.scrollIntoView({block:'start'});
+    return; }
+});
+document.addEventListener('keydown', e => {
+  if (e.key==='Escape' && !peekEl.hidden) return closePeek();
+  if (e.target.closest('input,textarea,[contenteditable]')) return;
+  if (e.key==='Enter' && e.target.dataset && e.target.dataset.pick){ e.preventDefault(); e.target.click(); return; }
+  if (!peekEl.hidden) return;
+  if (e.key==='ArrowLeft') go(-1);
+  if (e.key==='ArrowRight') go(1);
+  if (['1','2','3','4'].includes(e.key)){ state.v = ORDER[+e.key-1]; render(); }
+});
+render();
+</script>
