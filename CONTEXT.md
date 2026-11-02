@@ -78,6 +78,14 @@ _Avoid_: Chat, conversation, session, query
 One page per day listing, in time order, everything the owner sent from the phone that day: the Objects each message created, and the owner's comment on them as plain text in the owner's words. A comment stays in the Daily Inbox (shown on its Sources too) until the owner turns it into a Thought. A Daily Inbox is never an Object, and captures typed on the Mac don't appear in it.
 _Avoid_: Daily note, journal, inbox note
 
+**Unreviewed**:
+The state of an Object that came in through Capture, on the Mac or the phone, and that the owner hasn't looked at yet. Objects the owner makes on purpose inside the Garden, such as a Concept from a Tag or a Thought started from an AI Note, are never Unreviewed. All Unreviewed Objects form one Garden-wide list, the only inbox.
+_Avoid_: Inbox item, new, unprocessed, to do
+
+**Reviewed**:
+The owner's tick that they have looked at an Unreviewed Object. It approves and rejects nothing: pending Suggestions stay on the Object. An Object never becomes Unreviewed again.
+_Avoid_: Processed, done, organized, approved
+
 ### AI
 
 **Archivist**:
