@@ -23,12 +23,16 @@ An Object for something the owner reads, watches, listens to or looks at, such a
 _Avoid_: Reference, resource, bookmark
 
 **Concept**:
-An Object for an area of ideas that the owner deliberately creates once enough material has gathered to explore it, with many Sources and Thoughts connected to it.
+An Object for an area of ideas that the owner deliberately creates once enough material has gathered to explore it, with many Sources and Thoughts connected to it. The Objects in a Concept are those connected straight to it. Its body is the owner's current view of that area, always in the owner's words, and earlier versions of that view are kept by date.
 _Avoid_: Topic, theme, idea
 
 **Thought**:
 An Object for the owner's own reflection, insight, question or observation. A Thought is always the owner's words, never the AI's.
 _Avoid_: Note, idea, journal entry
+
+**Open Question**:
+A Thought the owner has marked as a question they mean to keep returning to. Only the owner can mark one; a question the AI suggests stays an AI Note until the owner starts a Thought from it in their own words. The owner can mark it "settled for now", optionally pointing to the Thought that settled it, and can reopen it. It is never a task: it has no due date and is never overdue.
+_Avoid_: Task, to-do, prompt, research question
 
 **Person**:
 An Object for an individual who matters to the owner's Garden, either personally or through their work.
