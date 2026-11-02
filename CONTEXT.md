@@ -19,7 +19,7 @@ _Avoid_: Category, class, template
 ### Core Object Types
 
 **Source**:
-An Object for something the owner reads, watches, listens to or looks at, such as a book, article, video, podcast, web page, image or document.
+An Object for something the owner reads, watches, listens to or looks at, such as a book, article, video, podcast, web page, post, image or document.
 _Avoid_: Reference, resource, bookmark
 
 **Concept**:
@@ -71,6 +71,12 @@ _Avoid_: AI summary, AI comment, annotation
 **Inquiry**:
 A question the owner puts to the Researcher, together with its follow-up questions and the answers. It is never an Object, and the Researcher never treats an earlier Inquiry as evidence.
 _Avoid_: Chat, conversation, session, query
+
+### Capture
+
+**Daily Inbox**:
+One page per day listing, in time order, everything the owner sent from the phone that day: the Objects each message created, and the owner's comment on them as plain text in the owner's words. A comment stays in the Daily Inbox (shown on its Sources too) until the owner turns it into a Thought. A Daily Inbox is never an Object, and captures typed on the Mac don't appear in it.
+_Avoid_: Daily note, journal, inbox note
 
 ### AI
 
