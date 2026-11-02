@@ -1,0 +1,63 @@
+before: { usage: 0, freeUsed: 29, freeRemaining: 971 }
+  google/gemma-4-31b-it:free attempt 1: Provider returned error
+  google/gemma-4-31b-it:free attempt 2: Provider returned error
+  google/gemma-4-31b-it:free attempt 3: Provider returned error
+archivist 1 google/gemma-4-31b-it:free: FAILED Provider returned error
+  google/gemma-4-31b-it:free attempt 1: Provider returned error
+  google/gemma-4-31b-it:free attempt 2: Provider returned error
+  google/gemma-4-31b-it:free attempt 3: Provider returned error
+archivist 2 google/gemma-4-31b-it:free: FAILED Provider returned error
+  xingchen-agi/xing4.0-29b-a4b:free attempt 1: Provider returned error
+  xingchen-agi/xing4.0-29b-a4b:free attempt 2: xingchen-agi/xing4.0-29b-a4b:free is temporarily rate-limited upstream. Please retry shortly, or add your own key to acc
+  xingchen-agi/xing4.0-29b-a4b:free attempt 3: Provider returned error
+archivist 2 xingchen-agi/xing4.0-29b-a4b:free: FAILED Provider returned error
+  google/gemma-4-31b-it:free attempt 1: Provider returned error
+  google/gemma-4-31b-it:free attempt 2: Provider returned error
+  google/gemma-4-31b-it:free attempt 3: Provider returned error
+archivist 3 google/gemma-4-31b-it:free: FAILED Provider returned error
+  xingchen-agi/xing4.0-29b-a4b:free attempt 1: xingchen-agi/xing4.0-29b-a4b:free is temporarily rate-limited upstream. Please retry shortly, or add your own key to acc
+  xingchen-agi/xing4.0-29b-a4b:free attempt 2: xingchen-agi/xing4.0-29b-a4b:free is temporarily rate-limited upstream. Please retry shortly, or add your own key to acc
+  xingchen-agi/xing4.0-29b-a4b:free attempt 3: Provider returned error
+archivist 3 xingchen-agi/xing4.0-29b-a4b:free: FAILED Provider returned error
+  google/gemma-4-31b-it:free attempt 1: Provider returned error
+  google/gemma-4-31b-it:free attempt 2: Provider returned error
+  google/gemma-4-31b-it:free attempt 3: Provider returned error
+archivist 4 google/gemma-4-31b-it:free: FAILED Provider returned error
+  google/gemma-4-31b-it:free attempt 1: Provider returned error
+  google/gemma-4-31b-it:free attempt 2: Provider returned error
+  google/gemma-4-31b-it:free attempt 3: Provider returned error
+archivist 5 google/gemma-4-31b-it:free: FAILED Provider returned error
+  xingchen-agi/xing4.0-29b-a4b:free attempt 1: Provider returned error
+  xingchen-agi/xing4.0-29b-a4b:free attempt 2: xingchen-agi/xing4.0-29b-a4b:free is temporarily rate-limited upstream. Please retry shortly, or add your own key to acc
+  xingchen-agi/xing4.0-29b-a4b:free attempt 3: Provider returned error
+archivist 5 xingchen-agi/xing4.0-29b-a4b:free: FAILED Provider returned error
+  google/gemma-4-31b-it:free attempt 1: Provider returned error
+  google/gemma-4-31b-it:free attempt 2: Provider returned error
+  google/gemma-4-31b-it:free attempt 3: Provider returned error
+archivist 6 google/gemma-4-31b-it:free: FAILED Provider returned error
+  xingchen-agi/xing4.0-29b-a4b:free attempt 1: Provider returned error
+  xingchen-agi/xing4.0-29b-a4b:free attempt 2: Provider returned error
+archivist 6 xingchen-agi/xing4.0-29b-a4b:free: clean json, 10s, by xingchen-agi/xing4.0-29b-a4b:free
+  google/gemma-4-31b-it:free attempt 1: Provider returned error
+  google/gemma-4-31b-it:free attempt 2: Provider returned error
+  google/gemma-4-31b-it:free attempt 3: Provider returned error
+archivist 7 google/gemma-4-31b-it:free: FAILED Provider returned error
+  google/gemma-4-31b-it:free attempt 1: Provider returned error
+  google/gemma-4-31b-it:free attempt 2: Provider returned error
+  google/gemma-4-31b-it:free attempt 3: Provider returned error
+archivist 8 google/gemma-4-31b-it:free: FAILED Provider returned error
+  google/gemma-4-31b-it:free attempt 1: Provider returned error
+  google/gemma-4-31b-it:free attempt 2: Provider returned error
+  google/gemma-4-31b-it:free attempt 3: Provider returned error
+researcher all google/gemma-4-31b-it:free: FAILED Provider returned error
+researcher all nvidia/nemotron-3.5-super-vl:free: clean json, 38s, by nvidia/nemotron-3.5-super-vl:free
+  xingchen-agi/xing4.0-29b-a4b:free attempt 1: xingchen-agi/xing4.0-29b-a4b:free is temporarily rate-limited upstream. Please retry shortly, or add your own key to acc
+  xingchen-agi/xing4.0-29b-a4b:free attempt 2: xingchen-agi/xing4.0-29b-a4b:free is temporarily rate-limited upstream. Please retry shortly, or add your own key to acc
+  xingchen-agi/xing4.0-29b-a4b:free attempt 3: xingchen-agi/xing4.0-29b-a4b:free is temporarily rate-limited upstream. Please retry shortly, or add your own key to acc
+researcher all xingchen-agi/xing4.0-29b-a4b:free: FAILED xingchen-agi/xing4.0-29b-a4b:free is temporarily rate-limited upstream. Please r
+  google/gemma-4-31b-it:free attempt 1: Provider returned error
+  google/gemma-4-31b-it:free attempt 2: Provider returned error
+  google/gemma-4-31b-it:free attempt 3: Provider returned error
+images p1.jpg google/gemma-4-31b-it:free: FAILED Provider returned error
+  google/gemma-4-31b-it:free attempt 1: Provider returned error
+  google/gemma-4-31b-it:free attempt 2: Provider returned error

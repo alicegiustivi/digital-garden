@@ -1,0 +1,110 @@
+before: { usage: 0, freeUsed: 0, freeRemaining: 1000 }
+  google/gemma-4-31b-it:free attempt 1: Provider returned error
+  google/gemma-4-31b-it:free attempt 2: Provider returned error
+  google/gemma-4-31b-it:free attempt 3: Provider returned error
+archivist 1 google/gemma-4-31b-it:free: FAILED Provider returned error
+archivist 1 nvidia/nemotron-3.5-super-vl:free: clean json, 13s, by nvidia/nemotron-3.5-super-vl:free
+archivist 1 nvidia/nemotron-3-ultra-550b-a55b:free: clean json, 19s, by nvidia/nemotron-3-ultra-550b-a55b:free
+archivist 1 xingchen-agi/xing4.0-29b-a4b:free: clean json, 12s, by xingchen-agi/xing4.0-29b-a4b:free
+archivist 1 openrouter/free: clean json, 19s, by nvidia/nemotron-3.5-super-vl:free
+  google/gemma-4-31b-it:free attempt 1: Provider returned error
+  google/gemma-4-31b-it:free attempt 2: Provider returned error
+  google/gemma-4-31b-it:free attempt 3: Provider returned error
+archivist 2 google/gemma-4-31b-it:free: FAILED Provider returned error
+archivist 2 nvidia/nemotron-3.5-super-vl:free: clean json, 11s, by nvidia/nemotron-3.5-super-vl:free
+archivist 2 nvidia/nemotron-3-ultra-550b-a55b:free: clean json, 17s, by nvidia/nemotron-3-ultra-550b-a55b:free
+  xingchen-agi/xing4.0-29b-a4b:free attempt 1: Provider returned error
+  xingchen-agi/xing4.0-29b-a4b:free attempt 2: xingchen-agi/xing4.0-29b-a4b:free is temporarily rate-limited upstream. Please retry shortly, or add your own key to acc
+  xingchen-agi/xing4.0-29b-a4b:free attempt 3: Provider returned error
+archivist 2 xingchen-agi/xing4.0-29b-a4b:free: FAILED Provider returned error
+archivist 2 openrouter/free: broken json, 73s, by nvidia/nemotron-3.5-lightning:free
+  google/gemma-4-31b-it:free attempt 1: Provider returned error
+  google/gemma-4-31b-it:free attempt 2: Provider returned error
+  google/gemma-4-31b-it:free attempt 3: Provider returned error
+archivist 3 google/gemma-4-31b-it:free: FAILED Provider returned error
+archivist 3 nvidia/nemotron-3.5-super-vl:free: clean json, 16s, by nvidia/nemotron-3.5-super-vl:free
+archivist 3 nvidia/nemotron-3-ultra-550b-a55b:free: clean json, 27s, by nvidia/nemotron-3-ultra-550b-a55b:free
+  xingchen-agi/xing4.0-29b-a4b:free attempt 1: Provider returned error
+  xingchen-agi/xing4.0-29b-a4b:free attempt 2: Provider returned error
+  xingchen-agi/xing4.0-29b-a4b:free attempt 3: Provider returned error
+archivist 3 xingchen-agi/xing4.0-29b-a4b:free: FAILED Provider returned error
+archivist 3 openrouter/free: clean json, 46s, by dots-studio/dots-3-note-preview:free
+  google/gemma-4-31b-it:free attempt 1: Provider returned error
+  google/gemma-4-31b-it:free attempt 2: Provider returned error
+  google/gemma-4-31b-it:free attempt 3: Provider returned error
+archivist 4 google/gemma-4-31b-it:free: FAILED Provider returned error
+archivist 4 nvidia/nemotron-3.5-super-vl:free: clean json, 25s, by nvidia/nemotron-3.5-super-vl:free
+archivist 4 nvidia/nemotron-3-ultra-550b-a55b:free: clean json, 20s, by nvidia/nemotron-3-ultra-550b-a55b:free
+archivist 4 xingchen-agi/xing4.0-29b-a4b:free: clean json, 10s, by xingchen-agi/xing4.0-29b-a4b:free
+archivist 4 openrouter/free: clean json, 29s, by nvidia/nemotron-3.5-super-vl:free
+  google/gemma-4-31b-it:free attempt 1: Provider returned error
+  google/gemma-4-31b-it:free attempt 2: Provider returned error
+  google/gemma-4-31b-it:free attempt 3: Provider returned error
+archivist 5 google/gemma-4-31b-it:free: FAILED Provider returned error
+archivist 5 nvidia/nemotron-3.5-super-vl:free: clean json, 20s, by nvidia/nemotron-3.5-super-vl:free
+archivist 5 nvidia/nemotron-3-ultra-550b-a55b:free: clean json, 26s, by nvidia/nemotron-3-ultra-550b-a55b:free
+  xingchen-agi/xing4.0-29b-a4b:free attempt 1: xingchen-agi/xing4.0-29b-a4b:free is temporarily rate-limited upstream. Please retry shortly, or add your own key to acc
+  xingchen-agi/xing4.0-29b-a4b:free attempt 2: Provider returned error
+  xingchen-agi/xing4.0-29b-a4b:free attempt 3: xingchen-agi/xing4.0-29b-a4b:free is temporarily rate-limited upstream. Please retry shortly, or add your own key to acc
+archivist 5 xingchen-agi/xing4.0-29b-a4b:free: FAILED xingchen-agi/xing4.0-29b-a4b:free is temporarily rate-limited upstream. Please r
+archivist 5 openrouter/free: clean json, 87s, by cohere/north-mini-code:free
+  google/gemma-4-31b-it:free attempt 1: Provider returned error
+  google/gemma-4-31b-it:free attempt 2: Provider returned error
+  google/gemma-4-31b-it:free attempt 3: Provider returned error
+archivist 6 google/gemma-4-31b-it:free: FAILED Provider returned error
+archivist 6 nvidia/nemotron-3.5-super-vl:free: clean json, 36s, by nvidia/nemotron-3.5-super-vl:free
+archivist 6 nvidia/nemotron-3-ultra-550b-a55b:free: clean json, 21s, by nvidia/nemotron-3-ultra-550b-a55b:free
+  xingchen-agi/xing4.0-29b-a4b:free attempt 1: Provider returned error
+  xingchen-agi/xing4.0-29b-a4b:free attempt 2: xingchen-agi/xing4.0-29b-a4b:free is temporarily rate-limited upstream. Please retry shortly, or add your own key to acc
+  xingchen-agi/xing4.0-29b-a4b:free attempt 3: Provider returned error
+archivist 6 xingchen-agi/xing4.0-29b-a4b:free: FAILED Provider returned error
+archivist 6 openrouter/free: empty json, 65s, by nvidia/nemotron-3.5-lightning:free
+  google/gemma-4-31b-it:free attempt 1: Provider returned error
+  google/gemma-4-31b-it:free attempt 2: Provider returned error
+  google/gemma-4-31b-it:free attempt 3: Provider returned error
+archivist 7 google/gemma-4-31b-it:free: FAILED Provider returned error
+archivist 7 nvidia/nemotron-3.5-super-vl:free: clean json, 26s, by nvidia/nemotron-3.5-super-vl:free
+archivist 7 nvidia/nemotron-3-ultra-550b-a55b:free: clean json, 18s, by nvidia/nemotron-3-ultra-550b-a55b:free
+  xingchen-agi/xing4.0-29b-a4b:free attempt 1: Provider returned error
+archivist 7 xingchen-agi/xing4.0-29b-a4b:free: clean json, 9s, by xingchen-agi/xing4.0-29b-a4b:free
+archivist 7 openrouter/free: clean json, 16s, by nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free
+  google/gemma-4-31b-it:free attempt 1: Provider returned error
+  google/gemma-4-31b-it:free attempt 2: Provider returned error
+  google/gemma-4-31b-it:free attempt 3: Provider returned error
+archivist 8 google/gemma-4-31b-it:free: FAILED Provider returned error
+archivist 8 nvidia/nemotron-3.5-super-vl:free: clean json, 25s, by nvidia/nemotron-3.5-super-vl:free
+archivist 8 nvidia/nemotron-3-ultra-550b-a55b:free: clean json, 65s, by nvidia/nemotron-3-ultra-550b-a55b:free
+  xingchen-agi/xing4.0-29b-a4b:free attempt 1: Provider returned error
+archivist 8 xingchen-agi/xing4.0-29b-a4b:free: clean json, 6s, by xingchen-agi/xing4.0-29b-a4b:free
+archivist 8 openrouter/free: clean json, 19s, by nvidia/nemotron-3-ultra-550b-a55b:free
+  google/gemma-4-31b-it:free attempt 1: Provider returned error
+  google/gemma-4-31b-it:free attempt 2: Provider returned error
+  google/gemma-4-31b-it:free attempt 3: Provider returned error
+researcher all google/gemma-4-31b-it:free: FAILED Provider returned error
+researcher all nvidia/nemotron-3.5-super-vl:free: broken json, 53s, by nvidia/nemotron-3.5-super-vl:free
+researcher all nvidia/nemotron-3-ultra-550b-a55b:free: clean json, 43s, by nvidia/nemotron-3-ultra-550b-a55b:free
+  xingchen-agi/xing4.0-29b-a4b:free attempt 1: xingchen-agi/xing4.0-29b-a4b:free is temporarily rate-limited upstream. Please retry shortly, or add your own key to acc
+  xingchen-agi/xing4.0-29b-a4b:free attempt 2: xingchen-agi/xing4.0-29b-a4b:free is temporarily rate-limited upstream. Please retry shortly, or add your own key to acc
+  xingchen-agi/xing4.0-29b-a4b:free attempt 3: Provider returned error
+researcher all xingchen-agi/xing4.0-29b-a4b:free: FAILED Provider returned error
+researcher all openrouter/free: clean json, 12s, by xingchen-agi/xing4.0-29b-a4b:free
+  google/gemma-4-31b-it:free attempt 1: Provider returned error
+  google/gemma-4-31b-it:free attempt 2: Provider returned error
+  google/gemma-4-31b-it:free attempt 3: Provider returned error
+images p1.jpg google/gemma-4-31b-it:free: FAILED Provider returned error
+images p1.jpg nvidia/nemotron-3.5-super-vl:free: clean json, 5s, by nvidia/nemotron-3.5-super-vl:free
+images p1.jpg openrouter/free: clean json, 10s, by nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free
+  google/gemma-4-31b-it:free attempt 1: Provider returned error
+  google/gemma-4-31b-it:free attempt 2: Provider returned error
+  google/gemma-4-31b-it:free attempt 3: Provider returned error
+images p2.jpg google/gemma-4-31b-it:free: FAILED Provider returned error
+images p2.jpg nvidia/nemotron-3.5-super-vl:free: clean json, 15s, by nvidia/nemotron-3.5-super-vl:free
+images p2.jpg openrouter/free: clean json, 32s, by dots-studio/dots-3-note-preview:free
+  google/gemma-4-31b-it:free attempt 1: Provider returned error
+  google/gemma-4-31b-it:free attempt 2: Provider returned error
+  google/gemma-4-31b-it:free attempt 3: Provider returned error
+images p3.jpg google/gemma-4-31b-it:free: FAILED Provider returned error
+images p3.jpg nvidia/nemotron-3.5-super-vl:free: clean json, 6s, by nvidia/nemotron-3.5-super-vl:free
+images p3.jpg openrouter/free: clean json, 5s, by nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free
+after: { usage: 0, freeUsed: 29, freeRemaining: 971 } calls this run: 90
+Spend check OK: account usage unchanged.

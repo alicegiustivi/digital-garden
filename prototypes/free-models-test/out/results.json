@@ -1,0 +1,2959 @@
+{
+ "archivist": {
+  "1": {
+   "google/gemma-4-31b-it:free": {
+    "ok": false,
+    "error": "Provider returned error",
+    "ms": 556,
+    "attempts": 3
+   },
+   "nvidia/nemotron-3.5-super-vl:free": {
+    "ok": true,
+    "text": "{\"object_type\": \"Source\", \"title\": \"When does AI creative improve advertising?\", \"facts\": {\"authors\": null, \"date\": \"2026-10-26\", \"format\": \"report\", \"publisher\": \"London Research Centre for Marketing AI\"}, \"summary\": \"A critical review of eight AI advertising report families finds that generative AI improves clicks mainly when workflows are tied to audience-response data—training, selection, and live testing—rather than through ordinary machine authorship alone. Commercial value can come from stronger response or lower production cost, but neither guarantees sales or profit. Marketers should evaluate the complete creative workflow against the relevant business outcome.\", \"tags\": [\"ai advertising\", \"creative workflow\", \"audience response\", \"generative ai\", \"production cost\", \"marketing effectiveness\"], \"concepts\": [\"AI-generated advertising effectiveness\", \"creative production and evaluation workflows\", \"audience-response data in marketing\", \"commercial value of generative AI\", \"brand versus direct-response measurement\"], \"connections\": [{\"to\": 2, \"kind\": \"related\", \"why\": \"Both sources caution that generic AI output tends toward the common or mediocre unless the production process is deliberately shaped by human judgment and audience evidence.\"}, {\"to\": 3, \"kind\": \"related\", \"why\": \"Both examine how AI-mediated brand communication affects audience response, with this Source adding a workflow-level evaluation of clicks, cost, and profit.\"}, {\"to\": 6, \"kind\": \"related\", \"why\": \"Both address AI-generated visual and media assets in commercial campaigns, including questions of selection, rights, and deployment context.\"}, {\"to\": 8, \"kind\": \"related\", \"why\": \"Both treat AI as a change to creative production economics rather than a simple replacement for human creative work.\"}]}",
+    "answeredBy": "nvidia/nemotron-3.5-super-vl:free",
+    "ms": 12580,
+    "attempts": 1,
+    "usage": {
+     "prompt_tokens": 9185,
+     "completion_tokens": 2851,
+     "total_tokens": 12036,
+     "cost": 0,
+     "is_byok": false,
+     "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+     },
+     "cost_details": {
+      "upstream_inference_cost": 0,
+      "upstream_inference_prompt_cost": 0,
+      "upstream_inference_completions_cost": 0
+     },
+     "completion_tokens_details": {
+      "reasoning_tokens": 2462,
+      "image_tokens": 0,
+      "audio_tokens": 0
+     }
+    },
+    "parsed": {
+     "object_type": "Source",
+     "title": "When does AI creative improve advertising?",
+     "facts": {
+      "authors": null,
+      "date": "2026-10-26",
+      "format": "report",
+      "publisher": "London Research Centre for Marketing AI"
+     },
+     "summary": "A critical review of eight AI advertising report families finds that generative AI improves clicks mainly when workflows are tied to audience-response data—training, selection, and live testing—rather than through ordinary machine authorship alone. Commercial value can come from stronger response or lower production cost, but neither guarantees sales or profit. Marketers should evaluate the complete creative workflow against the relevant business outcome.",
+     "tags": [
+      "ai advertising",
+      "creative workflow",
+      "audience response",
+      "generative ai",
+      "production cost",
+      "marketing effectiveness"
+     ],
+     "concepts": [
+      "AI-generated advertising effectiveness",
+      "creative production and evaluation workflows",
+      "audience-response data in marketing",
+      "commercial value of generative AI",
+      "brand versus direct-response measurement"
+     ],
+     "connections": [
+      {
+       "to": 2,
+       "kind": "related",
+       "why": "Both sources caution that generic AI output tends toward the common or mediocre unless the production process is deliberately shaped by human judgment and audience evidence."
+      },
+      {
+       "to": 3,
+       "kind": "related",
+       "why": "Both examine how AI-mediated brand communication affects audience response, with this Source adding a workflow-level evaluation of clicks, cost, and profit."
+      },
+      {
+       "to": 6,
+       "kind": "related",
+       "why": "Both address AI-generated visual and media assets in commercial campaigns, including questions of selection, rights, and deployment context."
+      },
+      {
+       "to": 8,
+       "kind": "related",
+       "why": "Both treat AI as a change to creative production economics rather than a simple replacement for human creative work."
+      }
+     ]
+    },
+    "how": "clean"
+   },
+   "nvidia/nemotron-3-ultra-550b-a55b:free": {
+    "ok": true,
+    "text": "{\n  \"object_type\": \"Source\",\n  \"title\": \"When does AI creative improve advertising? — Production workflows, audience response and commercial value\",\n  \"facts\": {\n    \"authors\": [\"London Research Centre for Marketing AI\"],\n    \"date\": \"2026-10-26\",\n    \"format\": \"report\",\n    \"publisher\": \"London Research Centre for Marketing AI\"\n  },\n  \"summary\": \"This focused critical review examines eight report families on AI-assisted advertising creative. The strongest evidence shows that workflows informed by prior audience-response data (trained models, performance-guided selection) improve click-through rates, while ordinary generation does not consistently do so. Sales and gross-profit effects remain limited and inconclusive: a retail push experiment increased buying probability without establishing higher sales, and newsletter experiments at Wine Access support cost-dependent adoption without proving profit advantage. The review distinguishes average asset quality from winner-finding, and response gains from commercial value, concluding that marketers should evaluate the complete creative workflow—including human review, testing costs, and brand objectives—against their actual alternative.\",\n  \"tags\": [\"ai advertising\", \"creative workflow\", \"ab testing\", \"commercial value\", \"generative ai\", \"marketing effectiveness\"],\n  \"concepts\": [\"AI-assisted creative production\", \"audience-response-informed workflows\", \"commercial evaluation of AI outputs\", \"human-AI collaboration in marketing\", \"creative selection vs generation\"],\n  \"connections\": [\n    {\n      \"to\": 2,\n      \"kind\": \"related\",\n      \"why\": \"Both sources distinguish between ordinary AI output (which tends toward average/common responses) and trained/selected workflows that can surface stronger candidates.\"\n    },\n    {\n      \"to\": 8,\n      \"kind\": \"related\",\n      \"why\": \"Both examine how AI redistributes creative work—this review details workflow stages where humans remain involved (briefing, review, selection), while #8 studies job-posting and survey evidence on shifting creative roles.\"\n    },\n    {\n      \"to\": 3,\n      \"kind\": \"related\",\n      \"why\": \"Both address AI in brand contexts: this review finds brand recognition may favor human executions (Heitmann et al.), while #3 studies how AI chatbot communication affects luxury brand trust.\"\n    },\n    {\n      \"to\": 7,\n      \"kind\": \"related\",\n      \"why\": \"Both highlight that effective AI use depends on human expertise and process design—this review shows trained workflows outperform ordinary assistance, while #7 finds critical thinking improves when humans actively engage with AI outputs.\"\n    }\n  ]\n}",
+    "answeredBy": "nvidia/nemotron-3-ultra-550b-a55b:free",
+    "ms": 18532,
+    "attempts": 1,
+    "usage": {
+     "prompt_tokens": 9185,
+     "completion_tokens": 1088,
+     "total_tokens": 10273,
+     "cost": 0,
+     "is_byok": false,
+     "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+     },
+     "cost_details": {
+      "upstream_inference_cost": 0,
+      "upstream_inference_prompt_cost": 0,
+      "upstream_inference_completions_cost": 0
+     },
+     "completion_tokens_details": {
+      "reasoning_tokens": 630,
+      "image_tokens": 0,
+      "audio_tokens": 0
+     }
+    },
+    "parsed": {
+     "object_type": "Source",
+     "title": "When does AI creative improve advertising? — Production workflows, audience response and commercial value",
+     "facts": {
+      "authors": [
+       "London Research Centre for Marketing AI"
+      ],
+      "date": "2026-10-26",
+      "format": "report",
+      "publisher": "London Research Centre for Marketing AI"
+     },
+     "summary": "This focused critical review examines eight report families on AI-assisted advertising creative. The strongest evidence shows that workflows informed by prior audience-response data (trained models, performance-guided selection) improve click-through rates, while ordinary generation does not consistently do so. Sales and gross-profit effects remain limited and inconclusive: a retail push experiment increased buying probability without establishing higher sales, and newsletter experiments at Wine Access support cost-dependent adoption without proving profit advantage. The review distinguishes average asset quality from winner-finding, and response gains from commercial value, concluding that marketers should evaluate the complete creative workflow—including human review, testing costs, and brand objectives—against their actual alternative.",
+     "tags": [
+      "ai advertising",
+      "creative workflow",
+      "ab testing",
+      "commercial value",
+      "generative ai",
+      "marketing effectiveness"
+     ],
+     "concepts": [
+      "AI-assisted creative production",
+      "audience-response-informed workflows",
+      "commercial evaluation of AI outputs",
+      "human-AI collaboration in marketing",
+      "creative selection vs generation"
+     ],
+     "connections": [
+      {
+       "to": 2,
+       "kind": "related",
+       "why": "Both sources distinguish between ordinary AI output (which tends toward average/common responses) and trained/selected workflows that can surface stronger candidates."
+      },
+      {
+       "to": 8,
+       "kind": "related",
+       "why": "Both examine how AI redistributes creative work—this review details workflow stages where humans remain involved (briefing, review, selection), while #8 studies job-posting and survey evidence on shifting creative roles."
+      },
+      {
+       "to": 3,
+       "kind": "related",
+       "why": "Both address AI in brand contexts: this review finds brand recognition may favor human executions (Heitmann et al.), while #3 studies how AI chatbot communication affects luxury brand trust."
+      },
+      {
+       "to": 7,
+       "kind": "related",
+       "why": "Both highlight that effective AI use depends on human expertise and process design—this review shows trained workflows outperform ordinary assistance, while #7 finds critical thinking improves when humans actively engage with AI outputs."
+      }
+     ]
+    },
+    "how": "clean"
+   },
+   "xingchen-agi/xing4.0-29b-a4b:free": {
+    "ok": true,
+    "text": "{\"object_type\":\"Source\",\"title\":\"When does AI creative improve advertising?\",\"facts\":{\"authors\":[\"London Research Centre for Marketing AI\"],\"date\":\"2026-10-26\",\"format\":\"report\",\"publisher\":\"London Research Centre for Marketing AI\"},\"summary\":\"AI-assisted creative improves advertising response when production workflows are connected to audience-response data, but ordinary generation does not consistently reproduce those gains. Commercial value is more limited: a retail experiment increased buying probability without higher sales, while newsletter experiments support cost-dependent adoption without proving gross-profit advantage. The strongest evidence rewards specific systems informed by prior experiments, candidate selection, and human review rather than machine authorship alone.\",\"tags\":[\"ai-advertising\",\"creative-workflow\",\"production-costs\",\"click-response\",\"commercial-uncertainty\"],\"concepts\":[\"advertising effectiveness\",\"human-AI collaboration in creative production\",\"brand recognition versus direct response\",\"cost-benefit analysis of generative tools\",\"candidate selection and winner identification\"],\"connections\":[{\"to\":3,\"kind\":\"related\",\"why\":\"Both sources examine how information qualities and brand perception shape consumer trust and behavior in AI-driven communications.\"},{\"to\":5,\"kind\":\"builds on\",\"why\":\"The source explains why 'effort signaling' is becoming fashion’s antithesis to AI by showing that human-involved workflows outperform generic generation.\"},{\"to\":6,\"kind\":\"mentions\",\"why\":\"The source discusses face swaps and digital clones as part of the broader AI era in fashion communications.\"},{\"to\":8,\"kind\":\"supports\",\"why\":\"The source provides evidence on how AI redistributes creative work by showing that workflow design—not just generation—matters commercially.\"}]}",
+    "answeredBy": "xingchen-agi/xing4.0-29b-a4b:free",
+    "ms": 11974,
+    "attempts": 1,
+    "usage": {
+     "prompt_tokens": 9378,
+     "completion_tokens": 363,
+     "total_tokens": 9741,
+     "cost": 0,
+     "is_byok": false,
+     "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+     },
+     "cost_details": {
+      "upstream_inference_cost": 0,
+      "upstream_inference_prompt_cost": 0,
+      "upstream_inference_completions_cost": 0
+     },
+     "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+     }
+    },
+    "parsed": {
+     "object_type": "Source",
+     "title": "When does AI creative improve advertising?",
+     "facts": {
+      "authors": [
+       "London Research Centre for Marketing AI"
+      ],
+      "date": "2026-10-26",
+      "format": "report",
+      "publisher": "London Research Centre for Marketing AI"
+     },
+     "summary": "AI-assisted creative improves advertising response when production workflows are connected to audience-response data, but ordinary generation does not consistently reproduce those gains. Commercial value is more limited: a retail experiment increased buying probability without higher sales, while newsletter experiments support cost-dependent adoption without proving gross-profit advantage. The strongest evidence rewards specific systems informed by prior experiments, candidate selection, and human review rather than machine authorship alone.",
+     "tags": [
+      "ai-advertising",
+      "creative-workflow",
+      "production-costs",
+      "click-response",
+      "commercial-uncertainty"
+     ],
+     "concepts": [
+      "advertising effectiveness",
+      "human-AI collaboration in creative production",
+      "brand recognition versus direct response",
+      "cost-benefit analysis of generative tools",
+      "candidate selection and winner identification"
+     ],
+     "connections": [
+      {
+       "to": 3,
+       "kind": "related",
+       "why": "Both sources examine how information qualities and brand perception shape consumer trust and behavior in AI-driven communications."
+      },
+      {
+       "to": 5,
+       "kind": "builds on",
+       "why": "The source explains why 'effort signaling' is becoming fashion’s antithesis to AI by showing that human-involved workflows outperform generic generation."
+      },
+      {
+       "to": 6,
+       "kind": "mentions",
+       "why": "The source discusses face swaps and digital clones as part of the broader AI era in fashion communications."
+      },
+      {
+       "to": 8,
+       "kind": "supports",
+       "why": "The source provides evidence on how AI redistributes creative work by showing that workflow design—not just generation—matters commercially."
+      }
+     ]
+    },
+    "how": "clean"
+   },
+   "openrouter/free": {
+    "ok": true,
+    "text": "{\"object_type\": \"Source\", \"title\": \"When does AI creative improve advertising?\", \"facts\": {\"authors\": null, \"date\": \"2026-10-26\", \"format\": \"report\", \"publisher\": \"London Research Centre for Marketing AI\"}, \"summary\": \"This critical review finds AI creative can improve advertising when the production and evaluation workflow is matched to the task. Ordinary generation does not reliably boost clicks; performance-informed systems and human selection do. Higher response does not automatically mean higher sales or profit, but lower production costs can justify adoption. Marketers should test the full workflow—response, brand requirements, and total cost—against their actual alternative.\", \"tags\": [\"ai advertising\", \"creative workflow\", \"generative ai\", \"marketing effectiveness\", \"commercial value\"], \"concepts\": [\"AI-generated advertising effectiveness\", \"creative production and testing workflows\", \"audience response versus commercial value\", \"human-AI collaboration in marketing\"], \"connections\": [{\"to\": 2, \"kind\": \"related\", \"why\": \"Both examine the limits of generic AI creative output, with #2 describing the 'beige trap' of common answers and this review showing ordinary AI assistance lacks consistent click advantages.\"}, {\"to\": 5, \"kind\": \"related\", \"why\": \"#5 frames human effort as fashion's antithesis to AI, while this review shows human review and selection remain material inside AI advertising workflows.\"}, {\"to\": 8, \"kind\": \"related\", \"why\": \"Both address how AI reshapes creative production and work processes rather than simply replacing human creators.\"}, {\"to\": 6, \"kind\": \"related\", \"why\": \"Both concern AI-generated visual content in commercial contexts, with #6 covering fashion face swaps and clones and this review covering AI image ads.\"}]}",
+    "answeredBy": "nvidia/nemotron-3.5-super-vl:free",
+    "ms": 19180,
+    "attempts": 1,
+    "usage": {
+     "prompt_tokens": 9185,
+     "completion_tokens": 3616,
+     "total_tokens": 12801,
+     "cost": 0,
+     "is_byok": false,
+     "prompt_tokens_details": {
+      "cached_tokens": 8672,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+     },
+     "cost_details": {
+      "upstream_inference_cost": 0,
+      "upstream_inference_prompt_cost": 0,
+      "upstream_inference_completions_cost": 0
+     },
+     "completion_tokens_details": {
+      "reasoning_tokens": 3224,
+      "image_tokens": 0,
+      "audio_tokens": 0
+     }
+    },
+    "parsed": {
+     "object_type": "Source",
+     "title": "When does AI creative improve advertising?",
+     "facts": {
+      "authors": null,
+      "date": "2026-10-26",
+      "format": "report",
+      "publisher": "London Research Centre for Marketing AI"
+     },
+     "summary": "This critical review finds AI creative can improve advertising when the production and evaluation workflow is matched to the task. Ordinary generation does not reliably boost clicks; performance-informed systems and human selection do. Higher response does not automatically mean higher sales or profit, but lower production costs can justify adoption. Marketers should test the full workflow—response, brand requirements, and total cost—against their actual alternative.",
+     "tags": [
+      "ai advertising",
+      "creative workflow",
+      "generative ai",
+      "marketing effectiveness",
+      "commercial value"
+     ],
+     "concepts": [
+      "AI-generated advertising effectiveness",
+      "creative production and testing workflows",
+      "audience response versus commercial value",
+      "human-AI collaboration in marketing"
+     ],
+     "connections": [
+      {
+       "to": 2,
+       "kind": "related",
+       "why": "Both examine the limits of generic AI creative output, with #2 describing the 'beige trap' of common answers and this review showing ordinary AI assistance lacks consistent click advantages."
+      },
+      {
+       "to": 5,
+       "kind": "related",
+       "why": "#5 frames human effort as fashion's antithesis to AI, while this review shows human review and selection remain material inside AI advertising workflows."
+      },
+      {
+       "to": 8,
+       "kind": "related",
+       "why": "Both address how AI reshapes creative production and work processes rather than simply replacing human creators."
+      },
+      {
+       "to": 6,
+       "kind": "related",
+       "why": "Both concern AI-generated visual content in commercial contexts, with #6 covering fashion face swaps and clones and this review covering AI image ads."
+      }
+     ]
+    },
+    "how": "clean"
+   }
+  },
+  "2": {
+   "google/gemma-4-31b-it:free": {
+    "ok": false,
+    "error": "Provider returned error",
+    "ms": 418,
+    "attempts": 3
+   },
+   "nvidia/nemotron-3.5-super-vl:free": {
+    "ok": true,
+    "text": "{\"object_type\": \"Source\", \"title\": \"Why It Doesn’t Work: AI and the ‘beige trap’ of creativity\", \"facts\": {\"authors\": [\"Richard Shotton\"], \"date\": null, \"format\": \"article\", \"publisher\": \"Marketing Week\"}, \"summary\": \"Richard Shotton argues that generative AI produces average, 'beige' creative ideas because LLMs draw on the most common human responses. Citing studies by Hauser/Doshi and Meincke, he shows AI can raise quality for less-creative individuals but reduces collective novelty. Basic prompting worsens similarity, while chain-of-thought prompting improves diversity. Distinctiveness remains key in marketing, so AI should be used carefully as a starting point with step-by-step instructions.\", \"tags\": [\"ai-creativity\", \"beige-trap\", \"marketing\", \"prompting\", \"distinctiveness\", \"novelty\"], \"concepts\": [\"AI and creative distinctiveness\", \"prompt engineering for novelty\", \"collective novelty vs individual quality\", \"generative AI in marketing\"], \"connections\": [{\"to\": 1, \"kind\": \"related\", \"why\": \"Both examine when and how AI-generated creative output holds value in marketing and advertising contexts.\"}, {\"to\": 5, \"kind\": \"related\", \"why\": \"Both address the tension between AI-generated output and human distinctiveness in creative industries.\"}, {\"to\": 7, \"kind\": \"related\", \"why\": \"Both explore how AI affects human cognition and creative output in professional knowledge work.\"}, {\"to\": 8, \"kind\": \"related\", \"why\": \"Both discuss the impact of generative AI on creative work and the risk of homogenized output.\"}]}",
+    "answeredBy": "nvidia/nemotron-3.5-super-vl:free",
+    "ms": 10802,
+    "attempts": 1,
+    "usage": {
+     "prompt_tokens": 2857,
+     "completion_tokens": 2478,
+     "total_tokens": 5335,
+     "cost": 0,
+     "is_byok": false,
+     "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+     },
+     "cost_details": {
+      "upstream_inference_cost": 0,
+      "upstream_inference_prompt_cost": 0,
+      "upstream_inference_completions_cost": 0
+     },
+     "completion_tokens_details": {
+      "reasoning_tokens": 2111,
+      "image_tokens": 0,
+      "audio_tokens": 0
+     }
+    },
+    "parsed": {
+     "object_type": "Source",
+     "title": "Why It Doesn’t Work: AI and the ‘beige trap’ of creativity",
+     "facts": {
+      "authors": [
+       "Richard Shotton"
+      ],
+      "date": null,
+      "format": "article",
+      "publisher": "Marketing Week"
+     },
+     "summary": "Richard Shotton argues that generative AI produces average, 'beige' creative ideas because LLMs draw on the most common human responses. Citing studies by Hauser/Doshi and Meincke, he shows AI can raise quality for less-creative individuals but reduces collective novelty. Basic prompting worsens similarity, while chain-of-thought prompting improves diversity. Distinctiveness remains key in marketing, so AI should be used carefully as a starting point with step-by-step instructions.",
+     "tags": [
+      "ai-creativity",
+      "beige-trap",
+      "marketing",
+      "prompting",
+      "distinctiveness",
+      "novelty"
+     ],
+     "concepts": [
+      "AI and creative distinctiveness",
+      "prompt engineering for novelty",
+      "collective novelty vs individual quality",
+      "generative AI in marketing"
+     ],
+     "connections": [
+      {
+       "to": 1,
+       "kind": "related",
+       "why": "Both examine when and how AI-generated creative output holds value in marketing and advertising contexts."
+      },
+      {
+       "to": 5,
+       "kind": "related",
+       "why": "Both address the tension between AI-generated output and human distinctiveness in creative industries."
+      },
+      {
+       "to": 7,
+       "kind": "related",
+       "why": "Both explore how AI affects human cognition and creative output in professional knowledge work."
+      },
+      {
+       "to": 8,
+       "kind": "related",
+       "why": "Both discuss the impact of generative AI on creative work and the risk of homogenized output."
+      }
+     ]
+    },
+    "how": "clean"
+   },
+   "nvidia/nemotron-3-ultra-550b-a55b:free": {
+    "ok": true,
+    "text": "{\n  \"object_type\": \"Source\",\n  \"title\": \"Why It Doesn't Work: AI and the 'beige trap' of creativity\",\n  \"facts\": {\n    \"authors\": [\"Richard Shotton\"],\n    \"date\": null,\n    \"format\": \"article\",\n    \"publisher\": \"Marketing Week\"\n  },\n  \"summary\": \"Richard Shotton argues that generative AI defaults to average responses, creating a 'beige trap' where individual output improves but collective novelty declines. Citing Hauser & Doshi (2024), AI-assisted stories were rated better but 9-11% more similar. Meincke et al. found basic prompting reduces idea diversity by 55% versus humans, while chain-of-thought prompting (step-by-step with explicit non-repetition instructions) nearly matches human diversity. Shotton concludes creative professionals should resist superficial AI use and employ structured prompting to preserve distinctiveness.\",\n  \"tags\": [\"ai creativity\", \"beige trap\", \"prompt engineering\", \"marketing\", \"novelty\", \"divergent thinking\"],\n  \"concepts\": [\"AI in creative work\", \"distinctiveness in advertising\", \"prompt engineering techniques\", \"human vs machine creativity\", \"collective novelty loss\"],\n  \"connections\": [\n    {\n      \"to\": 1,\n      \"kind\": \"related\",\n      \"why\": \"Both sources examine when and how AI improves creative advertising outcomes, focusing on process over raw generation.\"\n    },\n    {\n      \"to\": 5,\n      \"kind\": \"related\",\n      \"why\": \"Both highlight human craft and effort signaling as the antithesis to AI's tendency toward polished sameness.\"\n    },\n    {\n      \"to\": 8,\n      \"kind\": \"related\",\n      \"why\": \"Both address how AI redistributes creative labor, with Shotton emphasizing prompt structure as a skill that preserves novelty.\"\n    },\n    {\n      \"to\": 4,\n      \"kind\": \"supports\",\n      \"why\": \"The trend toward restrained, distinctive luxury campaigns aligns with Shotton's warning that AI beige makes ads invisible.\"\n    }\n  ]\n}",
+    "answeredBy": "nvidia/nemotron-3-ultra-550b-a55b:free",
+    "ms": 17385,
+    "attempts": 1,
+    "usage": {
+     "prompt_tokens": 2857,
+     "completion_tokens": 1046,
+     "total_tokens": 3903,
+     "cost": 0,
+     "is_byok": false,
+     "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+     },
+     "cost_details": {
+      "upstream_inference_cost": 0,
+      "upstream_inference_prompt_cost": 0,
+      "upstream_inference_completions_cost": 0
+     },
+     "completion_tokens_details": {
+      "reasoning_tokens": 606,
+      "image_tokens": 0,
+      "audio_tokens": 0
+     }
+    },
+    "parsed": {
+     "object_type": "Source",
+     "title": "Why It Doesn't Work: AI and the 'beige trap' of creativity",
+     "facts": {
+      "authors": [
+       "Richard Shotton"
+      ],
+      "date": null,
+      "format": "article",
+      "publisher": "Marketing Week"
+     },
+     "summary": "Richard Shotton argues that generative AI defaults to average responses, creating a 'beige trap' where individual output improves but collective novelty declines. Citing Hauser & Doshi (2024), AI-assisted stories were rated better but 9-11% more similar. Meincke et al. found basic prompting reduces idea diversity by 55% versus humans, while chain-of-thought prompting (step-by-step with explicit non-repetition instructions) nearly matches human diversity. Shotton concludes creative professionals should resist superficial AI use and employ structured prompting to preserve distinctiveness.",
+     "tags": [
+      "ai creativity",
+      "beige trap",
+      "prompt engineering",
+      "marketing",
+      "novelty",
+      "divergent thinking"
+     ],
+     "concepts": [
+      "AI in creative work",
+      "distinctiveness in advertising",
+      "prompt engineering techniques",
+      "human vs machine creativity",
+      "collective novelty loss"
+     ],
+     "connections": [
+      {
+       "to": 1,
+       "kind": "related",
+       "why": "Both sources examine when and how AI improves creative advertising outcomes, focusing on process over raw generation."
+      },
+      {
+       "to": 5,
+       "kind": "related",
+       "why": "Both highlight human craft and effort signaling as the antithesis to AI's tendency toward polished sameness."
+      },
+      {
+       "to": 8,
+       "kind": "related",
+       "why": "Both address how AI redistributes creative labor, with Shotton emphasizing prompt structure as a skill that preserves novelty."
+      },
+      {
+       "to": 4,
+       "kind": "supports",
+       "why": "The trend toward restrained, distinctive luxury campaigns aligns with Shotton's warning that AI beige makes ads invisible."
+      }
+     ]
+    },
+    "how": "clean"
+   },
+   "xingchen-agi/xing4.0-29b-a4b:free": {
+    "ok": false,
+    "error": "Provider returned error",
+    "ms": 3441,
+    "attempts": 3
+   },
+   "openrouter/free": {
+    "ok": true,
+    "text": "{\n  \"object_type\": \"Source\",\n  \"title",
+    "answeredBy": "nvidia/nemotron-3.5-lightning:free",
+    "ms": 72724,
+    "attempts": 1,
+    "usage": {
+     "prompt_tokens": 2857,
+     "completion_tokens": 6000,
+     "total_tokens": 8857,
+     "cost": 0,
+     "is_byok": false,
+     "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+     },
+     "cost_details": {
+      "upstream_inference_cost": 0,
+      "upstream_inference_prompt_cost": 0,
+      "upstream_inference_completions_cost": 0
+     },
+     "completion_tokens_details": {
+      "reasoning_tokens": 5987,
+      "image_tokens": 0,
+      "audio_tokens": 0
+     }
+    },
+    "parsed": null,
+    "how": "broken"
+   }
+  },
+  "3": {
+   "google/gemma-4-31b-it:free": {
+    "ok": false,
+    "error": "Provider returned error",
+    "ms": 521,
+    "attempts": 3
+   },
+   "nvidia/nemotron-3.5-super-vl:free": {
+    "ok": true,
+    "text": "{\"object_type\": \"Source\", \"title\": \"Luxury fashion brands’ AI-powered sustainability chatbot communication\", \"facts\": {\"authors\": [\"Yujeong Won\", \"Seyoon Jang\", \"Yuri Lee\"], \"date\": \"2026-10-23\", \"format\": \"article\", \"publisher\": \"Springer Nature\"}, \"summary\": \"This study examines whether AI chatbots or human agents more effectively communicate luxury fashion sustainability, and how perceived information objectivity and persuasiveness shape brand trust, information acceptance, and purchase intention. In a 346-participant experiment, objectivity’s trust-mediated effect was stronger under AI communication, especially among consumers with lower perceived brand luxury, while persuasiveness worked consistently across provider types.\", \"tags\": [\"ai chatbots\", \"sustainability communication\", \"luxury fashion\", \"consumer trust\", \"information quality\", \"perceived brand luxury\"], \"concepts\": [\"AI-mediated brand communication\", \"sustainability communication and greenwashing\", \"consumer trust and purchase intention\", \"machinery heuristic in provider cues\", \"perceived brand luxury as moderator\"], \"connections\": [{\"to\": 5, \"kind\": \"related\", \"why\": \"Both address AI's role in fashion, with #5 positioning human effort as an antithesis to AI while this study finds AI cues can strengthen trust in sustainability messaging.\"}, {\"to\": 6, \"kind\": \"related\", \"why\": \"Both examine AI integration in fashion, comparing chatbot communication here with digital clones and face swaps there.\"}, {\"to\": 4, \"kind\": \"related\", \"why\": \"Both concern luxury brand communication and consumer perception of luxury, though #4 focuses on restrained visual campaigns.\"}, {\"to\": 1, \"kind\": \"related\", \"why\": \"Both assess how AI-mediated communication influences commercial outcomes and consumer response in branded contexts.\"}]}",
+    "answeredBy": "nvidia/nemotron-3.5-super-vl:free",
+    "ms": 16400,
+    "attempts": 1,
+    "usage": {
+     "prompt_tokens": 8797,
+     "completion_tokens": 3517,
+     "total_tokens": 12314,
+     "cost": 0,
+     "is_byok": false,
+     "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+     },
+     "cost_details": {
+      "upstream_inference_cost": 0,
+      "upstream_inference_prompt_cost": 0,
+      "upstream_inference_completions_cost": 0
+     },
+     "completion_tokens_details": {
+      "reasoning_tokens": 3110,
+      "image_tokens": 0,
+      "audio_tokens": 0
+     }
+    },
+    "parsed": {
+     "object_type": "Source",
+     "title": "Luxury fashion brands’ AI-powered sustainability chatbot communication",
+     "facts": {
+      "authors": [
+       "Yujeong Won",
+       "Seyoon Jang",
+       "Yuri Lee"
+      ],
+      "date": "2026-10-23",
+      "format": "article",
+      "publisher": "Springer Nature"
+     },
+     "summary": "This study examines whether AI chatbots or human agents more effectively communicate luxury fashion sustainability, and how perceived information objectivity and persuasiveness shape brand trust, information acceptance, and purchase intention. In a 346-participant experiment, objectivity’s trust-mediated effect was stronger under AI communication, especially among consumers with lower perceived brand luxury, while persuasiveness worked consistently across provider types.",
+     "tags": [
+      "ai chatbots",
+      "sustainability communication",
+      "luxury fashion",
+      "consumer trust",
+      "information quality",
+      "perceived brand luxury"
+     ],
+     "concepts": [
+      "AI-mediated brand communication",
+      "sustainability communication and greenwashing",
+      "consumer trust and purchase intention",
+      "machinery heuristic in provider cues",
+      "perceived brand luxury as moderator"
+     ],
+     "connections": [
+      {
+       "to": 5,
+       "kind": "related",
+       "why": "Both address AI's role in fashion, with #5 positioning human effort as an antithesis to AI while this study finds AI cues can strengthen trust in sustainability messaging."
+      },
+      {
+       "to": 6,
+       "kind": "related",
+       "why": "Both examine AI integration in fashion, comparing chatbot communication here with digital clones and face swaps there."
+      },
+      {
+       "to": 4,
+       "kind": "related",
+       "why": "Both concern luxury brand communication and consumer perception of luxury, though #4 focuses on restrained visual campaigns."
+      },
+      {
+       "to": 1,
+       "kind": "related",
+       "why": "Both assess how AI-mediated communication influences commercial outcomes and consumer response in branded contexts."
+      }
+     ]
+    },
+    "how": "clean"
+   },
+   "nvidia/nemotron-3-ultra-550b-a55b:free": {
+    "ok": true,
+    "text": "{\n  \"object_type\": \"Source\",\n  \"title\": \"Luxury fashion brands' AI-powered sustainability chatbot communication: how information qualities and brand luxury perception shape consumer trust and behavior\",\n  \"facts\": {\n    \"authors\": [\"Yujeong Won\", \"Seyoon Jang\", \"Yuri Lee\"],\n    \"date\": \"2026-10-23\",\n    \"format\": \"article\",\n    \"publisher\": \"Springer Nature (Fashion and Textiles)\"\n  },\n  \"summary\": \"This study examines how AI chatbots vs. human agents affect consumer trust and behavioral intentions in luxury fashion sustainability communication. Through a scenario-based experiment with 346 participants using Gucci as the stimulus brand, the research finds that perceived objectivity's indirect effect on trust and behavioral intentions is significant only under AI communication, while perceived persuasiveness works consistently across provider types. Consumers with lower perceived brand luxury show stronger trust-intention links under AI communication, whereas high luxury perceivers show no provider differences. The findings suggest AI provider cues can strengthen objectivity's trust-mediated role in sustainability messaging.\",\n  \"tags\": [\"luxury fashion\", \"ai chatbot\", \"sustainability communication\", \"consumer trust\", \"perceived brand luxury\", \"machinery heuristic\"],\n  \"concepts\": [\"AI in luxury branding\", \"sustainability communication credibility\", \"consumer trust formation\", \"brand luxury perception\", \"human vs AI communication\"],\n  \"connections\": [\n    {\n      \"to\": 1,\n      \"kind\": \"related\",\n      \"why\": \"Both sources examine AI's effectiveness in advertising/communication contexts, though this study focuses on sustainability chatbots in luxury fashion while #1 reviews AI creative in advertising broadly.\"\n    },\n    {\n      \"to\": 4,\n      \"kind\": \"related\",\n      \"why\": \"Both address luxury marketing communication trends; #4 discusses restrained campaigns while this study tests AI chatbot communication for sustainability messaging.\"\n    },\n    {\n      \"to\": 5,\n      \"kind\": \"related\",\n      \"why\": \"Both explore fashion brands' responses to AI; #5 covers effort signaling as antithesis to AI while this study tests AI chatbots as sustainability communicators.\"\n    },\n    {\n      \"to\": 6,\n      \"kind\": \"related\",\n      \"why\": \"Both examine AI applications in fashion; #6 covers face swaps and digital clones in contracts while this study tests AI chatbots for sustainability communication.\"\n    }\n  ]\n}",
+    "answeredBy": "nvidia/nemotron-3-ultra-550b-a55b:free",
+    "ms": 26511,
+    "attempts": 1,
+    "usage": {
+     "prompt_tokens": 8797,
+     "completion_tokens": 1231,
+     "total_tokens": 10028,
+     "cost": 0,
+     "is_byok": false,
+     "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+     },
+     "cost_details": {
+      "upstream_inference_cost": 0,
+      "upstream_inference_prompt_cost": 0,
+      "upstream_inference_completions_cost": 0
+     },
+     "completion_tokens_details": {
+      "reasoning_tokens": 784,
+      "image_tokens": 0,
+      "audio_tokens": 0
+     }
+    },
+    "parsed": {
+     "object_type": "Source",
+     "title": "Luxury fashion brands' AI-powered sustainability chatbot communication: how information qualities and brand luxury perception shape consumer trust and behavior",
+     "facts": {
+      "authors": [
+       "Yujeong Won",
+       "Seyoon Jang",
+       "Yuri Lee"
+      ],
+      "date": "2026-10-23",
+      "format": "article",
+      "publisher": "Springer Nature (Fashion and Textiles)"
+     },
+     "summary": "This study examines how AI chatbots vs. human agents affect consumer trust and behavioral intentions in luxury fashion sustainability communication. Through a scenario-based experiment with 346 participants using Gucci as the stimulus brand, the research finds that perceived objectivity's indirect effect on trust and behavioral intentions is significant only under AI communication, while perceived persuasiveness works consistently across provider types. Consumers with lower perceived brand luxury show stronger trust-intention links under AI communication, whereas high luxury perceivers show no provider differences. The findings suggest AI provider cues can strengthen objectivity's trust-mediated role in sustainability messaging.",
+     "tags": [
+      "luxury fashion",
+      "ai chatbot",
+      "sustainability communication",
+      "consumer trust",
+      "perceived brand luxury",
+      "machinery heuristic"
+     ],
+     "concepts": [
+      "AI in luxury branding",
+      "sustainability communication credibility",
+      "consumer trust formation",
+      "brand luxury perception",
+      "human vs AI communication"
+     ],
+     "connections": [
+      {
+       "to": 1,
+       "kind": "related",
+       "why": "Both sources examine AI's effectiveness in advertising/communication contexts, though this study focuses on sustainability chatbots in luxury fashion while #1 reviews AI creative in advertising broadly."
+      },
+      {
+       "to": 4,
+       "kind": "related",
+       "why": "Both address luxury marketing communication trends; #4 discusses restrained campaigns while this study tests AI chatbot communication for sustainability messaging."
+      },
+      {
+       "to": 5,
+       "kind": "related",
+       "why": "Both explore fashion brands' responses to AI; #5 covers effort signaling as antithesis to AI while this study tests AI chatbots as sustainability communicators."
+      },
+      {
+       "to": 6,
+       "kind": "related",
+       "why": "Both examine AI applications in fashion; #6 covers face swaps and digital clones in contracts while this study tests AI chatbots for sustainability communication."
+      }
+     ]
+    },
+    "how": "clean"
+   },
+   "xingchen-agi/xing4.0-29b-a4b:free": {
+    "ok": false,
+    "error": "Provider returned error",
+    "ms": 2429,
+    "attempts": 3
+   },
+   "openrouter/free": {
+    "ok": true,
+    "text": "{\n  \"object_type\": \"Source\",\n  \"title\": \"Luxury fashion brands’ AI-powered sustainability chatbot communication: how information qualities and brand luxury perception shape consumer trust and behavior\",\n  \"facts\": {\n    \"authors\": [\"Yujeong Won\", \"Seyoon Jang\", \"Yuri Lee\"],\n    \"date\": \"2026-10-23\",\n    \"format\": \"article\",\n    \"publisher\": \"Springer Nature\"\n  },\n  \"summary\": \"This study examines how AI chatbots versus human agents influence consumer trust and behavioral intentions regarding luxury fashion sustainability. Through an experimental design, the authors find that perceived information objectivity and persuasiveness boost brand trust. AI provider cues strengthen the trust-mediated impact of objectivity, particularly among consumers with lower perceived brand luxury, highlighting how algorithmic communication can address sustainability credibility gaps.\",\n  \"tags\": [\"luxury fashion\", \"sustainability\", \"ai chatbots\", \"consumer trust\", \"brand perception\"],\n  \"concepts\": [\n    \"AI vs human agency in luxury branding\",\n    \"sustainability communication and consumer trust\",\n    \"perceived brand luxury as a boundary condition\"\n  ],\n  \"connections\": [\n    {\n      \"to\": 4,\n      \"kind\": \"related\",\n      \"why\": \"Both sources investigate how luxury fashion brands manage communication and symbolic value to shape consumer perceptions and trust.\"\n    },\n    {\n      \"to\": 6,\n      \"kind\": \"related\",\n      \"why\": \"Both address the adoption of AI technologies in the fashion sector, focusing on how digital tools alter brand-consumer interactions.\"\n    },\n    {\n      \"to\": 1,\n      \"kind\": \"related\",\n      \"why\": \"Both explore how AI-mediated communication influences consumer evaluations, trust, and commercial responses in marketing contexts.\"\n    },\n    {\n      \"to\": 8,\n      \"kind\": \"related\",\n      \"why\": \"Both examine the shifting roles of human labor as AI technologies take over customer service and communicative tasks.\"\n    }\n  ]\n}",
+    "answeredBy": "dots-studio/dots-3-note-preview:free",
+    "ms": 46142,
+    "attempts": 1,
+    "usage": {
+     "prompt_tokens": 8747,
+     "completion_tokens": 4008,
+     "total_tokens": 12755,
+     "cost": 0,
+     "is_byok": false,
+     "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+     },
+     "cost_details": {
+      "upstream_inference_cost": 0,
+      "upstream_inference_prompt_cost": 0,
+      "upstream_inference_completions_cost": 0
+     },
+     "completion_tokens_details": {
+      "reasoning_tokens": 3789,
+      "image_tokens": 0,
+      "audio_tokens": 0
+     }
+    },
+    "parsed": {
+     "object_type": "Source",
+     "title": "Luxury fashion brands’ AI-powered sustainability chatbot communication: how information qualities and brand luxury perception shape consumer trust and behavior",
+     "facts": {
+      "authors": [
+       "Yujeong Won",
+       "Seyoon Jang",
+       "Yuri Lee"
+      ],
+      "date": "2026-10-23",
+      "format": "article",
+      "publisher": "Springer Nature"
+     },
+     "summary": "This study examines how AI chatbots versus human agents influence consumer trust and behavioral intentions regarding luxury fashion sustainability. Through an experimental design, the authors find that perceived information objectivity and persuasiveness boost brand trust. AI provider cues strengthen the trust-mediated impact of objectivity, particularly among consumers with lower perceived brand luxury, highlighting how algorithmic communication can address sustainability credibility gaps.",
+     "tags": [
+      "luxury fashion",
+      "sustainability",
+      "ai chatbots",
+      "consumer trust",
+      "brand perception"
+     ],
+     "concepts": [
+      "AI vs human agency in luxury branding",
+      "sustainability communication and consumer trust",
+      "perceived brand luxury as a boundary condition"
+     ],
+     "connections": [
+      {
+       "to": 4,
+       "kind": "related",
+       "why": "Both sources investigate how luxury fashion brands manage communication and symbolic value to shape consumer perceptions and trust."
+      },
+      {
+       "to": 6,
+       "kind": "related",
+       "why": "Both address the adoption of AI technologies in the fashion sector, focusing on how digital tools alter brand-consumer interactions."
+      },
+      {
+       "to": 1,
+       "kind": "related",
+       "why": "Both explore how AI-mediated communication influences consumer evaluations, trust, and commercial responses in marketing contexts."
+      },
+      {
+       "to": 8,
+       "kind": "related",
+       "why": "Both examine the shifting roles of human labor as AI technologies take over customer service and communicative tasks."
+      }
+     ]
+    },
+    "how": "clean"
+   }
+  },
+  "4": {
+   "google/gemma-4-31b-it:free": {
+    "ok": false,
+    "error": "Provider returned error",
+    "ms": 580,
+    "attempts": 3
+   },
+   "nvidia/nemotron-3.5-super-vl:free": {
+    "ok": true,
+    "text": "{\"object_type\": \"Source\", \"title\": \"Why Luxury Marketing Is Getting More Restrained\", \"facts\": {\"authors\": [], \"date\": null, \"format\": \"article\", \"publisher\": \"Business of Fashion\"}, \"summary\": \"Luxury brands are shifting from attention-grabbing TikTok gimmicks and microtrends toward restrained, heritage-focused marketing. Campaigns by Burberry, Dior, Prada, and others emphasize recognizable brand DNA, archival silhouettes, and relatable daily rituals. Economic pressures and consumer fatigue drive this return to simplicity, while prior AI experimentation paradoxically reinforces the value of authentic brand history and cinematic storytelling over machine-generated sameness.\", \"tags\": [\"luxury marketing\", \"restraint\", \"heritage branding\", \"ai sameness\", \"consumer sentiment\"], \"concepts\": [\"brand DNA and heritage in luxury marketing\", \"restraint versus attention-seeking in fashion advertising\", \"economic pressure on luxury consumer behavior\", \"AI limitations in authentic brand storytelling\"], \"connections\": [{\"to\": 2, \"kind\": \"supports\", \"why\": \"Source #4's claim that AI cannot hallucinate a brand's history and creates AI-generated sameness reinforces Source #2's argument that AI outputs converge on predictable, average answers.\"}, {\"to\": 5, \"kind\": \"related\", \"why\": \"Both sources position restraint, human effort, and brand authenticity as deliberate alternatives to AI-driven or attention-seeking fashion content.\"}, {\"to\": 6, \"kind\": \"related\", \"why\": \"Source #4's turn toward simple, human-centric campaigns contrasts with Source #6's reporting on fashion brands adopting AI face swaps and digital clones.\"}, {\"to\": 8, \"kind\": \"related\", \"why\": \"Source #4 describes creative directors shifting from personal ego to brand-first curation, echoing Source #8's findings on how AI is redistributing creative work and roles.\"}]}",
+    "answeredBy": "nvidia/nemotron-3.5-super-vl:free",
+    "ms": 24554,
+    "attempts": 1,
+    "usage": {
+     "prompt_tokens": 2632,
+     "completion_tokens": 3137,
+     "total_tokens": 5769,
+     "cost": 0,
+     "is_byok": false,
+     "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+     },
+     "cost_details": {
+      "upstream_inference_cost": 0,
+      "upstream_inference_prompt_cost": 0,
+      "upstream_inference_completions_cost": 0
+     },
+     "completion_tokens_details": {
+      "reasoning_tokens": 2722,
+      "image_tokens": 0,
+      "audio_tokens": 0
+     }
+    },
+    "parsed": {
+     "object_type": "Source",
+     "title": "Why Luxury Marketing Is Getting More Restrained",
+     "facts": {
+      "authors": [],
+      "date": null,
+      "format": "article",
+      "publisher": "Business of Fashion"
+     },
+     "summary": "Luxury brands are shifting from attention-grabbing TikTok gimmicks and microtrends toward restrained, heritage-focused marketing. Campaigns by Burberry, Dior, Prada, and others emphasize recognizable brand DNA, archival silhouettes, and relatable daily rituals. Economic pressures and consumer fatigue drive this return to simplicity, while prior AI experimentation paradoxically reinforces the value of authentic brand history and cinematic storytelling over machine-generated sameness.",
+     "tags": [
+      "luxury marketing",
+      "restraint",
+      "heritage branding",
+      "ai sameness",
+      "consumer sentiment"
+     ],
+     "concepts": [
+      "brand DNA and heritage in luxury marketing",
+      "restraint versus attention-seeking in fashion advertising",
+      "economic pressure on luxury consumer behavior",
+      "AI limitations in authentic brand storytelling"
+     ],
+     "connections": [
+      {
+       "to": 2,
+       "kind": "supports",
+       "why": "Source #4's claim that AI cannot hallucinate a brand's history and creates AI-generated sameness reinforces Source #2's argument that AI outputs converge on predictable, average answers."
+      },
+      {
+       "to": 5,
+       "kind": "related",
+       "why": "Both sources position restraint, human effort, and brand authenticity as deliberate alternatives to AI-driven or attention-seeking fashion content."
+      },
+      {
+       "to": 6,
+       "kind": "related",
+       "why": "Source #4's turn toward simple, human-centric campaigns contrasts with Source #6's reporting on fashion brands adopting AI face swaps and digital clones."
+      },
+      {
+       "to": 8,
+       "kind": "related",
+       "why": "Source #4 describes creative directors shifting from personal ego to brand-first curation, echoing Source #8's findings on how AI is redistributing creative work and roles."
+      }
+     ]
+    },
+    "how": "clean"
+   },
+   "nvidia/nemotron-3-ultra-550b-a55b:free": {
+    "ok": true,
+    "text": "{\n  \"object_type\": \"Source\",\n  \"title\": \"Why Luxury Marketing Is Getting More Restrained\",\n  \"facts\": {\n    \"authors\": [],\n    \"date\": \"2026-10-27\",\n    \"format\": \"article\",\n    \"publisher\": \"Business of Fashion\"\n  },\n  \"summary\": \"Luxury brands (Burberry, Dior, Prada, Balenciaga, Chloé, Saint Laurent) are shifting from high-decibel TikTok-era gimmicks to restrained, heritage-driven campaigns centered on recognizable DNA and relatable daily rituals. Creative directors now curate archives rather than reinvent each season. AI experimentation paradoxically reinforced this turn: brands use their unauthored history as a weapon against AI-generated sameness, investing in cinematic storytelling with film directors and actors to elevate ordinary moments.\",\n  \"tags\": [\"luxury marketing\", \"brand heritage\", \"creative direction\", \"ai backlash\", \"quiet luxury\", \"campaign strategy\"],\n  \"concepts\": [\"brand DNA and archive curation\", \"restraint as luxury signal\", \"AI-generated sameness vs. human heritage\", \"cinematic storytelling in fashion marketing\", \"creative director role evolution\"],\n  \"connections\": [\n    {\n      \"to\": 2,\n      \"kind\": \"supports\",\n      \"why\": \"Article explicitly cites AI-generated sameness as a driver for brands to lean on unauthored heritage as differentiation.\"\n    },\n    {\n      \"to\": 5,\n      \"kind\": \"related\",\n      \"why\": \"Both describe fashion brands rejecting AI-driven ease in favor of human effort, craft, and authenticity as a counter-signal.\"\n    },\n    {\n      \"to\": 6,\n      \"kind\": \"related\",\n      \"why\": \"Article references a year of AI experimentation (face swaps, digital clones) that preceded the current restrained, heritage-focused turn.\"\n    },\n    {\n      \"to\": 3,\n      \"kind\": \"related\",\n      \"why\": \"Both examine luxury brands navigating AI — one via chatbot communication, the other via marketing strategy — with trust and authenticity at stake.\"\n    }\n  ]\n}",
+    "answeredBy": "nvidia/nemotron-3-ultra-550b-a55b:free",
+    "ms": 20140,
+    "attempts": 1,
+    "usage": {
+     "prompt_tokens": 2632,
+     "completion_tokens": 973,
+     "total_tokens": 3605,
+     "cost": 0,
+     "is_byok": false,
+     "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+     },
+     "cost_details": {
+      "upstream_inference_cost": 0,
+      "upstream_inference_prompt_cost": 0,
+      "upstream_inference_completions_cost": 0
+     },
+     "completion_tokens_details": {
+      "reasoning_tokens": 554,
+      "image_tokens": 0,
+      "audio_tokens": 0
+     }
+    },
+    "parsed": {
+     "object_type": "Source",
+     "title": "Why Luxury Marketing Is Getting More Restrained",
+     "facts": {
+      "authors": [],
+      "date": "2026-10-27",
+      "format": "article",
+      "publisher": "Business of Fashion"
+     },
+     "summary": "Luxury brands (Burberry, Dior, Prada, Balenciaga, Chloé, Saint Laurent) are shifting from high-decibel TikTok-era gimmicks to restrained, heritage-driven campaigns centered on recognizable DNA and relatable daily rituals. Creative directors now curate archives rather than reinvent each season. AI experimentation paradoxically reinforced this turn: brands use their unauthored history as a weapon against AI-generated sameness, investing in cinematic storytelling with film directors and actors to elevate ordinary moments.",
+     "tags": [
+      "luxury marketing",
+      "brand heritage",
+      "creative direction",
+      "ai backlash",
+      "quiet luxury",
+      "campaign strategy"
+     ],
+     "concepts": [
+      "brand DNA and archive curation",
+      "restraint as luxury signal",
+      "AI-generated sameness vs. human heritage",
+      "cinematic storytelling in fashion marketing",
+      "creative director role evolution"
+     ],
+     "connections": [
+      {
+       "to": 2,
+       "kind": "supports",
+       "why": "Article explicitly cites AI-generated sameness as a driver for brands to lean on unauthored heritage as differentiation."
+      },
+      {
+       "to": 5,
+       "kind": "related",
+       "why": "Both describe fashion brands rejecting AI-driven ease in favor of human effort, craft, and authenticity as a counter-signal."
+      },
+      {
+       "to": 6,
+       "kind": "related",
+       "why": "Article references a year of AI experimentation (face swaps, digital clones) that preceded the current restrained, heritage-focused turn."
+      },
+      {
+       "to": 3,
+       "kind": "related",
+       "why": "Both examine luxury brands navigating AI — one via chatbot communication, the other via marketing strategy — with trust and authenticity at stake."
+      }
+     ]
+    },
+    "how": "clean"
+   },
+   "xingchen-agi/xing4.0-29b-a4b:free": {
+    "ok": true,
+    "text": "{\"object_type\": \"Source\", \"title\": \"Why Luxury Marketing Is Getting More Restrained\", \"facts\": {\"authors\": [\"Business of Fashion\"], \"date\": \"2026-09-15\", \"format\": \"news\", \"publisher\": \"Business of Fashion\"}, \"summary\": \"Luxury brands are shifting from attention-grabbing gimmicks toward restrained, heritage-driven campaigns that foreground recognizable DNA and everyday rituals. Driven by consumer caution over rising costs, social unrest, and economic uncertainty, brands like Burberry, Dior, Prada, Chloé, Balenciaga, Saint Laurent, and Loewe emphasize archive curation, relatable settings, and cinematic storytelling over novelty. AI experimentation paradoxically reinforces the value of authentic brand history.\", \"tags\": [\"luxury marketing\", \"creative directors\", \"heritage\", \"campaign strategy\", \"consumer sentiment\"], \"concepts\": [\"brand identity\", \"creative director role\", \"restraint in luxury advertising\", \"heritage curation\", \"AI and brand authenticity\"], \"connections\": [{\"to\": 1, \"kind\": \"builds on\", \"why\": \"This Source explains why luxury brands moved away from gimmicky campaigns toward restrained, heritage-led strategies, which directly informs the production workflow focus of Source #1.\"}, {\"to\": 3, \"kind\": \"related\", \"why\": \"Both sources examine how luxury brands communicate with consumers; Source #3 studies AI chatbots for sustainability communication while this one examines broader campaign strategy restraint.\"}, {\"to\": 5, \"kind\": \"supports\", \"why\": \"Source #5 discusses how fashion brands use effort signaling to resist AI sameness, which parallels the restrained, human-centered approach described here.\"}, {\"to\": 6, \"kind\": \"mentions\", \"why\": \"Source #6 covers face swaps and digital clones in fashion, a related topic of AI's disruptive presence in creative work that this Source contextualizes.\"}]}",
+    "answeredBy": "xingchen-agi/xing4.0-29b-a4b:free",
+    "ms": 10488,
+    "attempts": 1,
+    "usage": {
+     "prompt_tokens": 2656,
+     "completion_tokens": 413,
+     "total_tokens": 3069,
+     "cost": 0,
+     "is_byok": false,
+     "prompt_tokens_details": {
+      "cached_tokens": 320,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+     },
+     "cost_details": {
+      "upstream_inference_cost": 0,
+      "upstream_inference_prompt_cost": 0,
+      "upstream_inference_completions_cost": 0
+     },
+     "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+     }
+    },
+    "parsed": {
+     "object_type": "Source",
+     "title": "Why Luxury Marketing Is Getting More Restrained",
+     "facts": {
+      "authors": [
+       "Business of Fashion"
+      ],
+      "date": "2026-09-15",
+      "format": "news",
+      "publisher": "Business of Fashion"
+     },
+     "summary": "Luxury brands are shifting from attention-grabbing gimmicks toward restrained, heritage-driven campaigns that foreground recognizable DNA and everyday rituals. Driven by consumer caution over rising costs, social unrest, and economic uncertainty, brands like Burberry, Dior, Prada, Chloé, Balenciaga, Saint Laurent, and Loewe emphasize archive curation, relatable settings, and cinematic storytelling over novelty. AI experimentation paradoxically reinforces the value of authentic brand history.",
+     "tags": [
+      "luxury marketing",
+      "creative directors",
+      "heritage",
+      "campaign strategy",
+      "consumer sentiment"
+     ],
+     "concepts": [
+      "brand identity",
+      "creative director role",
+      "restraint in luxury advertising",
+      "heritage curation",
+      "AI and brand authenticity"
+     ],
+     "connections": [
+      {
+       "to": 1,
+       "kind": "builds on",
+       "why": "This Source explains why luxury brands moved away from gimmicky campaigns toward restrained, heritage-led strategies, which directly informs the production workflow focus of Source #1."
+      },
+      {
+       "to": 3,
+       "kind": "related",
+       "why": "Both sources examine how luxury brands communicate with consumers; Source #3 studies AI chatbots for sustainability communication while this one examines broader campaign strategy restraint."
+      },
+      {
+       "to": 5,
+       "kind": "supports",
+       "why": "Source #5 discusses how fashion brands use effort signaling to resist AI sameness, which parallels the restrained, human-centered approach described here."
+      },
+      {
+       "to": 6,
+       "kind": "mentions",
+       "why": "Source #6 covers face swaps and digital clones in fashion, a related topic of AI's disruptive presence in creative work that this Source contextualizes."
+      }
+     ]
+    },
+    "how": "clean"
+   },
+   "openrouter/free": {
+    "ok": true,
+    "text": "{\"object_type\": \"Source\", \"title\": \"Why Luxury Marketing Is Getting More Restrained\", \"facts\": {\"authors\": [], \"date\": null, \"format\": \"article\", \"publisher\": \"Business of Fashion\"}, \"summary\": \"Luxury brands such as Burberry, Dior, and Prada are replacing attention-grabbing TikTok stunts and memes with restrained, heritage-led campaigns centered on recognizable product DNA and everyday rituals. Amid economic strain and consumer fatigue, creative directors are curating archives rather than reinventing brands. The article argues that AI-generated sameness has made authentic brand history a competitive advantage, driving investment in cinematic storytelling with prestigious directors and actors.\", \"tags\": [\"luxury marketing\", \"restrained branding\", \"heritage\", \"ai sameness\", \"fashion campaigns\"], \"concepts\": [\"brand authenticity in luxury\", \"heritage-driven marketing\", \"post-AI creative differentiation\", \"luxury consumer sentiment\"], \"connections\": [{\"to\": 2, \"kind\": \"builds on\", \"why\": \"The source extends the 'beige trap' critique of AI sameness into luxury marketing, proposing heritage and restraint as a counter-strategy.\"}, {\"to\": 5, \"kind\": \"related\", \"why\": \"Both describe fashion’s turn away from AI-driven gimmicks toward human-centered, authentic brand expression.\"}, {\"to\": 6, \"kind\": \"related\", \"why\": \"Both examine fashion’s relationship with AI, though #4 describes a pullback from AI-led marketing while #6 reports brands securing AI replica rights.\"}, {\"to\": 8, \"kind\": \"related\", \"why\": \"Both address the changing role of creative directors and creative labor in an AI-influenced industry.\"}]}",
+    "answeredBy": "nvidia/nemotron-3.5-super-vl:free",
+    "ms": 29015,
+    "attempts": 1,
+    "usage": {
+     "prompt_tokens": 2632,
+     "completion_tokens": 3532,
+     "total_tokens": 6164,
+     "cost": 0,
+     "is_byok": false,
+     "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+     },
+     "cost_details": {
+      "upstream_inference_cost": 0,
+      "upstream_inference_prompt_cost": 0,
+      "upstream_inference_completions_cost": 0
+     },
+     "completion_tokens_details": {
+      "reasoning_tokens": 3155,
+      "image_tokens": 0,
+      "audio_tokens": 0
+     }
+    },
+    "parsed": {
+     "object_type": "Source",
+     "title": "Why Luxury Marketing Is Getting More Restrained",
+     "facts": {
+      "authors": [],
+      "date": null,
+      "format": "article",
+      "publisher": "Business of Fashion"
+     },
+     "summary": "Luxury brands such as Burberry, Dior, and Prada are replacing attention-grabbing TikTok stunts and memes with restrained, heritage-led campaigns centered on recognizable product DNA and everyday rituals. Amid economic strain and consumer fatigue, creative directors are curating archives rather than reinventing brands. The article argues that AI-generated sameness has made authentic brand history a competitive advantage, driving investment in cinematic storytelling with prestigious directors and actors.",
+     "tags": [
+      "luxury marketing",
+      "restrained branding",
+      "heritage",
+      "ai sameness",
+      "fashion campaigns"
+     ],
+     "concepts": [
+      "brand authenticity in luxury",
+      "heritage-driven marketing",
+      "post-AI creative differentiation",
+      "luxury consumer sentiment"
+     ],
+     "connections": [
+      {
+       "to": 2,
+       "kind": "builds on",
+       "why": "The source extends the 'beige trap' critique of AI sameness into luxury marketing, proposing heritage and restraint as a counter-strategy."
+      },
+      {
+       "to": 5,
+       "kind": "related",
+       "why": "Both describe fashion’s turn away from AI-driven gimmicks toward human-centered, authentic brand expression."
+      },
+      {
+       "to": 6,
+       "kind": "related",
+       "why": "Both examine fashion’s relationship with AI, though #4 describes a pullback from AI-led marketing while #6 reports brands securing AI replica rights."
+      },
+      {
+       "to": 8,
+       "kind": "related",
+       "why": "Both address the changing role of creative directors and creative labor in an AI-influenced industry."
+      }
+     ]
+    },
+    "how": "clean"
+   }
+  },
+  "5": {
+   "google/gemma-4-31b-it:free": {
+    "ok": false,
+    "error": "Provider returned error",
+    "ms": 941,
+    "attempts": 3
+   },
+   "nvidia/nemotron-3.5-super-vl:free": {
+    "ok": true,
+    "text": "{\"object_type\": \"Source\", \"title\": \"How \\\"Effort Signaling\\\" Became Fashion's Antithesis to AI\", \"facts\": {\"authors\": null, \"date\": null, \"format\": \"article\", \"publisher\": \"Vogue\"}, \"summary\": \"Fashion brands are countering AI-generated content with “effort signaling”—visible, slow human craft—to justify luxury prices and rebuild consumer trust. The Vogue piece reports on collaborations with artists like Sibatable and Hermès illustrators, noting backlash against synthetic imagery and growing demand for proof of labor, care, and authenticity in high-end marketing.\", \"tags\": [\"effort signaling\", \"ai backlash\", \"human craft\", \"luxury fashion\", \"brand authenticity\", \"handmade artistry\"], \"concepts\": [\"authenticity in luxury\", \"human vs AI creativity\", \"effort signaling as brand strategy\", \"consumer trust in fashion\"], \"connections\": [{\"to\": 2, \"kind\": \"supports\", \"why\": \"Source #2's “beige trap” explains why AI-generated creativity feels generic, reinforcing #5's argument that brands use human effort to signal distinctiveness.\"}, {\"to\": 4, \"kind\": \"related\", \"why\": \"Both sources examine how luxury fashion marketing is shifting toward restraint, simplicity, and human-centered storytelling.\"}, {\"to\": 6, \"kind\": \"related\", \"why\": \"#6 reports on fashion brands contracting for AI image rights, while #5 documents consumer backlash against such AI-generated imagery.\"}, {\"to\": 8, \"kind\": \"related\", \"why\": \"Both sources analyze how AI is changing creative labor and the value placed on human-made work in fashion and adjacent industries.\"}]}",
+    "answeredBy": "nvidia/nemotron-3.5-super-vl:free",
+    "ms": 19705,
+    "attempts": 1,
+    "usage": {
+     "prompt_tokens": 3193,
+     "completion_tokens": 3023,
+     "total_tokens": 6216,
+     "cost": 0,
+     "is_byok": false,
+     "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+     },
+     "cost_details": {
+      "upstream_inference_cost": 0,
+      "upstream_inference_prompt_cost": 0,
+      "upstream_inference_completions_cost": 0
+     },
+     "completion_tokens_details": {
+      "reasoning_tokens": 2654,
+      "image_tokens": 0,
+      "audio_tokens": 0
+     }
+    },
+    "parsed": {
+     "object_type": "Source",
+     "title": "How \"Effort Signaling\" Became Fashion's Antithesis to AI",
+     "facts": {
+      "authors": null,
+      "date": null,
+      "format": "article",
+      "publisher": "Vogue"
+     },
+     "summary": "Fashion brands are countering AI-generated content with “effort signaling”—visible, slow human craft—to justify luxury prices and rebuild consumer trust. The Vogue piece reports on collaborations with artists like Sibatable and Hermès illustrators, noting backlash against synthetic imagery and growing demand for proof of labor, care, and authenticity in high-end marketing.",
+     "tags": [
+      "effort signaling",
+      "ai backlash",
+      "human craft",
+      "luxury fashion",
+      "brand authenticity",
+      "handmade artistry"
+     ],
+     "concepts": [
+      "authenticity in luxury",
+      "human vs AI creativity",
+      "effort signaling as brand strategy",
+      "consumer trust in fashion"
+     ],
+     "connections": [
+      {
+       "to": 2,
+       "kind": "supports",
+       "why": "Source #2's “beige trap” explains why AI-generated creativity feels generic, reinforcing #5's argument that brands use human effort to signal distinctiveness."
+      },
+      {
+       "to": 4,
+       "kind": "related",
+       "why": "Both sources examine how luxury fashion marketing is shifting toward restraint, simplicity, and human-centered storytelling."
+      },
+      {
+       "to": 6,
+       "kind": "related",
+       "why": "#6 reports on fashion brands contracting for AI image rights, while #5 documents consumer backlash against such AI-generated imagery."
+      },
+      {
+       "to": 8,
+       "kind": "related",
+       "why": "Both sources analyze how AI is changing creative labor and the value placed on human-made work in fashion and adjacent industries."
+      }
+     ]
+    },
+    "how": "clean"
+   },
+   "nvidia/nemotron-3-ultra-550b-a55b:free": {
+    "ok": true,
+    "text": "{\n  \"object_type\": \"Source\",\n  \"title\": \"How 'Effort Signaling' Became Fashion's Antithesis to AI\",\n  \"facts\": {\n    \"authors\": [\"Vogue\"],\n    \"date\": \"2026-08-01\",\n    \"format\": \"article\",\n    \"publisher\": \"Vogue\"\n  },\n  \"summary\": \"Vogue reports on 'effort signaling' — luxury and fashion brands collaborating with human artists (e.g., Min Kyung-jin's pasta denim for Abercrombie, hand-drawn animations for Hermès, Chanel, Dior) to visibly demonstrate craft, time, and skill as a counter-narrative to AI-generated campaigns. Consultants Miranda Shanahan and Tammy Smulders note consumers now equate visible labor with value, distrust glossy imagery that could be AI, and seek emotional warmth over status; brands must prove care through process transparency, not just output.\",\n  \"tags\": [\"effort signaling\", \"luxury marketing\", \"human craft\", \"ai backlash\", \"brand authenticity\", \"consumer trust\"],\n  \"concepts\": [\"authenticity in luxury\", \"human vs AI creativity\", \"craft as brand strategy\", \"consumer skepticism toward technology\", \"value signaling through labor\"],\n  \"connections\": [\n    {\n      \"to\": 4,\n      \"kind\": \"related\",\n      \"why\": \"Both describe luxury marketing shifting toward restraint and human-scale storytelling; this source adds the specific 'effort signaling' mechanism behind the muted campaigns noted in #4.\"\n    },\n    {\n      \"to\": 2,\n      \"kind\": \"supports\",\n      \"why\": \"The 'beige trap' of AI's generic output (#2) explains why brands now showcase painstaking, imperfect human craft to differentiate — exactly the dynamic Shanahan describes.\"\n    },\n    {\n      \"to\": 6,\n      \"kind\": \"contradicts\",\n      \"why\": \"#6 reports brands securing AI replica rights for models/influencers, while this source shows brands actively rejecting AI aesthetics in favor of visible human labor.\"\n    },\n    {\n      \"to\": 8,\n      \"kind\": \"related\",\n      \"why\": \"#8 documents AI redistributing creative work; this source illustrates the market reaction — brands commissioning slow, manual craft to reassert human creative value.\"\n    }\n  ]\n}",
+    "answeredBy": "nvidia/nemotron-3-ultra-550b-a55b:free",
+    "ms": 25940,
+    "attempts": 1,
+    "usage": {
+     "prompt_tokens": 3193,
+     "completion_tokens": 967,
+     "total_tokens": 4160,
+     "cost": 0,
+     "is_byok": false,
+     "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+     },
+     "cost_details": {
+      "upstream_inference_cost": 0,
+      "upstream_inference_prompt_cost": 0,
+      "upstream_inference_completions_cost": 0
+     },
+     "completion_tokens_details": {
+      "reasoning_tokens": 470,
+      "image_tokens": 0,
+      "audio_tokens": 0
+     }
+    },
+    "parsed": {
+     "object_type": "Source",
+     "title": "How 'Effort Signaling' Became Fashion's Antithesis to AI",
+     "facts": {
+      "authors": [
+       "Vogue"
+      ],
+      "date": "2026-08-01",
+      "format": "article",
+      "publisher": "Vogue"
+     },
+     "summary": "Vogue reports on 'effort signaling' — luxury and fashion brands collaborating with human artists (e.g., Min Kyung-jin's pasta denim for Abercrombie, hand-drawn animations for Hermès, Chanel, Dior) to visibly demonstrate craft, time, and skill as a counter-narrative to AI-generated campaigns. Consultants Miranda Shanahan and Tammy Smulders note consumers now equate visible labor with value, distrust glossy imagery that could be AI, and seek emotional warmth over status; brands must prove care through process transparency, not just output.",
+     "tags": [
+      "effort signaling",
+      "luxury marketing",
+      "human craft",
+      "ai backlash",
+      "brand authenticity",
+      "consumer trust"
+     ],
+     "concepts": [
+      "authenticity in luxury",
+      "human vs AI creativity",
+      "craft as brand strategy",
+      "consumer skepticism toward technology",
+      "value signaling through labor"
+     ],
+     "connections": [
+      {
+       "to": 4,
+       "kind": "related",
+       "why": "Both describe luxury marketing shifting toward restraint and human-scale storytelling; this source adds the specific 'effort signaling' mechanism behind the muted campaigns noted in #4."
+      },
+      {
+       "to": 2,
+       "kind": "supports",
+       "why": "The 'beige trap' of AI's generic output (#2) explains why brands now showcase painstaking, imperfect human craft to differentiate — exactly the dynamic Shanahan describes."
+      },
+      {
+       "to": 6,
+       "kind": "contradicts",
+       "why": "#6 reports brands securing AI replica rights for models/influencers, while this source shows brands actively rejecting AI aesthetics in favor of visible human labor."
+      },
+      {
+       "to": 8,
+       "kind": "related",
+       "why": "#8 documents AI redistributing creative work; this source illustrates the market reaction — brands commissioning slow, manual craft to reassert human creative value."
+      }
+     ]
+    },
+    "how": "clean"
+   },
+   "xingchen-agi/xing4.0-29b-a4b:free": {
+    "ok": false,
+    "error": "Provider returned error",
+    "ms": 849,
+    "attempts": 3
+   },
+   "openrouter/free": {
+    "ok": true,
+    "text": "{\n  \"object_type\": \"Source\",\n  \"title\": \"Effort signaling becomes fashion's antithesis to AI\",\n  \"facts\": {\n    \"authors\": [],\n    \"date\": null,\n    \"format\": \"article\",\n    \"publisher\": \"Vogue\"\n  },\n  \"summary\": \"The article explores how luxury brands are embracing \\\"effort signaling\\\"—showcasing handcrafted, human‑made art (e.g., edible sculptures) to counter AI‑generated content, responding to consumer skepticism about AI and a desire for visible labor and authenticity. It details collaborations, consumer backlash to perceived AI, and the strategic shift toward human touch as a value marker.\",\n  \"tags\": [\n    \"effort signaling\",\n    \"human artistry\",\n    \"luxury branding\",\n    \"ai backlash\",\n    \"consumer trust\"\n  ],\n  \"concepts\": [\n    \"human touch in luxury\",\n    \"value signaling and authenticity\",\n    \"consumer skepticism toward AI\",\n    \"creative collaboration strategies\"\n  ],\n  \"connections\": [\n    {\n      \"to\": 4,\n      \"kind\": \"related\",\n      \"why\": \"Both discuss luxury brands shifting toward human‑crafted aesthetics and restrained marketing to differentiate from AI.\"\n    },\n    {\n      \"to\": 2,\n      \"kind\": \"supports\",\n      \"why\": \"The article reinforces the critique that AI often produces generic, ‘beige’ results, prompting brands to highlight manual effort.\"\n    },\n    {\n      \"to\": 6,\n      \"kind\": \"contradicts\",\n      \"why\": \"While #6 examines AI’s rise in fashion imagery, #5 argues that AI‑generated visuals face consumer backlash, opposing that trend.\"\n    },\n    {\n      \"to\": 8,\n      \"kind\": \"contradicts\",\n      \"why\": \"The article counters #8’s focus on AI redistributing creative work by championing human artisans as the new value drivers.\"\n    }\n  ]\n}",
+    "answeredBy": "cohere/north-mini-code:free",
+    "ms": 87460,
+    "attempts": 1,
+    "usage": {
+     "prompt_tokens": 2959,
+     "completion_tokens": 2396,
+     "total_tokens": 5355,
+     "cost": 0,
+     "is_byok": false,
+     "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+     },
+     "cost_details": {
+      "upstream_inference_cost": 0,
+      "upstream_inference_prompt_cost": 0,
+      "upstream_inference_completions_cost": 0
+     },
+     "completion_tokens_details": {
+      "reasoning_tokens": 2285,
+      "image_tokens": 0,
+      "audio_tokens": 0
+     }
+    },
+    "parsed": {
+     "object_type": "Source",
+     "title": "Effort signaling becomes fashion's antithesis to AI",
+     "facts": {
+      "authors": [],
+      "date": null,
+      "format": "article",
+      "publisher": "Vogue"
+     },
+     "summary": "The article explores how luxury brands are embracing \"effort signaling\"—showcasing handcrafted, human‑made art (e.g., edible sculptures) to counter AI‑generated content, responding to consumer skepticism about AI and a desire for visible labor and authenticity. It details collaborations, consumer backlash to perceived AI, and the strategic shift toward human touch as a value marker.",
+     "tags": [
+      "effort signaling",
+      "human artistry",
+      "luxury branding",
+      "ai backlash",
+      "consumer trust"
+     ],
+     "concepts": [
+      "human touch in luxury",
+      "value signaling and authenticity",
+      "consumer skepticism toward AI",
+      "creative collaboration strategies"
+     ],
+     "connections": [
+      {
+       "to": 4,
+       "kind": "related",
+       "why": "Both discuss luxury brands shifting toward human‑crafted aesthetics and restrained marketing to differentiate from AI."
+      },
+      {
+       "to": 2,
+       "kind": "supports",
+       "why": "The article reinforces the critique that AI often produces generic, ‘beige’ results, prompting brands to highlight manual effort."
+      },
+      {
+       "to": 6,
+       "kind": "contradicts",
+       "why": "While #6 examines AI’s rise in fashion imagery, #5 argues that AI‑generated visuals face consumer backlash, opposing that trend."
+      },
+      {
+       "to": 8,
+       "kind": "contradicts",
+       "why": "The article counters #8’s focus on AI redistributing creative work by championing human artisans as the new value drivers."
+      }
+     ]
+    },
+    "how": "clean"
+   }
+  },
+  "6": {
+   "google/gemma-4-31b-it:free": {
+    "ok": false,
+    "error": "Provider returned error",
+    "ms": 478,
+    "attempts": 3
+   },
+   "nvidia/nemotron-3.5-super-vl:free": {
+    "ok": true,
+    "text": "{\"object_type\": \"Source\", \"title\": \"Fashion's AI era: face swaps and digital clones\", \"facts\": {\"authors\": [\"Helen Reid\"], \"date\": \"2026-10-27\", \"format\": \"news\", \"publisher\": \"Reuters\"}, \"summary\": \"Reuters reports that fashion brands including Diesel, Calvin Klein, and L'Oreal are seeking contract rights to AI-alter models, create unpaid digital clones, and train AI on their images. AI-generated models cut production costs by over 90%, driving studio closures and job losses, while regulation lags behind except for New York's Fashion Workers Act.\", \"tags\": [\"ai models\", \"fashion\", \"digital clones\", \"modeling contracts\", \"synthetic media\", \"labor rights\"], \"concepts\": [\"AI in fashion\", \"digital labor and image rights\", \"synthetic media economics\", \"AI regulation\"], \"connections\": [{\"to\": 1, \"kind\": \"related\", \"why\": \"Both examine how generative AI is reshaping commercial image production and advertising workflows.\"}, {\"to\": 5, \"kind\": \"related\", \"why\": \"Both address fashion's response to AI, contrasting anti-AI effort signaling with AI model adoption.\"}, {\"to\": 8, \"kind\": \"supports\", \"why\": \"The article offers concrete evidence of AI displacing creative jobs, supporting broader research on AI redistributing creative work.\"}]}",
+    "answeredBy": "nvidia/nemotron-3.5-super-vl:free",
+    "ms": 35738,
+    "attempts": 1,
+    "usage": {
+     "prompt_tokens": 2672,
+     "completion_tokens": 2551,
+     "total_tokens": 5223,
+     "cost": 0,
+     "is_byok": false,
+     "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+     },
+     "cost_details": {
+      "upstream_inference_cost": 0,
+      "upstream_inference_prompt_cost": 0,
+      "upstream_inference_completions_cost": 0
+     },
+     "completion_tokens_details": {
+      "reasoning_tokens": 2235,
+      "image_tokens": 0,
+      "audio_tokens": 0
+     }
+    },
+    "parsed": {
+     "object_type": "Source",
+     "title": "Fashion's AI era: face swaps and digital clones",
+     "facts": {
+      "authors": [
+       "Helen Reid"
+      ],
+      "date": "2026-10-27",
+      "format": "news",
+      "publisher": "Reuters"
+     },
+     "summary": "Reuters reports that fashion brands including Diesel, Calvin Klein, and L'Oreal are seeking contract rights to AI-alter models, create unpaid digital clones, and train AI on their images. AI-generated models cut production costs by over 90%, driving studio closures and job losses, while regulation lags behind except for New York's Fashion Workers Act.",
+     "tags": [
+      "ai models",
+      "fashion",
+      "digital clones",
+      "modeling contracts",
+      "synthetic media",
+      "labor rights"
+     ],
+     "concepts": [
+      "AI in fashion",
+      "digital labor and image rights",
+      "synthetic media economics",
+      "AI regulation"
+     ],
+     "connections": [
+      {
+       "to": 1,
+       "kind": "related",
+       "why": "Both examine how generative AI is reshaping commercial image production and advertising workflows."
+      },
+      {
+       "to": 5,
+       "kind": "related",
+       "why": "Both address fashion's response to AI, contrasting anti-AI effort signaling with AI model adoption."
+      },
+      {
+       "to": 8,
+       "kind": "supports",
+       "why": "The article offers concrete evidence of AI displacing creative jobs, supporting broader research on AI redistributing creative work."
+      }
+     ]
+    },
+    "how": "clean"
+   },
+   "nvidia/nemotron-3-ultra-550b-a55b:free": {
+    "ok": true,
+    "text": "{\n  \"object_type\": \"Source\",\n  \"title\": \"Fashion's AI era: face swaps and digital clones\",\n  \"facts\": {\n    \"authors\": [\"Helen Reid\"],\n    \"date\": \"2026-10-27\",\n    \"format\": \"news\",\n    \"publisher\": \"Reuters\"\n  },\n  \"summary\": \"Reuters investigates how AI-generated fashion models are upending the modeling industry, with brands like Diesel, Calvin Klein, and L'Oréal seeking contract rights to create digital twins, swap faces, and use model images to train AI—often without additional compensation. E-commerce studios are closing as retailers switch to AI models cutting costs by 90%+, while regulation lags behind except for New York's Fashion Workers Act.\",\n  \"tags\": [\"fashion\", \"ai-models\", \"digital-twins\", \"modeling-industry\", \"labor-rights\", \"ecommerce\"],\n  \"concepts\": [\"AI displacement of creative labor\", \"digital likeness rights\", \"fashion industry economics\", \"regulatory gaps in AI\", \"synthetic media ethics\"],\n  \"connections\": [\n    {\n      \"to\": 1,\n      \"kind\": \"related\",\n      \"why\": \"Both examine AI's role in creative production workflows and commercial value, though this focuses on modeling rather than advertising.\"\n    },\n    {\n      \"to\": 3,\n      \"kind\": \"related\",\n      \"why\": \"Both cover luxury fashion brands adopting AI technologies, but this addresses model replacement while #3 covers sustainability chatbots.\"\n    },\n    {\n      \"to\": 5,\n      \"kind\": \"related\",\n      \"why\": \"#5 describes 'effort signaling' as fashion's response to AI; this shows the AI-driven cost-cutting that prompts such signaling.\"\n    },\n    {\n      \"to\": 8,\n      \"kind\": \"supports\",\n      \"why\": \"Provides concrete evidence of AI redistributing creative work—specifically modeling jobs—and the economic forces driving it.\"\n    }\n  ]\n}",
+    "answeredBy": "nvidia/nemotron-3-ultra-550b-a55b:free",
+    "ms": 20753,
+    "attempts": 1,
+    "usage": {
+     "prompt_tokens": 2672,
+     "completion_tokens": 828,
+     "total_tokens": 3500,
+     "cost": 0,
+     "is_byok": false,
+     "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+     },
+     "cost_details": {
+      "upstream_inference_cost": 0,
+      "upstream_inference_prompt_cost": 0,
+      "upstream_inference_completions_cost": 0
+     },
+     "completion_tokens_details": {
+      "reasoning_tokens": 418,
+      "image_tokens": 0,
+      "audio_tokens": 0
+     }
+    },
+    "parsed": {
+     "object_type": "Source",
+     "title": "Fashion's AI era: face swaps and digital clones",
+     "facts": {
+      "authors": [
+       "Helen Reid"
+      ],
+      "date": "2026-10-27",
+      "format": "news",
+      "publisher": "Reuters"
+     },
+     "summary": "Reuters investigates how AI-generated fashion models are upending the modeling industry, with brands like Diesel, Calvin Klein, and L'Oréal seeking contract rights to create digital twins, swap faces, and use model images to train AI—often without additional compensation. E-commerce studios are closing as retailers switch to AI models cutting costs by 90%+, while regulation lags behind except for New York's Fashion Workers Act.",
+     "tags": [
+      "fashion",
+      "ai-models",
+      "digital-twins",
+      "modeling-industry",
+      "labor-rights",
+      "ecommerce"
+     ],
+     "concepts": [
+      "AI displacement of creative labor",
+      "digital likeness rights",
+      "fashion industry economics",
+      "regulatory gaps in AI",
+      "synthetic media ethics"
+     ],
+     "connections": [
+      {
+       "to": 1,
+       "kind": "related",
+       "why": "Both examine AI's role in creative production workflows and commercial value, though this focuses on modeling rather than advertising."
+      },
+      {
+       "to": 3,
+       "kind": "related",
+       "why": "Both cover luxury fashion brands adopting AI technologies, but this addresses model replacement while #3 covers sustainability chatbots."
+      },
+      {
+       "to": 5,
+       "kind": "related",
+       "why": "#5 describes 'effort signaling' as fashion's response to AI; this shows the AI-driven cost-cutting that prompts such signaling."
+      },
+      {
+       "to": 8,
+       "kind": "supports",
+       "why": "Provides concrete evidence of AI redistributing creative work—specifically modeling jobs—and the economic forces driving it."
+      }
+     ]
+    },
+    "how": "clean"
+   },
+   "xingchen-agi/xing4.0-29b-a4b:free": {
+    "ok": true,
+    "text": "{\"object_type\":\"Source\",\"title\":\"Fashion's AI era: face swaps and digital clones\",\"facts\":{\"authors\":[\"Helen Reid\"],\"date\":\"2026-10-27\",\"format\":\"news\",\"publisher\":\"Reuters\"},\"summary\":\"AI-generated fashion models cut production costs by 90%+, but models face existential risk from face swaps, digital twins, and unpaid image use for AI training. Brands like Diesel, Calvin Klein, and L'Oreal seek broad AI rights in photo contracts, while fast-fashion retailers Zalando and About You adopt AI models at scale. Limited regulation (NY Fashion Workers Act) offers some protection, but global rules lag behind the threat to livelihoods.\",\"tags\":[\"ai-models\",\"digital-twins\",\"model-rights\",\"photo-shoots\",\"regulation\",\"cost-reduction\"],\"concepts\":[\"labor-economics\",\"digital-identity\",\"brand-communication\",\"creative-industry-regulation\",\"commercial-photography\"],\"connections\":[{\"to\":3,\"kind\":\"mentions\",\"why\":\"Source #3 studies how luxury fashion brands use AI chatbots to communicate sustainability, touching on the same AI-in-fashion transformation this Reuters piece documents.\"},{\"to\":5,\"kind\":\"builds on\",\"why\":\"Source #5 examines how fashion brands signal craft authenticity as an antithesis to AI, directly relevant to the human-vs-AI model debate in this article.\"},{\"to\":8,\"kind\":\"related\",\"why\":\"Source #8 reports how AI redistributes creative work across industries, including fashion, complementing this piece's focus on modeling industry disruption.\"},{\"to\":4,\"kind\":\"contradicts\",\"why\":\"Source #4 argues luxury marketing restraint is rising, while this Reuters piece shows high-end brands like Gucci experimenting with AI-generated imagery, suggesting tension between restraint and AI adoption.\"}]}",
+    "answeredBy": "xingchen-agi/xing4.0-29b-a4b:free",
+    "ms": 9795,
+    "attempts": 3,
+    "usage": {
+     "prompt_tokens": 2751,
+     "completion_tokens": 397,
+     "total_tokens": 3148,
+     "cost": 0,
+     "is_byok": false,
+     "prompt_tokens_details": {
+      "cached_tokens": 736,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+     },
+     "cost_details": {
+      "upstream_inference_cost": 0,
+      "upstream_inference_prompt_cost": 0,
+      "upstream_inference_completions_cost": 0
+     },
+     "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+     }
+    },
+    "parsed": {
+     "object_type": "Source",
+     "title": "Fashion's AI era: face swaps and digital clones",
+     "facts": {
+      "authors": [
+       "Helen Reid"
+      ],
+      "date": "2026-10-27",
+      "format": "news",
+      "publisher": "Reuters"
+     },
+     "summary": "AI-generated fashion models cut production costs by 90%+, but models face existential risk from face swaps, digital twins, and unpaid image use for AI training. Brands like Diesel, Calvin Klein, and L'Oreal seek broad AI rights in photo contracts, while fast-fashion retailers Zalando and About You adopt AI models at scale. Limited regulation (NY Fashion Workers Act) offers some protection, but global rules lag behind the threat to livelihoods.",
+     "tags": [
+      "ai-models",
+      "digital-twins",
+      "model-rights",
+      "photo-shoots",
+      "regulation",
+      "cost-reduction"
+     ],
+     "concepts": [
+      "labor-economics",
+      "digital-identity",
+      "brand-communication",
+      "creative-industry-regulation",
+      "commercial-photography"
+     ],
+     "connections": [
+      {
+       "to": 3,
+       "kind": "mentions",
+       "why": "Source #3 studies how luxury fashion brands use AI chatbots to communicate sustainability, touching on the same AI-in-fashion transformation this Reuters piece documents."
+      },
+      {
+       "to": 5,
+       "kind": "builds on",
+       "why": "Source #5 examines how fashion brands signal craft authenticity as an antithesis to AI, directly relevant to the human-vs-AI model debate in this article."
+      },
+      {
+       "to": 8,
+       "kind": "related",
+       "why": "Source #8 reports how AI redistributes creative work across industries, including fashion, complementing this piece's focus on modeling industry disruption."
+      },
+      {
+       "to": 4,
+       "kind": "contradicts",
+       "why": "Source #4 argues luxury marketing restraint is rising, while this Reuters piece shows high-end brands like Gucci experimenting with AI-generated imagery, suggesting tension between restraint and AI adoption."
+      }
+     ]
+    },
+    "how": "clean"
+   },
+   "openrouter/free": {
+    "ok": true,
+    "text": "",
+    "answeredBy": "nvidia/nemotron-3.5-lightning:free",
+    "ms": 64725,
+    "attempts": 1,
+    "usage": {
+     "prompt_tokens": 2672,
+     "completion_tokens": 6000,
+     "total_tokens": 8672,
+     "cost": 0,
+     "is_byok": false,
+     "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+     },
+     "cost_details": {
+      "upstream_inference_cost": 0,
+      "upstream_inference_prompt_cost": 0,
+      "upstream_inference_completions_cost": 0
+     },
+     "completion_tokens_details": {
+      "reasoning_tokens": 6000,
+      "image_tokens": 0,
+      "audio_tokens": 0
+     }
+    },
+    "parsed": null,
+    "how": "empty"
+   }
+  },
+  "7": {
+   "google/gemma-4-31b-it:free": {
+    "ok": false,
+    "error": "Provider returned error",
+    "ms": 657,
+    "attempts": 3
+   },
+   "nvidia/nemotron-3.5-super-vl:free": {
+    "ok": true,
+    "text": "{\"object_type\": \"Source\", \"title\": \"How Artificial Intelligence Can Help With Critical Thinking\", \"facts\": {\"authors\": [], \"date\": null, \"format\": \"article\", \"publisher\": \"Greater Good\"}, \"summary\": \"Knowledge workers risk cognitive offloading when they accept AI’s quick answers, eroding critical thinking. This article argues that intentionally using AI to challenge one’s ideas—by generating opposing viewpoints, unlikely scenarios, and contradictory information—creates productive friction that improves performance. Workers should apply their own expertise to scrutinize outputs, while organizations can support this through bootcamps, sandboxes, and shared practice sessions.\", \"tags\": [\"ai\", \"critical thinking\", \"cognitive offloading\", \"knowledge work\", \"friction\", \"generative ai\"], \"concepts\": [\"AI-augmented critical thinking\", \"cognitive offloading in knowledge work\", \"human-AI collaboration\", \"productive friction in professional work\"], \"connections\": [{\"to\": 2, \"kind\": \"related\", \"why\": \"Both describe how generative AI tends toward conventional or common outputs, and this source proposes intentional friction as a way to disrupt that pattern.\"}, {\"to\": 8, \"kind\": \"related\", \"why\": \"Both examine how AI is reshaping knowledge and creative work, stressing that workers must actively direct their use of AI rather than passively accept its outputs.\"}, {\"to\": 1, \"kind\": \"related\", \"why\": \"Both treat AI as part of a human-led production and evaluation process rather than as a replacement for human judgment.\"}]}",
+    "answeredBy": "nvidia/nemotron-3.5-super-vl:free",
+    "ms": 26170,
+    "attempts": 1,
+    "usage": {
+     "prompt_tokens": 1924,
+     "completion_tokens": 3649,
+     "total_tokens": 5573,
+     "cost": 0,
+     "is_byok": false,
+     "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+     },
+     "cost_details": {
+      "upstream_inference_cost": 0,
+      "upstream_inference_prompt_cost": 0,
+      "upstream_inference_completions_cost": 0
+     },
+     "completion_tokens_details": {
+      "reasoning_tokens": 3312,
+      "image_tokens": 0,
+      "audio_tokens": 0
+     }
+    },
+    "parsed": {
+     "object_type": "Source",
+     "title": "How Artificial Intelligence Can Help With Critical Thinking",
+     "facts": {
+      "authors": [],
+      "date": null,
+      "format": "article",
+      "publisher": "Greater Good"
+     },
+     "summary": "Knowledge workers risk cognitive offloading when they accept AI’s quick answers, eroding critical thinking. This article argues that intentionally using AI to challenge one’s ideas—by generating opposing viewpoints, unlikely scenarios, and contradictory information—creates productive friction that improves performance. Workers should apply their own expertise to scrutinize outputs, while organizations can support this through bootcamps, sandboxes, and shared practice sessions.",
+     "tags": [
+      "ai",
+      "critical thinking",
+      "cognitive offloading",
+      "knowledge work",
+      "friction",
+      "generative ai"
+     ],
+     "concepts": [
+      "AI-augmented critical thinking",
+      "cognitive offloading in knowledge work",
+      "human-AI collaboration",
+      "productive friction in professional work"
+     ],
+     "connections": [
+      {
+       "to": 2,
+       "kind": "related",
+       "why": "Both describe how generative AI tends toward conventional or common outputs, and this source proposes intentional friction as a way to disrupt that pattern."
+      },
+      {
+       "to": 8,
+       "kind": "related",
+       "why": "Both examine how AI is reshaping knowledge and creative work, stressing that workers must actively direct their use of AI rather than passively accept its outputs."
+      },
+      {
+       "to": 1,
+       "kind": "related",
+       "why": "Both treat AI as part of a human-led production and evaluation process rather than as a replacement for human judgment."
+      }
+     ]
+    },
+    "how": "clean"
+   },
+   "nvidia/nemotron-3-ultra-550b-a55b:free": {
+    "ok": true,
+    "text": "{\n  \"object_type\": \"Source\",\n  \"title\": \"How Artificial Intelligence Can Help With Critical Thinking\",\n  \"facts\": {\n    \"authors\": [\"Author not explicitly named; published on Greater Good Magazine (Berkeley)\"],\n    \"date\": \"2026-10-27\",\n    \"format\": \"article\",\n    \"publisher\": \"Greater Good Magazine / The Conversation\"\n  },\n  \"summary\": \"Research with 45 knowledge workers shows that using generative AI to deliberately challenge ideas—creating \\\"friction\\\" rather than accepting quick answers—improves critical thinking and performance. Examples include prompting AI for opposing viewpoints, unlikely personas, and cross-disciplinary methods. Organizations should foster friction-generating prompts, peer learning, and safe experimentation environments.\",\n  \"tags\": [\"critical thinking\", \"human-ai collaboration\", \"cognitive offloading\", \"knowledge work\", \"ai friction\"],\n  \"concepts\": [\"augmented cognition\", \"ai as thinking partner\", \"deliberate friction in ai use\", \"expertise retention with ai\"],\n  \"connections\": [\n    {\n      \"to\": 2,\n      \"kind\": \"related\",\n      \"why\": \"Both address AI's tendency toward average outputs; this source offers a method (friction) to counter the 'beige trap'.\"\n    },\n    {\n      \"to\": 8,\n      \"kind\": \"related\",\n      \"why\": \"Both examine how AI reshapes knowledge/creative work; this source focuses on individual cognitive practices, #8 on labor-market shifts.\"\n    },\n    {\n      \"to\": 1,\n      \"kind\": \"supports\",\n      \"why\": \"This source's friction technique aligns with #1's finding that AI improves advertising when embedded in a production-and-evaluation process, not mere generation.\"\n    },\n    {\n      \"to\": 5,\n      \"kind\": \"related\",\n      \"why\": \"#5 describes 'effort signaling' as a human response to AI; this source shows how intentional friction preserves human expertise and effort.\"\n    }\n  ]\n}",
+    "answeredBy": "nvidia/nemotron-3-ultra-550b-a55b:free",
+    "ms": 18420,
+    "attempts": 1,
+    "usage": {
+     "prompt_tokens": 1924,
+     "completion_tokens": 980,
+     "total_tokens": 2904,
+     "cost": 0,
+     "is_byok": false,
+     "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+     },
+     "cost_details": {
+      "upstream_inference_cost": 0,
+      "upstream_inference_prompt_cost": 0,
+      "upstream_inference_completions_cost": 0
+     },
+     "completion_tokens_details": {
+      "reasoning_tokens": 617,
+      "image_tokens": 0,
+      "audio_tokens": 0
+     }
+    },
+    "parsed": {
+     "object_type": "Source",
+     "title": "How Artificial Intelligence Can Help With Critical Thinking",
+     "facts": {
+      "authors": [
+       "Author not explicitly named; published on Greater Good Magazine (Berkeley)"
+      ],
+      "date": "2026-10-27",
+      "format": "article",
+      "publisher": "Greater Good Magazine / The Conversation"
+     },
+     "summary": "Research with 45 knowledge workers shows that using generative AI to deliberately challenge ideas—creating \"friction\" rather than accepting quick answers—improves critical thinking and performance. Examples include prompting AI for opposing viewpoints, unlikely personas, and cross-disciplinary methods. Organizations should foster friction-generating prompts, peer learning, and safe experimentation environments.",
+     "tags": [
+      "critical thinking",
+      "human-ai collaboration",
+      "cognitive offloading",
+      "knowledge work",
+      "ai friction"
+     ],
+     "concepts": [
+      "augmented cognition",
+      "ai as thinking partner",
+      "deliberate friction in ai use",
+      "expertise retention with ai"
+     ],
+     "connections": [
+      {
+       "to": 2,
+       "kind": "related",
+       "why": "Both address AI's tendency toward average outputs; this source offers a method (friction) to counter the 'beige trap'."
+      },
+      {
+       "to": 8,
+       "kind": "related",
+       "why": "Both examine how AI reshapes knowledge/creative work; this source focuses on individual cognitive practices, #8 on labor-market shifts."
+      },
+      {
+       "to": 1,
+       "kind": "supports",
+       "why": "This source's friction technique aligns with #1's finding that AI improves advertising when embedded in a production-and-evaluation process, not mere generation."
+      },
+      {
+       "to": 5,
+       "kind": "related",
+       "why": "#5 describes 'effort signaling' as a human response to AI; this source shows how intentional friction preserves human expertise and effort."
+      }
+     ]
+    },
+    "how": "clean"
+   },
+   "xingchen-agi/xing4.0-29b-a4b:free": {
+    "ok": true,
+    "text": "{\"object_type\":\"Source\",\"title\":\"How AI Can Help With Critical Thinking\",\"facts\":{\"authors\":[\"Greater Good Science Center, UC Berkeley\"],\"date\":\"2026-10-27\",\"format\":\"article\",\"publisher\":\"Greater Good Science Center (UC Berkeley)\"},\"summary\":\"Knowledge workers using generative AI can improve performance by intentionally using AI to challenge their ideas and generate friction, revealing perspectives and insights that would otherwise remain unexplored.\",\"tags\":[\"critical thinking\",\"cognitive offloading\",\"human-AI collaboration\",\"knowledge work\",\"friction generation\"],\"concepts\":[\"cognitive offloading\",\"friction in human-AI collaboration\",\"knowledge worker productivity\",\"prompt engineering for critical analysis\",\"organizational AI adoption\"],\"connections\":[{\"to\":3,\"kind\":\"mentions\",\"why\":\"The article discusses how AI is used in professional contexts including marketing and legal work, similar to luxury fashion's AI applications.\"},{\"to\":4,\"kind\":\"related\",\"why\":\"Both sources examine how AI is used in creative and professional domains, though from different angles on the value of AI collaboration.\"},{\"to\":5,\"kind\":\"builds on\",\"why\":\"The concept of 'effort signaling' as an antithesis to AI could be explored in relation to how organizations encourage critical engagement with AI outputs.\"},{\"to\":8,\"kind\":\"related\",\"why\":\"Both sources address how AI redistributes or transforms creative work, though #8 focuses on labor distribution while this one focuses on cognitive processes.\"}]}",
+    "answeredBy": "xingchen-agi/xing4.0-29b-a4b:free",
+    "ms": 8973,
+    "attempts": 2,
+    "usage": {
+     "prompt_tokens": 1976,
+     "completion_tokens": 316,
+     "total_tokens": 2292,
+     "cost": 0,
+     "is_byok": false,
+     "prompt_tokens_details": {
+      "cached_tokens": 544,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+     },
+     "cost_details": {
+      "upstream_inference_cost": 0,
+      "upstream_inference_prompt_cost": 0,
+      "upstream_inference_completions_cost": 0
+     },
+     "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+     }
+    },
+    "parsed": {
+     "object_type": "Source",
+     "title": "How AI Can Help With Critical Thinking",
+     "facts": {
+      "authors": [
+       "Greater Good Science Center, UC Berkeley"
+      ],
+      "date": "2026-10-27",
+      "format": "article",
+      "publisher": "Greater Good Science Center (UC Berkeley)"
+     },
+     "summary": "Knowledge workers using generative AI can improve performance by intentionally using AI to challenge their ideas and generate friction, revealing perspectives and insights that would otherwise remain unexplored.",
+     "tags": [
+      "critical thinking",
+      "cognitive offloading",
+      "human-AI collaboration",
+      "knowledge work",
+      "friction generation"
+     ],
+     "concepts": [
+      "cognitive offloading",
+      "friction in human-AI collaboration",
+      "knowledge worker productivity",
+      "prompt engineering for critical analysis",
+      "organizational AI adoption"
+     ],
+     "connections": [
+      {
+       "to": 3,
+       "kind": "mentions",
+       "why": "The article discusses how AI is used in professional contexts including marketing and legal work, similar to luxury fashion's AI applications."
+      },
+      {
+       "to": 4,
+       "kind": "related",
+       "why": "Both sources examine how AI is used in creative and professional domains, though from different angles on the value of AI collaboration."
+      },
+      {
+       "to": 5,
+       "kind": "builds on",
+       "why": "The concept of 'effort signaling' as an antithesis to AI could be explored in relation to how organizations encourage critical engagement with AI outputs."
+      },
+      {
+       "to": 8,
+       "kind": "related",
+       "why": "Both sources address how AI redistributes or transforms creative work, though #8 focuses on labor distribution while this one focuses on cognitive processes."
+      }
+     ]
+    },
+    "how": "clean"
+   },
+   "openrouter/free": {
+    "ok": true,
+    "text": "{\n  \"object_type\": \"Source\",\n  \"title\": \"Using AI to Create Friction for Critical Thinking\",\n  \"facts\": {\n    \"authors\": [],\n    \"date\": null,\n    \"format\": \"article\",\n    \"publisher\": \"Greater Good\"\n  },\n  \"summary\": \"Knowledge workers who use generative AI can unintentionally surrender critical thinking, but intentionally prompting AI to provide contradictory or challenging perspectives creates friction that improves problem solving, idea generation, and decision quality. The study shows that such friction‑based interactions enhance performance across domains like marketing, law, and supply chain design, and organizational support through training and sandboxes further empowers workers.\",\n  \"tags\": [\"ai\", \"criticalthinking\", \"friction\", \"knowledgework\", \"prompting\"],\n  \"concepts\": [\"human-AI collaboration\", \"critical thinking development\", \"cognitive offloading\", \"creative problem solving\"],\n  \"connections\": [\n    {\n      \"to\": 2,\n      \"kind\": \"related\",\n      \"why\": \"Both discuss AI's tendency to produce common answers and the need to challenge those outputs to avoid cognitive offloading.\"\n    },\n    {\n      \"to\": 5,\n      \"kind\": \"supports\",\n      \"why\": \"The article's friction concept aligns with using AI as a sounding board rather than a ghostwriter, as described in the fashion effort signaling study.\"\n    },\n    {\n      \"to\": 8,\n      \"kind\": \"builds on\",\n      \"why\": \"It extends the discussion of AI's impact on creative and professional work by showing how intentional friction can enhance knowledge work outcomes.\"\n    }\n  ]\n}",
+    "answeredBy": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "ms": 15865,
+    "attempts": 1,
+    "usage": {
+     "prompt_tokens": 1924,
+     "completion_tokens": 1690,
+     "total_tokens": 3614,
+     "cost": 0,
+     "is_byok": false,
+     "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+     },
+     "cost_details": {
+      "upstream_inference_cost": 0,
+      "upstream_inference_prompt_cost": 0,
+      "upstream_inference_completions_cost": 0
+     },
+     "completion_tokens_details": {
+      "reasoning_tokens": 1340,
+      "image_tokens": 0,
+      "audio_tokens": 0
+     }
+    },
+    "parsed": {
+     "object_type": "Source",
+     "title": "Using AI to Create Friction for Critical Thinking",
+     "facts": {
+      "authors": [],
+      "date": null,
+      "format": "article",
+      "publisher": "Greater Good"
+     },
+     "summary": "Knowledge workers who use generative AI can unintentionally surrender critical thinking, but intentionally prompting AI to provide contradictory or challenging perspectives creates friction that improves problem solving, idea generation, and decision quality. The study shows that such friction‑based interactions enhance performance across domains like marketing, law, and supply chain design, and organizational support through training and sandboxes further empowers workers.",
+     "tags": [
+      "ai",
+      "criticalthinking",
+      "friction",
+      "knowledgework",
+      "prompting"
+     ],
+     "concepts": [
+      "human-AI collaboration",
+      "critical thinking development",
+      "cognitive offloading",
+      "creative problem solving"
+     ],
+     "connections": [
+      {
+       "to": 2,
+       "kind": "related",
+       "why": "Both discuss AI's tendency to produce common answers and the need to challenge those outputs to avoid cognitive offloading."
+      },
+      {
+       "to": 5,
+       "kind": "supports",
+       "why": "The article's friction concept aligns with using AI as a sounding board rather than a ghostwriter, as described in the fashion effort signaling study."
+      },
+      {
+       "to": 8,
+       "kind": "builds on",
+       "why": "It extends the discussion of AI's impact on creative and professional work by showing how intentional friction can enhance knowledge work outcomes."
+      }
+     ]
+    },
+    "how": "clean"
+   }
+  },
+  "8": {
+   "google/gemma-4-31b-it:free": {
+    "ok": false,
+    "error": "Provider returned error",
+    "ms": 456,
+    "attempts": 3
+   },
+   "nvidia/nemotron-3.5-super-vl:free": {
+    "ok": true,
+    "text": "{\"object_type\": \"Source\", \"title\": \"How AI is redistributing creative work\", \"facts\": {\"authors\": [\"Adobe Research\"], \"date\": null, \"format\": \"report\", \"publisher\": \"Adobe Research\"}, \"summary\": \"Adobe Research finds AI is redistributing, not replacing, creative work. US creative job postings rose 8% in six months, with AI skills increasingly required. Professionals use AI mainly for brainstorming and finishing, while guarding originality in high-stakes work. Entrants rely on AI to enter the field; incumbents integrate it selectively. Judgment, selection, and accountability are becoming the scarce human inputs.\", \"tags\": [\"ai\", \"creative labor\", \"jobs\", \"originality\", \"workflow\"], \"concepts\": [\"AI and creative labor\", \"originality and authorship\", \"workforce redistribution\", \"human judgment in creative work\"], \"connections\": [{\"to\": 1, \"kind\": \"related\", \"why\": \"Both sources examine where AI fits inside creative production workflows and where human judgment retains commercial value.\"}, {\"to\": 2, \"kind\": \"related\", \"why\": \"Source #8's 'AI mid' output parallels Source #2's 'beige trap' of statistically average, unremarkable AI creativity.\"}, {\"to\": 5, \"kind\": \"related\", \"why\": \"Source #8 describes creatives returning to analog for human connection, echoing Source #5's effort signaling as resistance to AI.\"}, {\"to\": 7, \"kind\": \"related\", \"why\": \"Source #8 identifies selection and judgment as the scarce creative inputs, aligning with Source #7's focus on AI-assisted critical thinking.\"}]}",
+    "answeredBy": "nvidia/nemotron-3.5-super-vl:free",
+    "ms": 25053,
+    "attempts": 1,
+    "usage": {
+     "prompt_tokens": 3789,
+     "completion_tokens": 3143,
+     "total_tokens": 6932,
+     "cost": 0,
+     "is_byok": false,
+     "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+     },
+     "cost_details": {
+      "upstream_inference_cost": 0,
+      "upstream_inference_prompt_cost": 0,
+      "upstream_inference_completions_cost": 0
+     },
+     "completion_tokens_details": {
+      "reasoning_tokens": 2772,
+      "image_tokens": 0,
+      "audio_tokens": 0
+     }
+    },
+    "parsed": {
+     "object_type": "Source",
+     "title": "How AI is redistributing creative work",
+     "facts": {
+      "authors": [
+       "Adobe Research"
+      ],
+      "date": null,
+      "format": "report",
+      "publisher": "Adobe Research"
+     },
+     "summary": "Adobe Research finds AI is redistributing, not replacing, creative work. US creative job postings rose 8% in six months, with AI skills increasingly required. Professionals use AI mainly for brainstorming and finishing, while guarding originality in high-stakes work. Entrants rely on AI to enter the field; incumbents integrate it selectively. Judgment, selection, and accountability are becoming the scarce human inputs.",
+     "tags": [
+      "ai",
+      "creative labor",
+      "jobs",
+      "originality",
+      "workflow"
+     ],
+     "concepts": [
+      "AI and creative labor",
+      "originality and authorship",
+      "workforce redistribution",
+      "human judgment in creative work"
+     ],
+     "connections": [
+      {
+       "to": 1,
+       "kind": "related",
+       "why": "Both sources examine where AI fits inside creative production workflows and where human judgment retains commercial value."
+      },
+      {
+       "to": 2,
+       "kind": "related",
+       "why": "Source #8's 'AI mid' output parallels Source #2's 'beige trap' of statistically average, unremarkable AI creativity."
+      },
+      {
+       "to": 5,
+       "kind": "related",
+       "why": "Source #8 describes creatives returning to analog for human connection, echoing Source #5's effort signaling as resistance to AI."
+      },
+      {
+       "to": 7,
+       "kind": "related",
+       "why": "Source #8 identifies selection and judgment as the scarce creative inputs, aligning with Source #7's focus on AI-assisted critical thinking."
+      }
+     ]
+    },
+    "how": "clean"
+   },
+   "nvidia/nemotron-3-ultra-550b-a55b:free": {
+    "ok": true,
+    "text": "{\n  \"object_type\": \"Source\",\n  \"title\": \"How AI is redistributing creative work\",\n  \"facts\": {\n    \"authors\": [\"Adobe Research\"],\n    \"date\": \"2026-06\",\n    \"format\": \"report\",\n    \"publisher\": \"Adobe\"\n  },\n  \"summary\": \"Adobe Research finds AI is redistributing—not replacing—creative work. US creative job postings rose 8% in six months; AI skills appear in 15% of listings, concentrated in mid-market/enterprise firms. Working creatives use AI for brainstorming (84.8% positive) and finishing tasks, but draw boundaries around authorship, originality, and client-facing work. Meanwhile, 12M Americans are training for creative careers, 77% rating AI as essential. The scarce input shifts from generating options to judgment, selection, and guarding humanity in creative output.\",\n  \"tags\": [\"ai\", \"creative-work\", \"labor-market\", \"redistribution\", \"judgment\", \"originality\"],\n  \"concepts\": [\"AI redistribution of creative labor\", \"Human judgment vs AI generation\", \"Creative career entry and AI fluency\", \"Authorship and authenticity in AI era\", \"Client expectations and AI boundaries\"],\n  \"connections\": [\n    {\n      \"to\": 1,\n      \"kind\": \"related\",\n      \"why\": \"Both examine how AI reshapes creative workflows and the shifting balance between generation and evaluation.\"\n    },\n    {\n      \"to\": 2,\n      \"kind\": \"supports\",\n      \"why\": \"The 'beige trap' of generic AI output aligns with creatives deliberately checking their ideas against AI and restarting when AI matches them.\"\n    },\n    {\n      \"to\": 5,\n      \"kind\": \"related\",\n      \"why\": \"Both describe a human turn toward effort, craft, and analog methods as a deliberate counterweight to AI abundance.\"\n    },\n    {\n      \"to\": 7,\n      \"kind\": \"related\",\n      \"why\": \"Both highlight judgment, selection, and critical evaluation as the enduring human contribution alongside AI tools.\"\n    }\n  ]\n}",
+    "answeredBy": "nvidia/nemotron-3-ultra-550b-a55b:free",
+    "ms": 65173,
+    "attempts": 1,
+    "usage": {
+     "prompt_tokens": 3789,
+     "completion_tokens": 1184,
+     "total_tokens": 4973,
+     "cost": 0,
+     "is_byok": false,
+     "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+     },
+     "cost_details": {
+      "upstream_inference_cost": 0,
+      "upstream_inference_prompt_cost": 0,
+      "upstream_inference_completions_cost": 0
+     },
+     "completion_tokens_details": {
+      "reasoning_tokens": 732,
+      "image_tokens": 0,
+      "audio_tokens": 0
+     }
+    },
+    "parsed": {
+     "object_type": "Source",
+     "title": "How AI is redistributing creative work",
+     "facts": {
+      "authors": [
+       "Adobe Research"
+      ],
+      "date": "2026-06",
+      "format": "report",
+      "publisher": "Adobe"
+     },
+     "summary": "Adobe Research finds AI is redistributing—not replacing—creative work. US creative job postings rose 8% in six months; AI skills appear in 15% of listings, concentrated in mid-market/enterprise firms. Working creatives use AI for brainstorming (84.8% positive) and finishing tasks, but draw boundaries around authorship, originality, and client-facing work. Meanwhile, 12M Americans are training for creative careers, 77% rating AI as essential. The scarce input shifts from generating options to judgment, selection, and guarding humanity in creative output.",
+     "tags": [
+      "ai",
+      "creative-work",
+      "labor-market",
+      "redistribution",
+      "judgment",
+      "originality"
+     ],
+     "concepts": [
+      "AI redistribution of creative labor",
+      "Human judgment vs AI generation",
+      "Creative career entry and AI fluency",
+      "Authorship and authenticity in AI era",
+      "Client expectations and AI boundaries"
+     ],
+     "connections": [
+      {
+       "to": 1,
+       "kind": "related",
+       "why": "Both examine how AI reshapes creative workflows and the shifting balance between generation and evaluation."
+      },
+      {
+       "to": 2,
+       "kind": "supports",
+       "why": "The 'beige trap' of generic AI output aligns with creatives deliberately checking their ideas against AI and restarting when AI matches them."
+      },
+      {
+       "to": 5,
+       "kind": "related",
+       "why": "Both describe a human turn toward effort, craft, and analog methods as a deliberate counterweight to AI abundance."
+      },
+      {
+       "to": 7,
+       "kind": "related",
+       "why": "Both highlight judgment, selection, and critical evaluation as the enduring human contribution alongside AI tools."
+      }
+     ]
+    },
+    "how": "clean"
+   },
+   "xingchen-agi/xing4.0-29b-a4b:free": {
+    "ok": true,
+    "text": "{\"object_type\":\"Source\",\"title\":\"How AI is redistributing creative work\",\"facts\":{\"authors\":[\"Adobe Research\"],\"date\":\"2026-06-01\",\"format\":\"report\",\"publisher\":\"Adobe Research — The Future of Creative Work\"},\"summary\":\"AI is reshaping creative work by redistributing it rather than replacing workers: creative hiring rose 8% and AI skills became more explicit in job requirements. Working creatives integrate AI into brainstorming and late-stage finishing but draw sharp boundaries around tasks that define their craft and authorship, such as originality checking and client direction. The sharpest divide is between established incumbents (restricting AI) and entrants (using AI as a path into creative fields).\",\"tags\":[\"creative labor\",\"AI workflow\",\"job market\",\"redistribution\",\"entrants vs incumbents\"],\"concepts\":[\"creative workflow stages\",\"originality and authorship\",\"client negotiation\",\"creative hiring trends\",\"AI fluency gap\"],\"connections\":[{\"to\":1,\"kind\":\"related\",\"why\":\"Source #1 examines how generative AI improves advertising response through production workflows; this Source #8 examines the broader redistribution of creative work across roles and workflows.\"},{\"to\":2,\"kind\":\"supports\",\"why\":\"Both sources argue that AI is reshaping creative practice rather than displacing it, with working creatives drawing boundaries around AI use.\"},{\"to\":5,\"kind\":\"builds on\",\"why\":\"Source #5 discusses effort signaling as fashion's antithesis to AI; Source #8 shows working creatives deliberately resisting AI to preserve authorship and authenticity.\"},{\"to\":7,\"kind\":\"mentions\",\"why\":\"Source #7 discusses AI helping critical thinking while creative professionals worry about career impact; Source #8 provides empirical evidence on that tension among creative workers.\"}]}",
+    "answeredBy": "xingchen-agi/xing4.0-29b-a4b:free",
+    "ms": 5838,
+    "attempts": 2,
+    "usage": {
+     "prompt_tokens": 3882,
+     "completion_tokens": 380,
+     "total_tokens": 4262,
+     "cost": 0,
+     "is_byok": false,
+     "prompt_tokens_details": {
+      "cached_tokens": 832,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+     },
+     "cost_details": {
+      "upstream_inference_cost": 0,
+      "upstream_inference_prompt_cost": 0,
+      "upstream_inference_completions_cost": 0
+     },
+     "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+     }
+    },
+    "parsed": {
+     "object_type": "Source",
+     "title": "How AI is redistributing creative work",
+     "facts": {
+      "authors": [
+       "Adobe Research"
+      ],
+      "date": "2026-06-01",
+      "format": "report",
+      "publisher": "Adobe Research — The Future of Creative Work"
+     },
+     "summary": "AI is reshaping creative work by redistributing it rather than replacing workers: creative hiring rose 8% and AI skills became more explicit in job requirements. Working creatives integrate AI into brainstorming and late-stage finishing but draw sharp boundaries around tasks that define their craft and authorship, such as originality checking and client direction. The sharpest divide is between established incumbents (restricting AI) and entrants (using AI as a path into creative fields).",
+     "tags": [
+      "creative labor",
+      "AI workflow",
+      "job market",
+      "redistribution",
+      "entrants vs incumbents"
+     ],
+     "concepts": [
+      "creative workflow stages",
+      "originality and authorship",
+      "client negotiation",
+      "creative hiring trends",
+      "AI fluency gap"
+     ],
+     "connections": [
+      {
+       "to": 1,
+       "kind": "related",
+       "why": "Source #1 examines how generative AI improves advertising response through production workflows; this Source #8 examines the broader redistribution of creative work across roles and workflows."
+      },
+      {
+       "to": 2,
+       "kind": "supports",
+       "why": "Both sources argue that AI is reshaping creative practice rather than displacing it, with working creatives drawing boundaries around AI use."
+      },
+      {
+       "to": 5,
+       "kind": "builds on",
+       "why": "Source #5 discusses effort signaling as fashion's antithesis to AI; Source #8 shows working creatives deliberately resisting AI to preserve authorship and authenticity."
+      },
+      {
+       "to": 7,
+       "kind": "mentions",
+       "why": "Source #7 discusses AI helping critical thinking while creative professionals worry about career impact; Source #8 provides empirical evidence on that tension among creative workers."
+      }
+     ]
+    },
+    "how": "clean"
+   },
+   "openrouter/free": {
+    "ok": true,
+    "text": "{\"object_type\": \"Source\", \"title\": \"How AI is redistributing creative work\", \"facts\": {\"authors\": [\"Adobe Research\", \"The Future of Creative Work team\"], \"date\": \"2026-06-01\", \"format\": \"report\", \"publisher\": \"Adobe\"}, \"summary\": \"Adobe Research finds AI is redistributing—not replacing—creative work. US creative job postings rose 8% in six months; AI skills explicit in 15% of postings (18% at mid-market/enterprise). 85% of pros feel positive about AI for brainstorming, but 46% see it as a career threat. Entrants (12M Americans training) view AI as essential (77%). Creatives use AI for ideation and finishing, but draw red lines around authorship, originality checks, and human-centric tasks. Judgment, selection, and accountability become the scarce skills.\", \"tags\": [\"ai\", \"creative-work\", \"labor-market\", \"redistribution\", \"judgment\", \"authorship\"], \"concepts\": [\"ai in creative professions\", \"creative labor redistribution\", \"human judgment vs ai generation\", \"creative career entry barriers\", \"authenticity in creative work\"], \"connections\": [{\"to\": 1, \"kind\": \"related\", \"why\": \"Both examine AI's role in creative production workflows and the shift from generation to evaluation.\"}, {\"to\": 2, \"kind\": \"related\", \"why\": \"Both address AI's tendency toward common outputs and creatives' deliberate originality checks against AI.\"}, {\"to\": 5, \"kind\": \"related\", \"why\": \"Both document creatives resisting AI integration to preserve human authorship and effort signaling.\"}, {\"to\": 7, \"kind\": \"related\", \"why\": \"Both highlight judgment and critical evaluation as the enduring human contribution alongside AI tools.\"}]}",
+    "answeredBy": "nvidia/nemotron-3-ultra-550b-a55b:free",
+    "ms": 18784,
+    "attempts": 1,
+    "usage": {
+     "prompt_tokens": 3789,
+     "completion_tokens": 1162,
+     "total_tokens": 4951,
+     "cost": 0,
+     "is_byok": false,
+     "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+     },
+     "cost_details": {
+      "upstream_inference_cost": 0,
+      "upstream_inference_prompt_cost": 0,
+      "upstream_inference_completions_cost": 0
+     },
+     "completion_tokens_details": {
+      "reasoning_tokens": 756,
+      "image_tokens": 0,
+      "audio_tokens": 0
+     }
+    },
+    "parsed": {
+     "object_type": "Source",
+     "title": "How AI is redistributing creative work",
+     "facts": {
+      "authors": [
+       "Adobe Research",
+       "The Future of Creative Work team"
+      ],
+      "date": "2026-06-01",
+      "format": "report",
+      "publisher": "Adobe"
+     },
+     "summary": "Adobe Research finds AI is redistributing—not replacing—creative work. US creative job postings rose 8% in six months; AI skills explicit in 15% of postings (18% at mid-market/enterprise). 85% of pros feel positive about AI for brainstorming, but 46% see it as a career threat. Entrants (12M Americans training) view AI as essential (77%). Creatives use AI for ideation and finishing, but draw red lines around authorship, originality checks, and human-centric tasks. Judgment, selection, and accountability become the scarce skills.",
+     "tags": [
+      "ai",
+      "creative-work",
+      "labor-market",
+      "redistribution",
+      "judgment",
+      "authorship"
+     ],
+     "concepts": [
+      "ai in creative professions",
+      "creative labor redistribution",
+      "human judgment vs ai generation",
+      "creative career entry barriers",
+      "authenticity in creative work"
+     ],
+     "connections": [
+      {
+       "to": 1,
+       "kind": "related",
+       "why": "Both examine AI's role in creative production workflows and the shift from generation to evaluation."
+      },
+      {
+       "to": 2,
+       "kind": "related",
+       "why": "Both address AI's tendency toward common outputs and creatives' deliberate originality checks against AI."
+      },
+      {
+       "to": 5,
+       "kind": "related",
+       "why": "Both document creatives resisting AI integration to preserve human authorship and effort signaling."
+      },
+      {
+       "to": 7,
+       "kind": "related",
+       "why": "Both highlight judgment and critical evaluation as the enduring human contribution alongside AI tools."
+      }
+     ]
+    },
+    "how": "clean"
+   }
+  }
+ },
+ "researcher": {
+  "all": {
+   "google/gemma-4-31b-it:free": {
+    "ok": false,
+    "error": "Provider returned error",
+    "ms": 705,
+    "attempts": 3
+   },
+   "nvidia/nemotron-3.5-super-vl:free": {
+    "ok": true,
+    "text": "{\"themes\": [{\"theme\": \"Workflow and testing matter more than AI authorship alone\", \"sources\": [1, 8], \"note\": \"Source #1 finds clicks improve when AI is connected to audience-response data and human selection, while Source #8 shows creative work shifting toward direction, evaluation, and accountability rather than pure generation.\"}, {\"theme\": \"AI creative risks collective sameness and the 'beige trap'\", \"sources\": [2, 4], \"note\": \"Source #2 demonstrates AI outputs converge toward common answers, reducing novelty, and Source #4 links luxury marketing's retreat from AI gimmicks to a desire for recognizable brand DNA over synthetic sameness.\"}, {\"theme\": \"Human effort signaling is revalued as an antidote to AI-generated creative\", \"sources\": [4, 5], \"note\": \"Sources #4 and #5 describe luxury and fashion brands emphasizing visible human craft, archives, and labor as value signals after polarized reactions to AI imagery.\"}, {\"theme\": \"AI is redistributing creative labor with uneven economic consequences\", \"sources\": [6, 8], \"note\": \"Source #6 documents modeling job losses and studio closures from AI adoption, while Source #8 reports rising creative hiring and a shift toward selection and client negotiation.\"}, {\"theme\": \"Trust in AI-mediated luxury communication varies by provider and brand perception\", \"sources\": [3, 4], \"note\": \"Source #3 finds AI chatbot cues can strengthen trust through perceived objectivity, especially for lower-luxury-perception brands, while Source #4 shows luxury marketing broadly favoring human heritage and restraint.\"}], \"contradictions\": [{\"between\": [6, 8], \"claim_a\": \"Source #6 reports AI-generated models cutting costs by over 90 percent, ecommerce photo studios closing, and modeling jobs declining as retailers replace human models.\", \"claim_b\": \"Source #8 reports US creative professional job postings rose 8 percent and describes redistribution rather than replacement, with creatives incorporating AI while setting boundaries.\", \"why_it_matters\": \"It determines whether AI is primarily destroying creative jobs or transforming them.\"}, {\"between\": [2, 7], \"claim_a\": \"Source #2 argues AI draws on the most common human answers, producing outputs that are more similar to each other and lowering collective novelty even when individual quality rises.\", \"claim_b\": \"Source #7 shows that when knowledge workers intentionally use AI to challenge their ideas and generate friction, AI can reveal unlikely perspectives and significantly improve performance.\", \"why_it_matters\": \"It disputes whether AI inherently converges toward the average or can productively disrupt conventional thinking.\"}, {\"between\": [3, 5], \"claim_a\": \"Source #3 finds that perceived objectivity significantly builds trust and behavioral intentions specifically under AI communication, suggesting algorithmic provider cues can enhance credibility.\", \"claim_b\": \"Source #5 presents human effort signaling—visible time, skill, and handmade labor—as the biggest signifier of value, with brands collaborating with human artists to counter AI-generated imagery criticized as lacking depth.\", \"why_it_matters\": \"It questions whether AI or human authorship is the more trustworthy and valuable signal in luxury and fashion contexts.\"}], \"questions\": [\"Can improvements in click-through rates and production cost savings from AI creative offset the brand risks of creative sameness and reduced distinctiveness?\", \"Under what conditions does an AI provider strengthen consumer trust through perceived objectivity, and when does visible human effort become the decisive signal of luxury value?\", \"Is the current shift of creative work toward direction, evaluation, and accountability a durable expansion of creative employment or a transitional phase before broader displacement?\"]}",
+    "answeredBy": "nvidia/nemotron-3.5-super-vl:free",
+    "ms": 37700,
+    "attempts": 1,
+    "usage": {
+     "prompt_tokens": 11189,
+     "completion_tokens": 7880,
+     "total_tokens": 19069,
+     "cost": 0,
+     "is_byok": false,
+     "prompt_tokens_details": {
+      "cached_tokens": 8672,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+     },
+     "cost_details": {
+      "upstream_inference_cost": 0,
+      "upstream_inference_prompt_cost": 0,
+      "upstream_inference_completions_cost": 0
+     },
+     "completion_tokens_details": {
+      "reasoning_tokens": 7108,
+      "image_tokens": 0,
+      "audio_tokens": 0
+     }
+    },
+    "parsed": {
+     "themes": [
+      {
+       "theme": "Workflow and testing matter more than AI authorship alone",
+       "sources": [
+        1,
+        8
+       ],
+       "note": "Source #1 finds clicks improve when AI is connected to audience-response data and human selection, while Source #8 shows creative work shifting toward direction, evaluation, and accountability rather than pure generation."
+      },
+      {
+       "theme": "AI creative risks collective sameness and the 'beige trap'",
+       "sources": [
+        2,
+        4
+       ],
+       "note": "Source #2 demonstrates AI outputs converge toward common answers, reducing novelty, and Source #4 links luxury marketing's retreat from AI gimmicks to a desire for recognizable brand DNA over synthetic sameness."
+      },
+      {
+       "theme": "Human effort signaling is revalued as an antidote to AI-generated creative",
+       "sources": [
+        4,
+        5
+       ],
+       "note": "Sources #4 and #5 describe luxury and fashion brands emphasizing visible human craft, archives, and labor as value signals after polarized reactions to AI imagery."
+      },
+      {
+       "theme": "AI is redistributing creative labor with uneven economic consequences",
+       "sources": [
+        6,
+        8
+       ],
+       "note": "Source #6 documents modeling job losses and studio closures from AI adoption, while Source #8 reports rising creative hiring and a shift toward selection and client negotiation."
+      },
+      {
+       "theme": "Trust in AI-mediated luxury communication varies by provider and brand perception",
+       "sources": [
+        3,
+        4
+       ],
+       "note": "Source #3 finds AI chatbot cues can strengthen trust through perceived objectivity, especially for lower-luxury-perception brands, while Source #4 shows luxury marketing broadly favoring human heritage and restraint."
+      }
+     ],
+     "contradictions": [
+      {
+       "between": [
+        6,
+        8
+       ],
+       "claim_a": "Source #6 reports AI-generated models cutting costs by over 90 percent, ecommerce photo studios closing, and modeling jobs declining as retailers replace human models.",
+       "claim_b": "Source #8 reports US creative professional job postings rose 8 percent and describes redistribution rather than replacement, with creatives incorporating AI while setting boundaries.",
+       "why_it_matters": "It determines whether AI is primarily destroying creative jobs or transforming them."
+      },
+      {
+       "between": [
+        2,
+        7
+       ],
+       "claim_a": "Source #2 argues AI draws on the most common human answers, producing outputs that are more similar to each other and lowering collective novelty even when individual quality rises.",
+       "claim_b": "Source #7 shows that when knowledge workers intentionally use AI to challenge their ideas and generate friction, AI can reveal unlikely perspectives and significantly improve performance.",
+       "why_it_matters": "It disputes whether AI inherently converges toward the average or can productively disrupt conventional thinking."
+      },
+      {
+       "between": [
+        3,
+        5
+       ],
+       "claim_a": "Source #3 finds that perceived objectivity significantly builds trust and behavioral intentions specifically under AI communication, suggesting algorithmic provider cues can enhance credibility.",
+       "claim_b": "Source #5 presents human effort signaling—visible time, skill, and handmade labor—as the biggest signifier of value, with brands collaborating with human artists to counter AI-generated imagery criticized as lacking depth.",
+       "why_it_matters": "It questions whether AI or human authorship is the more trustworthy and valuable signal in luxury and fashion contexts."
+      }
+     ],
+     "questions": [
+      "Can improvements in click-through rates and production cost savings from AI creative offset the brand risks of creative sameness and reduced distinctiveness?",
+      "Under what conditions does an AI provider strengthen consumer trust through perceived objectivity, and when does visible human effort become the decisive signal of luxury value?",
+      "Is the current shift of creative work toward direction, evaluation, and accountability a durable expansion of creative employment or a transitional phase before broader displacement?"
+     ]
+    },
+    "how": "clean"
+   },
+   "nvidia/nemotron-3-ultra-550b-a55b:free": {
+    "ok": true,
+    "text": "{\n \"themes\": [\n  {\n   \"theme\": \"Workflow integration over raw generation\",\n   \"sources\": [1, 2, 7, 8],\n   \"note\": \"Value comes from embedding AI in structured processes (trained on response data, chain-of-thought prompting, friction-generating queries) rather than naive generation; the middle stages of selection, direction, and accountability expand as AI handles front-end ideation and back-end production.\"\n  },\n  {\n   \"theme\": \"Human craft as premium differentiator against AI sameness\",\n   \"sources\": [2, 4, 5, 6],\n   \"note\": \"Luxury and fashion brands increasingly emphasize human artistry, heritage DNA, and 'effort signaling' (painstaking handcraft) to justify price points and counter perceived AI-generated homogeneity, even as ecommerce adopts synthetic models for cost savings.\"\n  },\n  {\n   \"theme\": \"AI raises the floor but lowers the ceiling of collective novelty\",\n   \"sources\": [1, 2, 4, 8],\n   \"note\": \"AI assistance improves average output quality for less-skilled creators but reduces diversity across outputs; ordinary generation fails to boost clicks, while creatives now check their ideas against AI to avoid unintentional conformity.\"\n  },\n  {\n   \"theme\": \"Commercial value splits between cost reduction and performance gains\",\n   \"sources\": [1, 6, 8],\n   \"note\": \"AI workflows can be adopted for cheaper production (90% savings in ecommerce imagery) without improving response, or for response gains that may not cover added costs; the business case depends on which route is tested against the relevant outcome.\"\n  },\n  {\n   \"theme\": \"Trust and authenticity perceptions depend on provider cues and context\",\n   \"sources\": [3, 4, 5, 6],\n   \"note\": \"AI chatbots can enhance trust via perceived objectivity for consumers with low luxury perceptions, yet brands simultaneously retreat to human-centric campaigns to signal authenticity; model contracts reveal tension over digital twin ownership.\"\n  }\n ],\n \"contradictions\": [\n  {\n   \"between\": [3, 4],\n   \"claim_a\": \"AI provider cues strengthen the trust-mediated role of objectivity in sustainability communication, especially for consumers with lower perceived brand luxury (Source 3).\",\n   \"claim_b\": \"Luxury brands are moving away from AI experimentation toward human-centric heritage campaigns because 'AI can't hallucinate a brand's history' and human imagery is the 'antidote to AI-generated sameness' (Source 4).\",\n   \"why_it_matters\": \"The same technology builds trust in functional sustainability communication but erodes brand distinctiveness in emotional brand storytelling; context determines whether AI signals credibility or commoditization.\"\n  },\n  {\n   \"between\": [6, 8],\n   \"claim_a\": \"Ecommerce photo studios are shutting down and model bookings declining as retailers switch to AI-generated models with 90% cost reduction (Source 6).\",\n   \"claim_b\": \"US creative professional job postings rose 8% in six months, with clients restricting AI use in final ads while compressing timelines for other deliverables (Source 8).\",\n   \"why_it_matters\": \"AI displaces specific execution roles (ecommerce modeling) while increasing demand for creative direction and accountability; the net effect varies sharply by creative specialty.\"\n  }\n ],\n \"questions\": [\n  \"How do performance-trained AI workflows (Source 1) interact with diversity-preserving prompting techniques like chain-of-thought (Source 2) when optimizing for both click-through rate and creative distinctiveness?\",\n  \"What consumer perception thresholds determine whether AI-generated content is read as 'objective and trustworthy' (Source 3) versus 'bland and synthetic' (Sources 2, 4, 5), and how do brand luxury level and communication goal (sustainability vs. brand image) shift those thresholds?\",\n  \"As entry-level creatives adopt AI broadly while incumbents set boundaries around 'human' stages (Source 8), how will the career pipeline and skill development for creative professions evolve over the next 3–5 years?\"\n ]\n}",
+    "answeredBy": "nvidia/nemotron-3-ultra-550b-a55b:free",
+    "ms": 42606,
+    "attempts": 1,
+    "usage": {
+     "prompt_tokens": 11189,
+     "completion_tokens": 2042,
+     "total_tokens": 13231,
+     "cost": 0,
+     "is_byok": false,
+     "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+     },
+     "cost_details": {
+      "upstream_inference_cost": 0,
+      "upstream_inference_prompt_cost": 0,
+      "upstream_inference_completions_cost": 0
+     },
+     "completion_tokens_details": {
+      "reasoning_tokens": 1378,
+      "image_tokens": 0,
+      "audio_tokens": 0
+     }
+    },
+    "parsed": {
+     "themes": [
+      {
+       "theme": "Workflow integration over raw generation",
+       "sources": [
+        1,
+        2,
+        7,
+        8
+       ],
+       "note": "Value comes from embedding AI in structured processes (trained on response data, chain-of-thought prompting, friction-generating queries) rather than naive generation; the middle stages of selection, direction, and accountability expand as AI handles front-end ideation and back-end production."
+      },
+      {
+       "theme": "Human craft as premium differentiator against AI sameness",
+       "sources": [
+        2,
+        4,
+        5,
+        6
+       ],
+       "note": "Luxury and fashion brands increasingly emphasize human artistry, heritage DNA, and 'effort signaling' (painstaking handcraft) to justify price points and counter perceived AI-generated homogeneity, even as ecommerce adopts synthetic models for cost savings."
+      },
+      {
+       "theme": "AI raises the floor but lowers the ceiling of collective novelty",
+       "sources": [
+        1,
+        2,
+        4,
+        8
+       ],
+       "note": "AI assistance improves average output quality for less-skilled creators but reduces diversity across outputs; ordinary generation fails to boost clicks, while creatives now check their ideas against AI to avoid unintentional conformity."
+      },
+      {
+       "theme": "Commercial value splits between cost reduction and performance gains",
+       "sources": [
+        1,
+        6,
+        8
+       ],
+       "note": "AI workflows can be adopted for cheaper production (90% savings in ecommerce imagery) without improving response, or for response gains that may not cover added costs; the business case depends on which route is tested against the relevant outcome."
+      },
+      {
+       "theme": "Trust and authenticity perceptions depend on provider cues and context",
+       "sources": [
+        3,
+        4,
+        5,
+        6
+       ],
+       "note": "AI chatbots can enhance trust via perceived objectivity for consumers with low luxury perceptions, yet brands simultaneously retreat to human-centric campaigns to signal authenticity; model contracts reveal tension over digital twin ownership."
+      }
+     ],
+     "contradictions": [
+      {
+       "between": [
+        3,
+        4
+       ],
+       "claim_a": "AI provider cues strengthen the trust-mediated role of objectivity in sustainability communication, especially for consumers with lower perceived brand luxury (Source 3).",
+       "claim_b": "Luxury brands are moving away from AI experimentation toward human-centric heritage campaigns because 'AI can't hallucinate a brand's history' and human imagery is the 'antidote to AI-generated sameness' (Source 4).",
+       "why_it_matters": "The same technology builds trust in functional sustainability communication but erodes brand distinctiveness in emotional brand storytelling; context determines whether AI signals credibility or commoditization."
+      },
+      {
+       "between": [
+        6,
+        8
+       ],
+       "claim_a": "Ecommerce photo studios are shutting down and model bookings declining as retailers switch to AI-generated models with 90% cost reduction (Source 6).",
+       "claim_b": "US creative professional job postings rose 8% in six months, with clients restricting AI use in final ads while compressing timelines for other deliverables (Source 8).",
+       "why_it_matters": "AI displaces specific execution roles (ecommerce modeling) while increasing demand for creative direction and accountability; the net effect varies sharply by creative specialty."
+      }
+     ],
+     "questions": [
+      "How do performance-trained AI workflows (Source 1) interact with diversity-preserving prompting techniques like chain-of-thought (Source 2) when optimizing for both click-through rate and creative distinctiveness?",
+      "What consumer perception thresholds determine whether AI-generated content is read as 'objective and trustworthy' (Source 3) versus 'bland and synthetic' (Sources 2, 4, 5), and how do brand luxury level and communication goal (sustainability vs. brand image) shift those thresholds?",
+      "As entry-level creatives adopt AI broadly while incumbents set boundaries around 'human' stages (Source 8), how will the career pipeline and skill development for creative professions evolve over the next 3–5 years?"
+     ]
+    },
+    "how": "clean"
+   },
+   "xingchen-agi/xing4.0-29b-a4b:free": {
+    "ok": false,
+    "error": "xingchen-agi/xing4.0-29b-a4b:free is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate your rate limits: https://openrouter.ai/settings/integrations",
+    "ms": 6403,
+    "attempts": 3
+   },
+   "openrouter/free": {
+    "ok": true,
+    "text": "{\"themes\":[{\"theme\":\"AI-assisted creative workflows outperform ordinary generation\",\"sources\":[1,2,8],\"note\":\"Source 1 shows trained workflows improve clicks while ordinary assistance does not; Source 2 shows AI can raise individual quality but reduce novelty; Source 8 finds AI is used for brainstorming and post-production, with judgment filling the middle stage.\"},{\"theme\":\"AI creativity risks homogenization ('beige trap')\",\"sources\":[2,4,5],\"note\":\"Source 2 documents how AI lowers the ceiling on novelty; Sources 4 and 5 describe luxury brands retreating from AI-generated imagery toward human craft as a value signal.\"},{\"theme\":\"AI reshapes creative labor rather than replacing it wholesale\",\"sources\":[6,8],\"note\":\"Source 6 reports AI-generated models threatening modeling jobs but also cutting production costs by 90%+; Source 8 finds creative hiring rose 8% and working creatives draw sharp boundaries around AI use.\"},{\"theme\":\"Luxury brands use human artistry to signal value against AI\",\"sources\":[4,5],\"note\":\"Sources 4 and 5 describe brands investing in hand-crafted, slow-craft collaborations to signal authenticity and justify premium pricing in an era of AI sameness.\"}],\"contradictions\":[{\"between\":[1,2],\"claim_a\":\"AI-assisted creative workflows improve advertising response (clicks) when connected to prior audience data\",\"claim_b\":\"AI improves individual creativity but reduces collective novelty and distinctiveness\",\"why_it_matters\":\"The two findings address different outcomes—response vs. originality—and together suggest AI's value depends on whether the workflow preserves or erodes creative distinctiveness.\"},{\"between\":[6,8],\"claim_a\":\"AI is rapidly displacing human models and reducing model jobs\",\"claim_b\":\"Creative professional hiring rose 8% and working creatives are setting boundaries that exclude AI from parts of their workflow\",\"why_it_matters\":\"Both claims may be true simultaneously: AI compresses production costs while creative labor shifts toward selection and direction roles rather than first-pass generation.\"},{\"between\":[4,5],\"claim_a\":\"Luxury brands are moving away from AI experimentation toward restrained, heritage-driven campaigns\",\"claim_b\":\"Brands are collaborating with human artists to signal 'effort signaling' and justify high prices against AI\",\"why_it_matters\":\"These are complementary rather than contradictory: restraint and human artistry both serve the same commercial goal of maintaining brand distinctiveness and perceived value.\"}],\"questions\":[\"Does the click advantage of AI-assisted workflows persist when campaigns also include higher production costs for testing and iteration?\",\"How large is the novelty loss from AI generation, and does it differ systematically across creative domains (text vs. visual vs. video)?\",\"What specific workflow boundaries do working creatives draw around AI use, and do those boundaries predict better commercial outcomes?\"]}",
+    "answeredBy": "xingchen-agi/xing4.0-29b-a4b:free",
+    "ms": 12387,
+    "attempts": 1,
+    "usage": {
+     "prompt_tokens": 11421,
+     "completion_tokens": 617,
+     "total_tokens": 12038,
+     "cost": 0,
+     "is_byok": false,
+     "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+     },
+     "cost_details": {
+      "upstream_inference_cost": 0,
+      "upstream_inference_prompt_cost": 0,
+      "upstream_inference_completions_cost": 0
+     },
+     "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+     }
+    },
+    "parsed": {
+     "themes": [
+      {
+       "theme": "AI-assisted creative workflows outperform ordinary generation",
+       "sources": [
+        1,
+        2,
+        8
+       ],
+       "note": "Source 1 shows trained workflows improve clicks while ordinary assistance does not; Source 2 shows AI can raise individual quality but reduce novelty; Source 8 finds AI is used for brainstorming and post-production, with judgment filling the middle stage."
+      },
+      {
+       "theme": "AI creativity risks homogenization ('beige trap')",
+       "sources": [
+        2,
+        4,
+        5
+       ],
+       "note": "Source 2 documents how AI lowers the ceiling on novelty; Sources 4 and 5 describe luxury brands retreating from AI-generated imagery toward human craft as a value signal."
+      },
+      {
+       "theme": "AI reshapes creative labor rather than replacing it wholesale",
+       "sources": [
+        6,
+        8
+       ],
+       "note": "Source 6 reports AI-generated models threatening modeling jobs but also cutting production costs by 90%+; Source 8 finds creative hiring rose 8% and working creatives draw sharp boundaries around AI use."
+      },
+      {
+       "theme": "Luxury brands use human artistry to signal value against AI",
+       "sources": [
+        4,
+        5
+       ],
+       "note": "Sources 4 and 5 describe brands investing in hand-crafted, slow-craft collaborations to signal authenticity and justify premium pricing in an era of AI sameness."
+      }
+     ],
+     "contradictions": [
+      {
+       "between": [
+        1,
+        2
+       ],
+       "claim_a": "AI-assisted creative workflows improve advertising response (clicks) when connected to prior audience data",
+       "claim_b": "AI improves individual creativity but reduces collective novelty and distinctiveness",
+       "why_it_matters": "The two findings address different outcomes—response vs. originality—and together suggest AI's value depends on whether the workflow preserves or erodes creative distinctiveness."
+      },
+      {
+       "between": [
+        6,
+        8
+       ],
+       "claim_a": "AI is rapidly displacing human models and reducing model jobs",
+       "claim_b": "Creative professional hiring rose 8% and working creatives are setting boundaries that exclude AI from parts of their workflow",
+       "why_it_matters": "Both claims may be true simultaneously: AI compresses production costs while creative labor shifts toward selection and direction roles rather than first-pass generation."
+      },
+      {
+       "between": [
+        4,
+        5
+       ],
+       "claim_a": "Luxury brands are moving away from AI experimentation toward restrained, heritage-driven campaigns",
+       "claim_b": "Brands are collaborating with human artists to signal 'effort signaling' and justify high prices against AI",
+       "why_it_matters": "These are complementary rather than contradictory: restraint and human artistry both serve the same commercial goal of maintaining brand distinctiveness and perceived value."
+      }
+     ],
+     "questions": [
+      "Does the click advantage of AI-assisted workflows persist when campaigns also include higher production costs for testing and iteration?",
+      "How large is the novelty loss from AI generation, and does it differ systematically across creative domains (text vs. visual vs. video)?",
+      "What specific workflow boundaries do working creatives draw around AI use, and do those boundaries predict better commercial outcomes?"
+     ]
+    },
+    "how": "clean"
+   }
+  }
+ },
+ "images": {
+  "p1.jpg": {
+   "google/gemma-4-31b-it:free": {
+    "ok": false,
+    "error": "Provider returned error",
+    "ms": 882,
+    "attempts": 3
+   },
+   "nvidia/nemotron-3.5-super-vl:free": {
+    "ok": true,
+    "text": "{\"title\": \"Sylvia Plath Quote\", \"description\": \"The image displays a typed quote on textured paper attributed to Sylvia Plath. The text discusses the desire for a brilliant mind that can be stimulated and respected, rather than just physical intimacy.\", \"text_in_image\": \"You know\\ndamn well that sex\\nisn't ever enough for you.\\nYou want a brilliant mind\\nthat you can stimulate,\\nbut that you can also\\nhonestly look up to.\\n— Sylvia Plath\", \"people_or_works\": [\"Sylvia Plath\"], \"tags\": [\"quote\", \"sylvia plath\", \"literature\", \"intellect\", \"relationships\"]}",
+    "answeredBy": "nvidia/nemotron-3.5-super-vl:free",
+    "ms": 5445,
+    "attempts": 1,
+    "usage": {
+     "prompt_tokens": 2126,
+     "completion_tokens": 833,
+     "total_tokens": 2959,
+     "cost": 0,
+     "is_byok": false,
+     "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+     },
+     "cost_details": {
+      "upstream_inference_cost": 0,
+      "upstream_inference_prompt_cost": 0,
+      "upstream_inference_completions_cost": 0
+     },
+     "completion_tokens_details": {
+      "reasoning_tokens": 681,
+      "image_tokens": 0,
+      "audio_tokens": 0
+     }
+    },
+    "parsed": {
+     "title": "Sylvia Plath Quote",
+     "description": "The image displays a typed quote on textured paper attributed to Sylvia Plath. The text discusses the desire for a brilliant mind that can be stimulated and respected, rather than just physical intimacy.",
+     "text_in_image": "You know\ndamn well that sex\nisn't ever enough for you.\nYou want a brilliant mind\nthat you can stimulate,\nbut that you can also\nhonestly look up to.\n— Sylvia Plath",
+     "people_or_works": [
+      "Sylvia Plath"
+     ],
+     "tags": [
+      "quote",
+      "sylvia plath",
+      "literature",
+      "intellect",
+      "relationships"
+     ]
+    },
+    "how": "clean"
+   },
+   "openrouter/free": {
+    "ok": true,
+    "text": "{\n  \"title\": \"Sylvia Plath on Desire\",\n  \"description\": \"The image displays a handwritten‑style quote on textured paper. It expresses the idea that physical intimacy alone is insufficient and that a stimulating, admirable mind is desired. The quote is attributed to Sylvia Plath.\",\n  \"text_in_image\": \"You know\\ndamn well that sex\\nisn’t ever enough for you.\\nYou want a brilliant mind\\nthat you can stimulate,\\nbut that you can also\\nhonestly look up to.\\n— Sylvia Plath\",\n  \"people_or_works\": [\"Sylvia Plath\"],\n  \"tags\": [\"quote\", \"sylvia plath\", \"relationship\", \"intellectual\", \"motivation\"]\n}",
+    "answeredBy": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "ms": 9622,
+    "attempts": 1,
+    "usage": {
+     "prompt_tokens": 2127,
+     "completion_tokens": 778,
+     "total_tokens": 2905,
+     "cost": 0,
+     "is_byok": false,
+     "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+     },
+     "cost_details": {
+      "upstream_inference_cost": 0,
+      "upstream_inference_prompt_cost": 0,
+      "upstream_inference_completions_cost": 0
+     },
+     "completion_tokens_details": {
+      "reasoning_tokens": 615,
+      "image_tokens": 0,
+      "audio_tokens": 0
+     }
+    },
+    "parsed": {
+     "title": "Sylvia Plath on Desire",
+     "description": "The image displays a handwritten‑style quote on textured paper. It expresses the idea that physical intimacy alone is insufficient and that a stimulating, admirable mind is desired. The quote is attributed to Sylvia Plath.",
+     "text_in_image": "You know\ndamn well that sex\nisn’t ever enough for you.\nYou want a brilliant mind\nthat you can stimulate,\nbut that you can also\nhonestly look up to.\n— Sylvia Plath",
+     "people_or_works": [
+      "Sylvia Plath"
+     ],
+     "tags": [
+      "quote",
+      "sylvia plath",
+      "relationship",
+      "intellectual",
+      "motivation"
+     ]
+    },
+    "how": "clean"
+   }
+  },
+  "p2.jpg": {
+   "google/gemma-4-31b-it:free": {
+    "ok": false,
+    "error": "Provider returned error",
+    "ms": 482,
+    "attempts": 3
+   },
+   "nvidia/nemotron-3.5-super-vl:free": {
+    "ok": true,
+    "text": "{\"title\": \"A Timeline of Art History Poster\", \"description\": \"The image displays a printed educational poster titled 'A Timeline of Art History,' held open by two hands at the top corners. The poster features a grid layout showcasing various art movements from Ancient times to the Contemporary era, each with a representative artwork, date range, and brief descriptive text.\", \"text_in_image\": \"A Timeline of Art History www.IdentifyThisArt.com Ancient ~ 500 BC Medieval ~ 500 BC - 1550 Renaissance 1400 - 1600 Baroque 1600 - 1725 Rococo 1720 - 1760 Pre-Raphaelite 1848 - 1854 Realism 1840 - 1870 Academic 1800s Romantic 1800 - 1850 Neoclassical 1760 - 1830 Impressionism 1870 - 1900 Post-Impressionism 1880 - 1920 Symbolism 1880 - 1910 Fauvism 1905 - 1908 Expressionism 1905 - 1925 Precisionism 1915 - 1945 Dada 1916 - 1923 Abstract Art from 1910 Futurism 1909 - 1918 Cubism 1908 - 1920 Surrealism from 1920s Art Deco 1920 - 1935 Pop Art 1956 - 1960s Photorealism began 1960s Conceptual / Installation Art began 1960s To obtain a copy of this print, visit www.IdentifyThisArt.com First Editions Printed in Canada. All Rights Reserved © Copyright www.IdentifyThisArt.com Designed by Tally Zaki\", \"people_or_works\": [\"Michelangelo\", \"Vincent van Gogh\", \"Pablo Picasso\", \"Andy Warhol\", \"Marcel Duchamp\", \"Salvador Dalí\", \"Piet Mondrian\", \"Henri Matisse\", \"Claude Monet\", \"Georges Seurat\", \"Caspar David Friedrich\", \"Jacques-Louis David\", \"Jean-François Millet\", \"William-Adolphe Bouguereau\", \"John Everett Millais\", \"Joseph Kosuth\"], \"tags\": [\"art history\", \"timeline\", \"poster\", \"art movements\", \"education\", \"visual guide\"]}",
+    "answeredBy": "nvidia/nemotron-3.5-super-vl:free",
+    "ms": 14548,
+    "attempts": 1,
+    "usage": {
+     "prompt_tokens": 2326,
+     "completion_tokens": 2929,
+     "total_tokens": 5255,
+     "cost": 0,
+     "is_byok": false,
+     "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+     },
+     "cost_details": {
+      "upstream_inference_cost": 0,
+      "upstream_inference_prompt_cost": 0,
+      "upstream_inference_completions_cost": 0
+     },
+     "completion_tokens_details": {
+      "reasoning_tokens": 2354,
+      "image_tokens": 0,
+      "audio_tokens": 0
+     }
+    },
+    "parsed": {
+     "title": "A Timeline of Art History Poster",
+     "description": "The image displays a printed educational poster titled 'A Timeline of Art History,' held open by two hands at the top corners. The poster features a grid layout showcasing various art movements from Ancient times to the Contemporary era, each with a representative artwork, date range, and brief descriptive text.",
+     "text_in_image": "A Timeline of Art History www.IdentifyThisArt.com Ancient ~ 500 BC Medieval ~ 500 BC - 1550 Renaissance 1400 - 1600 Baroque 1600 - 1725 Rococo 1720 - 1760 Pre-Raphaelite 1848 - 1854 Realism 1840 - 1870 Academic 1800s Romantic 1800 - 1850 Neoclassical 1760 - 1830 Impressionism 1870 - 1900 Post-Impressionism 1880 - 1920 Symbolism 1880 - 1910 Fauvism 1905 - 1908 Expressionism 1905 - 1925 Precisionism 1915 - 1945 Dada 1916 - 1923 Abstract Art from 1910 Futurism 1909 - 1918 Cubism 1908 - 1920 Surrealism from 1920s Art Deco 1920 - 1935 Pop Art 1956 - 1960s Photorealism began 1960s Conceptual / Installation Art began 1960s To obtain a copy of this print, visit www.IdentifyThisArt.com First Editions Printed in Canada. All Rights Reserved © Copyright www.IdentifyThisArt.com Designed by Tally Zaki",
+     "people_or_works": [
+      "Michelangelo",
+      "Vincent van Gogh",
+      "Pablo Picasso",
+      "Andy Warhol",
+      "Marcel Duchamp",
+      "Salvador Dalí",
+      "Piet Mondrian",
+      "Henri Matisse",
+      "Claude Monet",
+      "Georges Seurat",
+      "Caspar David Friedrich",
+      "Jacques-Louis David",
+      "Jean-François Millet",
+      "William-Adolphe Bouguereau",
+      "John Everett Millais",
+      "Joseph Kosuth"
+     ],
+     "tags": [
+      "art history",
+      "timeline",
+      "poster",
+      "art movements",
+      "education",
+      "visual guide"
+     ]
+    },
+    "how": "clean"
+   },
+   "openrouter/free": {
+    "ok": true,
+    "text": "{\"title\": \"A Timeline of Art History poster\", \"description\": \"The image shows a person holding a large educational poster titled 'A Timeline of Art History' from IdentifyThisArt.com. The poster is structured as a chronological grid of major art movements, from Ancient times to Conceptual/Installation Art, each featuring a representative masterpiece, active years, and a brief description of the term's origin.\", \"text_in_image\": \"A Timeline of Art History\\nwww.IdentifyThisArt.com\\nAncient\\n500 BC\\nMedieval\\n500 BC - 1550\\nRenaissance\\n1400 - 1600\\nBaroque\\n1600 - 1725\\nRococo\\n1730 - 1760\\nPre-Raphaelite\\n1848 - 1854\\nRealism\\n1840 - 1870\\nAcademic\\n1800s\\nRomantic\\n1800 - 1850\\nNeoclassical\\n1760 - 1830\\nImpressionism\\n1870 - 1900\\nPost-Impressionism\\n1880 - 1920\\nSymbolism\\n1880 - 1910\\nFauvism\\n1905 - 1908\\nExpressionism\\n1905 - 1925\\nPrecisionism\\n1915 - 1945\\nDada\\n1916 - 1923\\nAbstract Art\\nFROM 1910\\nFuturism\\n1909 - 1918\\nCubism\\n1908 - 1920\\nSurrealism\\nFROM 1920s\\nArt Deco\\n1920 - 1935\\nPop Art\\n1956 - 1960s\\nPhotorealism\\nBEGIN 1960s\\nConceptual / Installation Art\\nBEGIN 1960s\\nTo obtain a copy of this print, visit www.IdentifyThisArt.com\\nFirst Edition - Printed in Canada. All rights reserved.\\nCopyright www.IdentifyThisArt.com Owned by Fady Zaki\", \"people_or_works\": \"Fady Zaki (creator/owner of IdentifyThisArt.com); iconic artworks featured include Michelangelo's 'The Creation of Adam' (Renaissance), Leonardo da Vinci's 'Mona Lisa' (Dada section), Vincent van Gogh's 'The Starry Night' (Expressionism), Salvador Dalí's 'The Persistence of Memory' (Surrealism), Andy Warhol's 'Campbell's Soup Cans' (Pop Art), and Piet Mondrian's red/blue grid compositions (Abstract Art).\", \"tags\": [\"art history\", \"timeline\", \"poster\", \"educational\", \"art movements\", \"infographic\"]}",
+    "answeredBy": "dots-studio/dots-3-note-preview:free",
+    "ms": 31915,
+    "attempts": 1,
+    "usage": {
+     "prompt_tokens": 1370,
+     "completion_tokens": 2963,
+     "total_tokens": 4333,
+     "cost": 0,
+     "is_byok": false,
+     "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+     },
+     "cost_details": {
+      "upstream_inference_cost": 0,
+      "upstream_inference_prompt_cost": 0,
+      "upstream_inference_completions_cost": 0
+     },
+     "completion_tokens_details": {
+      "reasoning_tokens": 1776,
+      "image_tokens": 0,
+      "audio_tokens": 0
+     }
+    },
+    "parsed": {
+     "title": "A Timeline of Art History poster",
+     "description": "The image shows a person holding a large educational poster titled 'A Timeline of Art History' from IdentifyThisArt.com. The poster is structured as a chronological grid of major art movements, from Ancient times to Conceptual/Installation Art, each featuring a representative masterpiece, active years, and a brief description of the term's origin.",
+     "text_in_image": "A Timeline of Art History\nwww.IdentifyThisArt.com\nAncient\n500 BC\nMedieval\n500 BC - 1550\nRenaissance\n1400 - 1600\nBaroque\n1600 - 1725\nRococo\n1730 - 1760\nPre-Raphaelite\n1848 - 1854\nRealism\n1840 - 1870\nAcademic\n1800s\nRomantic\n1800 - 1850\nNeoclassical\n1760 - 1830\nImpressionism\n1870 - 1900\nPost-Impressionism\n1880 - 1920\nSymbolism\n1880 - 1910\nFauvism\n1905 - 1908\nExpressionism\n1905 - 1925\nPrecisionism\n1915 - 1945\nDada\n1916 - 1923\nAbstract Art\nFROM 1910\nFuturism\n1909 - 1918\nCubism\n1908 - 1920\nSurrealism\nFROM 1920s\nArt Deco\n1920 - 1935\nPop Art\n1956 - 1960s\nPhotorealism\nBEGIN 1960s\nConceptual / Installation Art\nBEGIN 1960s\nTo obtain a copy of this print, visit www.IdentifyThisArt.com\nFirst Edition - Printed in Canada. All rights reserved.\nCopyright www.IdentifyThisArt.com Owned by Fady Zaki",
+     "people_or_works": "Fady Zaki (creator/owner of IdentifyThisArt.com); iconic artworks featured include Michelangelo's 'The Creation of Adam' (Renaissance), Leonardo da Vinci's 'Mona Lisa' (Dada section), Vincent van Gogh's 'The Starry Night' (Expressionism), Salvador Dalí's 'The Persistence of Memory' (Surrealism), Andy Warhol's 'Campbell's Soup Cans' (Pop Art), and Piet Mondrian's red/blue grid compositions (Abstract Art).",
+     "tags": [
+      "art history",
+      "timeline",
+      "poster",
+      "educational",
+      "art movements",
+      "infographic"
+     ]
+    },
+    "how": "clean"
+   }
+  },
+  "p3.jpg": {
+   "google/gemma-4-31b-it:free": {
+    "ok": false,
+    "error": "Provider returned error",
+    "ms": 763,
+    "attempts": 3
+   },
+   "nvidia/nemotron-3.5-super-vl:free": {
+    "ok": true,
+    "text": "{\"title\": \"Sunlit Modern Living Room with Pink Sofa\", \"description\": \"A spacious, modern living area bathed in natural light from a large overhead skylight. The room features a prominent pink modular sofa sitting on a patterned rug, surrounded by tall houseplants and wooden flooring. A mezzanine level with greenery overlooks the space below.\", \"text_in_image\": \"\", \"people_or_works\": [], \"tags\": [\"interior design\", \"living room\", \"pink sofa\", \"skylight\", \"houseplants\", \"sunlight\"]}",
+    "answeredBy": "nvidia/nemotron-3.5-super-vl:free",
+    "ms": 6255,
+    "attempts": 1,
+    "usage": {
+     "prompt_tokens": 2026,
+     "completion_tokens": 757,
+     "total_tokens": 2783,
+     "cost": 0,
+     "is_byok": false,
+     "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+     },
+     "cost_details": {
+      "upstream_inference_cost": 0,
+      "upstream_inference_prompt_cost": 0,
+      "upstream_inference_completions_cost": 0
+     },
+     "completion_tokens_details": {
+      "reasoning_tokens": 634,
+      "image_tokens": 0,
+      "audio_tokens": 0
+     }
+    },
+    "parsed": {
+     "title": "Sunlit Modern Living Room with Pink Sofa",
+     "description": "A spacious, modern living area bathed in natural light from a large overhead skylight. The room features a prominent pink modular sofa sitting on a patterned rug, surrounded by tall houseplants and wooden flooring. A mezzanine level with greenery overlooks the space below.",
+     "text_in_image": "",
+     "people_or_works": [],
+     "tags": [
+      "interior design",
+      "living room",
+      "pink sofa",
+      "skylight",
+      "houseplants",
+      "sunlight"
+     ]
+    },
+    "how": "clean"
+   },
+   "openrouter/free": {
+    "ok": true,
+    "text": "{\n  \"title\": \"Sunlit Modern Living Room\",\n  \"description\": \"A bright, two‑story living area features a high ceiling with a large skylight that floods the space with natural light. A plush pink modular sofa sits on a patterned rug over light wood flooring, accompanied by a glass coffee table and a tall potted palm. The open layout includes a mezzanine level with plants and a view of the sky.\",\n  \"text_in_image\": \"\",\n  \"people_or_works\": \"\",\n  \"tags\": [\"interior\", \"living room\", \"modern\", \"pink\", \"skylight\", \"plant\"]\n}",
+    "answeredBy": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "ms": 5057,
+    "attempts": 1,
+    "usage": {
+     "prompt_tokens": 2027,
+     "completion_tokens": 458,
+     "total_tokens": 2485,
+     "cost": 0,
+     "is_byok": false,
+     "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+     },
+     "cost_details": {
+      "upstream_inference_cost": 0,
+      "upstream_inference_prompt_cost": 0,
+      "upstream_inference_completions_cost": 0
+     },
+     "completion_tokens_details": {
+      "reasoning_tokens": 322,
+      "image_tokens": 0,
+      "audio_tokens": 0
+     }
+    },
+    "parsed": {
+     "title": "Sunlit Modern Living Room",
+     "description": "A bright, two‑story living area features a high ceiling with a large skylight that floods the space with natural light. A plush pink modular sofa sits on a patterned rug over light wood flooring, accompanied by a glass coffee table and a tall potted palm. The open layout includes a mezzanine level with plants and a view of the sky.",
+     "text_in_image": "",
+     "people_or_works": "",
+     "tags": [
+      "interior",
+      "living room",
+      "modern",
+      "pink",
+      "skylight",
+      "plant"
+     ]
+    },
+    "how": "clean"
+   }
+  }
+ },
+ "meta": {
+  "before": {
+   "usage": 0,
+   "freeUsed": 0,
+   "freeRemaining": 1000
+  },
+  "after": {
+   "usage": 0,
+   "freeUsed": 29,
+   "freeRemaining": 971
+  },
+  "calls": 90,
+  "models": [
+   "google/gemma-4-31b-it:free",
+   "nvidia/nemotron-3.5-super-vl:free",
+   "nvidia/nemotron-3-ultra-550b-a55b:free",
+   "xingchen-agi/xing4.0-29b-a4b:free",
+   "openrouter/free"
+  ],
+  "ranAt": "2026-11-02T00:30:16.415Z"
+ }
+}
