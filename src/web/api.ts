@@ -4,13 +4,14 @@ export type Field = { key: string; value: string } & OriginInfo;
 export type Tag = { id: number; name: string; color: string } & OriginInfo;
 export type Block = { id: number; text: string } & OriginInfo;
 export type Summary = {
-  id: string; type: string; private: boolean; unreviewed: boolean; createdAt: string; updatedAt: string;
+  id: string; type: string; private: boolean; unreviewed: boolean; hasImage: boolean; createdAt: string; updatedAt: string;
   fields: Field[]; firstLine: string; tags: Tag[]; connectionCount: number;
 };
 export type Obj = Summary & { blocks: Block[] };
 export type FieldDef = { key: string; label: string; input: "text" | "longtext" | "select"; options: string[] | null; lead?: boolean };
 export type TypeDef = { key: string; label: string; plural: string; fields: FieldDef[] };
 export type Types = { types: TypeDef[]; fieldLabels: Record<string, FieldDef> };
+export type CaptureResult = { created: Obj[]; existing: Obj[]; thoughtId: string | null; openId: string };
 export type TagRow = { id: number; name: string; color: string; count: number };
 
 async function call<T>(method: string, path: string, body?: unknown): Promise<T> {
@@ -23,7 +24,16 @@ export const api = {
   types: () => call<Types>("GET", "/api/types"),
   list: (q: { type?: string; tag?: string; since?: string } = {}) =>
     call<Summary[]>("GET", "/api/objects?" + new URLSearchParams(q as Record<string, string>)),
-  capture: (text: string, isPrivate: boolean) => call<Obj>("POST", "/api/capture", { text, private: isPrivate }),
+  capture: async (c: { text: string; links: string[]; images: File[]; private: boolean }): Promise<CaptureResult> => {
+    const payload = JSON.stringify({ text: c.text, links: c.links, private: c.private });
+    if (!c.images.length) return call("POST", "/api/capture", JSON.parse(payload));
+    const form = new FormData();
+    form.set("payload", payload);
+    c.images.forEach((f) => form.append("images", f, f.name));
+    const res = await fetch("/api/capture", { method: "POST", body: form });
+    if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error ?? res.statusText);
+    return res.json();
+  },
   get: (id: string) => call<Obj>("GET", `/api/objects/${id}`),
   create: (type: string) => call<Obj>("POST", "/api/objects", { type }),
   patch: (id: string, patch: { type?: string; private?: boolean; fields?: Record<string, string | null> }) =>

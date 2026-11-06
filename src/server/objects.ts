@@ -66,12 +66,14 @@ function summarise(db: Db, rows: any[]) {
        WHERE o.id IN (${marks}) GROUP BY o.id`,
     )
     .all(...ids) as any[];
+  const withImage = new Set((db.prepare(`SELECT object_id FROM source_images WHERE object_id IN (${marks})`).all(...ids) as any[]).map((r) => r.object_id));
   const tags = tagsFor(db, ids);
   return rows.map((r) => ({
     id: r.id,
     type: r.type,
     private: !!r.private,
     unreviewed: !!r.unreviewed,
+    hasImage: withImage.has(r.id),
     createdAt: iso(r.created_at),
     updatedAt: iso(r.updated_at ?? r.created_at),
     fields: fields.filter((f) => f.object_id === r.id).map((f) => ({ key: f.field, value: f.value, ...originOf(f) })),
@@ -205,21 +207,4 @@ export function setTagColor(db: Db, tagId: number, color: unknown) {
   if (!TAG_COLORS.includes(color as any)) throw new BadRequest("unknown colour");
   db.prepare("UPDATE tags SET color = ? WHERE id = ?").run(color, tagId);
   return listTags(db);
-}
-
-/**
- * Mac Capture (issues #21, #23, #15): typed words become a Thought. The words are the
- * owner's (Owner Origin), the Thought enters Unreviewed, and Private is stored as given.
- * Saved in one transaction, so nothing is lost if the app closes straight after.
- */
-export function captureText(db: Db, input: { text?: unknown; private?: unknown }) {
-  if (typeof input.text !== "string" || !input.text.trim()) throw new BadRequest("There is nothing to save yet");
-  const paragraphs = input.text.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
-  const id = randomUUID();
-  db.transaction(() => {
-    db.prepare("INSERT INTO objects (id, type, private, unreviewed, updated_at) VALUES (?, 'thought', ?, 1, datetime('now'))").run(id, input.private === true ? 1 : 0);
-    const ins = db.prepare("INSERT INTO blocks (object_id, position, text, origin) VALUES (?, ?, ?, 'owner')");
-    paragraphs.forEach((text, i) => ins.run(id, i, text));
-  })();
-  return getObject(db, id)!;
 }

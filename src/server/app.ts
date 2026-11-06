@@ -2,8 +2,14 @@ import { Hono } from "hono";
 import { serveStatic } from "@hono/node-server/serve-static";
 import type Database from "better-sqlite3";
 import * as o from "./objects.ts";
+import { capture } from "./capture.ts";
+import { extractInto } from "./extract.ts";
+import { readImage } from "./images.ts";
 
-export function createApp(sqlite: Database.Database) {
+type Options = { /** Reads a saved link in the background. Tests replace it. */ readLink?: (id: string, url: string) => void };
+
+export function createApp(sqlite: Database.Database, opts: Options = {}) {
+  const readLink = opts.readLink ?? ((id: string, url: string) => void extractInto(sqlite, id, url));
   const app = new Hono();
 
   app.onError((err, c) => {
@@ -22,7 +28,25 @@ export function createApp(sqlite: Database.Database) {
     c.json(o.listObjects(sqlite, { type: c.req.query("type"), tag: c.req.query("tag"), since: c.req.query("since") })),
   );
   app.post("/api/objects", async (c) => c.json(o.createObject(sqlite, await c.req.json().catch(() => ({}))), 201));
-  app.post("/api/capture", async (c) => c.json(o.captureText(sqlite, await c.req.json().catch(() => ({}))), 201));
+  // Capture takes JSON (words and links) or a form with the same JSON in "payload" plus picture files in "images".
+  app.post("/api/capture", async (c) => {
+    let input: any = {};
+    if ((c.req.header("content-type") ?? "").includes("multipart/form-data")) {
+      const form = await c.req.formData();
+      input = JSON.parse(String(form.get("payload") ?? "{}"));
+      input.images = await Promise.all(
+        form.getAll("images").filter((f): f is File => typeof f !== "string").map(async (f) => ({ name: f.name || "Pasted image", bytes: Buffer.from(await f.arrayBuffer()) })),
+      );
+    } else input = await c.req.json().catch(() => ({}));
+    return c.json(await capture(sqlite, input, readLink), 201);
+  });
+  app.get("/api/images/:id/:kind", async (c) => {
+    const id = c.req.param("id");
+    if (!/^[0-9a-f-]{36}$/.test(id)) return c.json({ error: "Not found" }, 404);
+    try {
+      return new Response(new Uint8Array(await readImage(id, c.req.param("kind") === "thumb")), { headers: { "content-type": "image/jpeg", "cache-control": "max-age=86400" } });
+    } catch { return c.json({ error: "Not found" }, 404); }
+  });
   app.get("/api/objects/:id", (c) => {
     const obj = o.getObject(sqlite, c.req.param("id"));
     return obj ? c.json(obj) : c.json({ error: "Not found" }, 404);

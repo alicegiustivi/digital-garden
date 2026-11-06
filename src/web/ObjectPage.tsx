@@ -110,6 +110,7 @@ export function ObjectPage({ id, types, fresh, onChanged }: Props) {
 
       <div className="art">
         <div className="body">
+          {obj.hasImage && <figure className="cover-img"><img src={`/api/images/${obj.id}/full`} alt={title?.value ?? "Captured image"} /></figure>}
           {quotes.map((b) => (
             <blockquote key={b.id} className="b-src"><Marked o={b}>{b.text}</Marked></blockquote>
           ))}
