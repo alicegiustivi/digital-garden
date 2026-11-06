@@ -147,3 +147,29 @@ describe("Capture of images", () => {
     expect(sqlite.prepare("SELECT count(*) n FROM objects").get()).toEqual({ n: 0 });
   });
 });
+
+describe("Unreviewed and Reviewed", () => {
+  const list = async () => (await (await app.request("/api/objects?unreviewed=1")).json()) as any[];
+  const review = (ids: string[]) => app.request("/api/reviewed", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ ids }) });
+  it("lists every capture newest first, and never an Object made on purpose", async () => {
+    const a = (await cap({ text: "first" })).json.created[0];
+    const b = (await cap({ links: ["https://example.com/x"] })).json.created[0];
+    await app.request("/api/objects", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ type: "thought", title: "on purpose" }) });
+    const rows = await list();
+    expect(rows.map((r) => r.id)).toEqual([b.id, a.id]);
+  });
+  it("Reviewed removes it from the list and changes nothing else", async () => {
+    const a = (await cap({ text: "first", private: true })).json.created[0];
+    await review([a.id]);
+    expect(await list()).toHaveLength(0);
+    const after = (await (await app.request(`/api/objects/${a.id}`)).json()) as any;
+    expect(after.unreviewed).toBe(false);
+    expect(after.private).toBe(true);
+    expect(after.blocks).toHaveLength(1);
+  });
+  it("an Object never becomes Unreviewed again", async () => {
+    const a = (await cap({ text: "first" })).json.created[0];
+    await review([a.id]);
+    expect(() => sqlite.prepare("UPDATE objects SET unreviewed = 1 WHERE id = ?").run(a.id)).toThrow(/never becomes Unreviewed/);
+  });
+});

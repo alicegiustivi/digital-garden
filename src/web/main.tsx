@@ -3,8 +3,9 @@ import { createRoot } from "react-dom/client";
 import "./style.css";
 import { api, type Types } from "./api";
 import { Appearance, getAppearance, setAppearance, startFollowingMac } from "./theme";
-import { TagsPage, ThisWeek, TypeList } from "./Lists";
+import { TagsPage, ThisWeek, TypeList, UnreviewedPage, statusLine, useList } from "./Lists";
 import { ObjectPage } from "./ObjectPage";
+import type { Summary } from "./api";
 import { Icon, typeVar } from "./ui";
 import { Capture, captureKey, emptyDraft, isCaptureKey, type CaptureDraft } from "./Capture";
 
@@ -31,7 +32,7 @@ const NAV = [
 ];
 const TYPE_OF_ROUTE: Record<string, string> = { sources: "source", concepts: "concept", thoughts: "thought", people: "person" };
 
-function TopBar({ hash, onCapture }: { hash: string; onCapture: () => void }) {
+function TopBar({ hash, unreviewed, onCapture }: { hash: string; unreviewed: number; onCapture: () => void }) {
   const [open, setOpen] = useState(false);
   const [appearance, setAppearanceState] = useState<Appearance>(getAppearance());
   const box = useRef<HTMLDivElement>(null);
@@ -55,6 +56,7 @@ function TopBar({ hash, onCapture }: { hash: string; onCapture: () => void }) {
             {n.label}
           </a>
         ))}
+        <a href="#/unreviewed" className={section === "#/unreviewed" ? "on" : ""}>Unreviewed ({unreviewed})</a>
         <button className="cap" onClick={onCapture} title="Capture a thought"><Icon name="plus" /> Capture <kbd>{captureKey()}</kbd></button>
         <div className="more" ref={box}>
           <button aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen(!open)}>More <Icon name="chevron" /></button>
@@ -96,8 +98,21 @@ function BookmarkPage() {
   );
 }
 
-function Peek({ id, ids, types, onChanged, onMove, onClose }: {
-  id: string; ids: string[]; types: Types; onChanged: () => void; onMove: (id: string) => void; onClose: () => void;
+/** What an Unreviewed capture shows above its page: the Archivist's status line and the "From the Archivist" block. Both are empty shells until the AI builds fill them in. */
+function ReviewShell({ o }: { o: Summary }) {
+  return (
+    <div className="review-shell">
+      <p className="status-line"><span className="dot" /> Archivist: {statusLine(o).toLowerCase()}</p>
+      <section className="from-archivist" aria-label="From the Archivist">
+        <h4>From the Archivist</h4>
+        <p className="quiet small">{o.private ? "Private: no AI reads this, so there is nothing to show." : "Nothing yet. Its proposals for a type, a title and Connections will appear here."}</p>
+      </section>
+    </div>
+  );
+}
+
+function Peek({ id, ids, types, pending, onChanged, onMove, onReview, onClose }: {
+  id: string; ids: string[]; types: Types; pending: Summary | undefined; onChanged: () => void; onMove: (id: string) => void; onReview: () => void; onClose: () => void;
 }) {
   const i = ids.indexOf(id);
   const prev = i > 0 ? ids[i - 1] : null;
@@ -107,12 +122,13 @@ function Peek({ id, ids, types, onChanged, onMove, onClose }: {
       const typing = (e.target as HTMLElement).closest("input, textarea, select, [contenteditable=true]");
       if (e.key === "Escape" && !typing) onClose();
       if (typing || e.metaKey || e.ctrlKey || e.altKey) return;
+      if ((e.key === "r" || e.key === "R") && pending) onReview();
       if (e.key === "ArrowLeft" && prev) onMove(prev);
       if (e.key === "ArrowRight" && next) onMove(next);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [prev, next, onClose, onMove]);
+  }, [prev, next, onClose, onMove, pending, onReview]);
   return (
     <div className="scrim" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
       <div className="peek" role="dialog" aria-label="Peek">
@@ -121,10 +137,11 @@ function Peek({ id, ids, types, onChanged, onMove, onClose }: {
           <button disabled={!next} onClick={() => next && onMove(next)} aria-label="Next"><Icon name="right" /></button>
           <span className="quiet small">{i >= 0 ? `${i + 1} of ${ids.length}` : ""}</span>
           <span className="grow" />
+          {pending && <button className="pill action reviewed" onClick={onReview}>✓ Reviewed <kbd>R</kbd></button>}
           <button className="pill action" onClick={() => { onClose(); go(`#/o/${id}`); }}><Icon name="expand" /> Open full page</button>
           <button onClick={onClose} aria-label="Close"><Icon name="close" /></button>
         </div>
-        <div className="peek-body"><ObjectPage key={id} id={id} types={types} onChanged={onChanged} /></div>
+        <div className="peek-body">{pending && <ReviewShell o={pending} />}<ObjectPage key={id} id={id} types={types} onChanged={onChanged} /></div>
       </div>
     </div>
   );
@@ -134,11 +151,12 @@ function App() {
   const hash = useHash();
   const [types, setTypes] = useState<Types | null>(null);
   const [version, setVersion] = useState(0);
-  const [peek, setPeek] = useState<{ id: string; ids: string[] } | null>(null);
+  const [peek, setPeek] = useState<{ id: string; ids: string[]; fromUnreviewed?: boolean } | null>(null);
   const [fresh, setFresh] = useState<string | null>(null);
   const [capture, setCapture] = useState(false);
   const [draft, setDraft] = useState<CaptureDraft>(emptyDraft);
   const changed = useCallback(() => setVersion((v) => v + 1), []);
+  const unreviewed = useList({ unreviewed: "1" }, version);
   useEffect(() => { api.types().then(setTypes); }, []);
   useEffect(() => setPeek(null), [hash]);
   // "Save to Garden" bookmark: #/capture?url=… opens the window with that page's link already in it.
@@ -165,7 +183,18 @@ function App() {
 
   if (!types) return <p className="quiet pad">Opening the Garden…</p>;
 
-  const open = (id: string, ids: string[]) => setPeek({ id, ids });
+  const open = (id: string, ids: string[]) => setPeek({ id, ids, fromUnreviewed: location.hash.startsWith("#/unreviewed") });
+  const review = async (ids: string[]) => { await api.reviewed(ids); changed(); };
+  // Reviewed from the Unreviewed list also moves on to the next one (or the previous, at the end).
+  const reviewPeeked = async () => {
+    if (!peek) return;
+    await review([peek.id]);
+    if (!peek.fromUnreviewed) return;
+    const i = peek.ids.indexOf(peek.id);
+    const rest = peek.ids.filter((x) => x !== peek.id);
+    const nextId = rest[i] ?? rest[i - 1];
+    setPeek(nextId ? { ...peek, id: nextId, ids: rest } : null);
+  };
   const make = async (type: string) => {
     const o = await api.create(type);
     setFresh(o.id);
@@ -183,17 +212,19 @@ function App() {
     );
   } else if (TYPE_OF_ROUTE[parts[0]]) {
     page = <TypeList typeKey={TYPE_OF_ROUTE[parts[0]]} types={types} version={version} onNew={make} onOpen={open} />;
+  } else if (parts[0] === "unreviewed") {
+    page = <UnreviewedPage rows={unreviewed} types={types} onOpen={open} onReviewed={review} />;
   } else if (parts[0] === "bookmark") {
     page = <BookmarkPage />;
   } else if (parts[0] === "tags") {
     page = <TagsPage tag={parts[1] ? decodeURIComponent(parts[1]) : undefined} types={types} version={version} onOpen={open} go={go} />;
   } else {
-    page = <ThisWeek types={types} version={version} onNew={make} onOpen={open} />;
+    page = <ThisWeek types={types} version={version} unreviewed={unreviewed?.length ?? 0} onNew={make} onOpen={open} />;
   }
 
   return (
     <>
-      <TopBar hash={hash} onCapture={() => { setPeek(null); setCapture(true); }} />
+      <TopBar hash={hash} unreviewed={unreviewed?.length ?? 0} onCapture={() => { setPeek(null); setCapture(true); }} />
       {page}
       {capture && (
         <Capture
@@ -204,7 +235,7 @@ function App() {
           onOpen={(id) => { setCapture(false); setDraft((d) => ({ ...d, saved: null })); open(id, [id]); }}
         />
       )}
-      {peek && <Peek id={peek.id} ids={peek.ids} types={types} onChanged={changed} onMove={(id) => setPeek({ ...peek, id })} onClose={() => setPeek(null)} />}
+      {peek && <Peek id={peek.id} ids={peek.ids} types={types} pending={unreviewed?.find((u) => u.id === peek.id)} onReview={reviewPeeked} onChanged={changed} onMove={(id) => setPeek({ ...peek, id })} onClose={() => setPeek(null)} />}
     </>
   );
 }
