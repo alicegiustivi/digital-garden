@@ -83,6 +83,7 @@ select.edit { font-size: 13.5px; }
 .wm { font-size: 27px; font-weight: 600; letter-spacing: -.02em; }
 .mast nav { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
 .mast nav > a, .more > button { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; color: var(--mute); }
+.mast nav > a .ic { color: var(--c); }
 .mast nav > a:hover, .more > button:hover { color: var(--ink); }
 .mast nav > a.on { background: var(--card); box-shadow: var(--shadow); color: var(--ink); font-weight: 500; }
 .more { position: relative; }

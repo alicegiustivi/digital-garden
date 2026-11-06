@@ -5,7 +5,7 @@ import { api, type Types } from "./api";
 import { Appearance, getAppearance, setAppearance, startFollowingMac } from "./theme";
 import { TagsPage, ThisWeek, TypeList } from "./Lists";
 import { ObjectPage } from "./ObjectPage";
-import { Icon } from "./ui";
+import { Icon, typeVar } from "./ui";
 
 startFollowingMac();
 
@@ -49,7 +49,7 @@ function TopBar({ hash }: { hash: string }) {
       <a className="wm" href="#/">Garden</a>
       <nav aria-label="Main">
         {NAV.map((n) => (
-          <a key={n.hash} href={n.hash} className={section === n.hash || (n.hash === "#/" && hash === "#/") ? "on" : ""}>
+          <a key={n.hash} href={n.hash} style={n.type ? typeVar(n.type) : undefined} className={section === n.hash || (n.hash === "#/" && hash === "#/") ? "on" : ""}>
             {n.type && <Icon name={n.type} />}
             {n.label}
           </a>
