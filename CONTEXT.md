@@ -90,6 +90,10 @@ _Avoid_: Inbox item, new, unprocessed, to do
 The owner's tick that they have looked at an Unreviewed Object. It approves and rejects nothing: pending Suggestions stay on the Object. An Object never becomes Unreviewed again.
 _Avoid_: Processed, done, organized, approved
 
+**Bin**:
+Where a deleted Object or Inquiry waits for 30 days before it is gone for good. While it is in the Bin it is hidden from every view and from the AI, its Connections are kept but hidden, and restoring it brings everything back as it was.
+_Avoid_: Trash, archive, recycle bin
+
 ### AI
 
 **Archivist**:
