@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { api, type Connection, type Found, type KindChoice, type MergeAsk, type Obj, type Shares, type Types, displayTitle } from "./api";
 import { Editable } from "./Editable";
 import { refresh, useRefresh } from "./refresh";
+import { showToast } from "./toast";
 import { Icon, Marked, TagPill, TypeChip, typeVar } from "./ui";
 
 const go = (h: string) => { location.hash = h; };
@@ -100,6 +101,8 @@ export function ConnectionsPanel({ obj, types, beside }: { obj: Pick<Obj, "id">;
   useEffect(() => { api.connections(obj.id).then(setRows); }, [obj.id, tick]);
   useEffect(() => { api.kinds().then(setChoices); }, []);
   const run = (p: Promise<unknown>) => p.then(() => { setError(undefined); refresh(); }).catch((e) => setError(e.message));
+  const removeConnection = (c: Connection) =>
+    run(api.disconnect(c.id).then((r) => showToast(`Connection to ${c.other.title} removed.`, () => api.restoreConnection(r.was).then(refresh))));
   return (
     <section className="connections" aria-label="Connections">
       <header>
@@ -129,7 +132,7 @@ export function ConnectionsPanel({ obj, types, beside }: { obj: Pick<Obj, "id">;
               <span className="quiet small">{c.other.connectionCount} {c.other.connectionCount === 1 ? "Connection" : "Connections"}</span>
               <span className="grow" />
               <button className="x" onClick={() => beside(c.other.id)} aria-label={`Open ${c.other.title} beside this one`} title="Open beside"><Icon name="expand" /></button>
-              {!c.fromText && <button className="x" onClick={() => run(api.disconnect(c.id))} aria-label={`Remove the Connection to ${c.other.title}`}><Icon name="close" /></button>}
+              {!c.fromText && <button className="x" onClick={() => removeConnection(c)} aria-label={`Remove the Connection to ${c.other.title}`}><Icon name="close" /></button>}
             </div>
             {c.sentence && (
               <blockquote className="conn-sentence">
@@ -313,7 +316,7 @@ function PlainBody({ text, mentions, beside }: { text: string; mentions: NonNull
         const m = p.match(/^\[\[o:([0-9a-f-]{36})\]\]$/);
         if (!m) return p;
         const info = mentions[m[1]];
-        if (!info || info.missing) return <span key={i} className="mention missing">missing Object</span>;
+        if (!info || info.missing) return <span key={i} className="mention missing">{info?.inBin ? "in the Bin" : "missing Object"}</span>;
         return <a key={i} className="mention" style={typeVar(info.type!)} href={`#/o/${m[1]}`} onClick={openLink(m[1], beside)}><Icon name={info.type!} />{info.title}</a>;
       })}
     </>

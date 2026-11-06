@@ -6,6 +6,7 @@ import { capture } from "./capture.ts";
 import * as k from "./connections.ts";
 import { extractInto } from "./extract.ts";
 import { readImage } from "./images.ts";
+import * as bin from "./bin.ts";
 
 type Options = { /** Reads a saved link in the background. Tests replace it. */ readLink?: (id: string, url: string) => void };
 
@@ -55,6 +56,11 @@ export function createApp(sqlite: Database.Database, opts: Options = {}) {
   app.get("/api/objects/:id", (c) => found(c, withMentions(o.getObject(sqlite, c.req.param("id")))));
   app.patch("/api/objects/:id", async (c) => found(c, withMentions(o.updateObject(sqlite, c.req.param("id"), await c.req.json().catch(() => ({}))))));
   app.delete("/api/objects/:id", (c) => (o.deleteObject(sqlite, c.req.param("id")) ? c.json({ deleted: true }) : c.json({ error: "Not found" }, 404)));
+  // The Bin (issue #30)
+  app.get("/api/bin", (c) => c.json(bin.listBin(sqlite)));
+  app.post("/api/bin/empty", (c) => c.json({ purged: bin.emptyBin(sqlite) }));
+  app.post("/api/objects/:id/restore", (c) => (bin.restoreObject(sqlite, c.req.param("id")) ? c.json({ restored: true }) : c.json({ error: "Not found" }, 404)));
+  app.delete("/api/bin/:id", (c) => (bin.purgeObjects(sqlite, [c.req.param("id")]) ? c.json({ purged: 1 }) : c.json({ error: "Not found" }, 404)));
   app.put("/api/objects/:id/body", async (c) => {
     const body = await c.req.json().catch(() => ({}));
     return found(c, withMentions(o.setBody(sqlite, c.req.param("id"), body.paragraphs)));
@@ -72,7 +78,14 @@ export function createApp(sqlite: Database.Database, opts: Options = {}) {
     const r = k.updateConnection(sqlite, Number(c.req.param("id")), await c.req.json().catch(() => ({})));
     return found(c, r);
   });
-  app.delete("/api/connections/:id", (c) => (k.disconnect(sqlite, Number(c.req.param("id"))) ? c.json({ removed: true }) : c.json({ error: "Not found" }, 404)));
+  // Removing answers with what was removed, so the page can offer Undo.
+  app.delete("/api/connections/:id", (c) => {
+    const id = Number(c.req.param("id"));
+    const was = sqlite.prepare("SELECT * FROM connections WHERE id = ?").get(id) as any;
+    if (!k.disconnect(sqlite, id)) return c.json({ error: "Not found" }, 404);
+    return c.json({ removed: true, was: { fromId: was.from_id, toId: was.to_id, kind: was.kind, note: was.note, origin: was.origin, aiRole: was.ai_role, aiModel: was.ai_model, aiDate: was.ai_date } });
+  });
+  app.post("/api/connections/restore", async (c) => c.json(bin.restoreConnection(sqlite, await c.req.json().catch(() => ({}))), 201));
   // Merge two Objects of the same type into the kept one. If two Connections disagree it answers 409 with what to ask.
   app.post("/api/objects/:id/merge", async (c) => {
     const body = await c.req.json().catch(() => ({}));
@@ -85,7 +98,11 @@ export function createApp(sqlite: Database.Database, opts: Options = {}) {
     const obj = o.addTag(sqlite, c.req.param("id"), body.name);
     return obj ? c.json(obj) : c.json({ error: "Not found" }, 404);
   });
+  app.post("/api/objects/:id/tags/:tagId/restore", async (c) =>
+    bin.restoreTagOn(sqlite, c.req.param("id"), Number(c.req.param("tagId")), await c.req.json().catch(() => ({}))) ? c.json(o.getObject(sqlite, c.req.param("id"))) : c.json({ error: "Not found" }, 404));
   app.delete("/api/objects/:id/tags/:tagId", (c) => c.json(o.removeTag(sqlite, c.req.param("id"), Number(c.req.param("tagId")))));
+  app.delete("/api/tags/:id", (c) => found(c, bin.deleteTag(sqlite, Number(c.req.param("id")))));
+  app.post("/api/tags/restore", async (c) => c.json(bin.restoreTag(sqlite, await c.req.json().catch(() => ({}))), 201));
   app.get("/api/tags", (c) => c.json(o.listTags(sqlite)));
   app.patch("/api/tags/:id", async (c) => {
     const body = await c.req.json().catch(() => ({}));

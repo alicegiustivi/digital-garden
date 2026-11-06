@@ -7,7 +7,7 @@ export type Summary = {
   id: string; type: string; private: boolean; unreviewed: boolean; hasImage: boolean; createdAt: string; updatedAt: string;
   fields: Field[]; firstLine: string; tags: Tag[]; connectionCount: number;
 };
-export type MentionInfo = { id: string; missing: boolean; type?: string; title?: string; private?: boolean; tags?: Tag[]; connectionCount?: number; kind?: string | null; label?: string | null };
+export type MentionInfo = { id: string; missing: boolean; type?: string; title?: string; private?: boolean; tags?: Tag[]; connectionCount?: number; inBin?: boolean; kind?: string | null; label?: string | null };
 export type Obj = Summary & { blocks: Block[]; mentions?: Record<string, MentionInfo> };
 export type Found = Summary & { title: string; connected: boolean };
 export type Brief = { id: string; type: string; title: string; private: boolean; tags: Tag[]; connectionCount: number };
@@ -21,6 +21,9 @@ export type FieldDef = { key: string; label: string; input: "text" | "longtext" 
 export type TypeDef = { key: string; label: string; plural: string; fields: FieldDef[] };
 export type Types = { types: TypeDef[]; fieldLabels: Record<string, FieldDef> };
 export type CaptureResult = { created: Obj[]; existing: Obj[]; thoughtId: string | null; openId: string };
+export type BinRow = Summary & { title: string; deletedAt: string; daysLeft: number };
+export type RemovedConnection = { fromId: string; toId: string; kind: string; note: string | null } & OriginInfo;
+export type RemovedTag = { tag: TagRow; objects: number; on: ({ objectId: string } & OriginInfo)[] };
 export type TagRow = { id: number; name: string; color: string; count: number };
 
 async function call<T>(method: string, path: string, body?: unknown): Promise<T> {
@@ -58,7 +61,16 @@ export const api = {
   sharesWords: (id: string) => call<Shares[]>("GET", `/api/objects/${id}/shares-words`),
   connect: (a: string, b: string) => call<Connection>("POST", "/api/connections", { a, b }),
   setConnection: (id: number, patch: { kind?: string; subject?: string; note?: string }) => call<unknown>("PATCH", `/api/connections/${id}`, patch),
-  disconnect: (id: number) => call<unknown>("DELETE", `/api/connections/${id}`),
+  disconnect: (id: number) => call<{ was: RemovedConnection }>("DELETE", `/api/connections/${id}`),
+  restoreConnection: (was: RemovedConnection) => call<unknown>("POST", "/api/connections/restore", was),
+  deleteObject: (id: string) => call<unknown>("DELETE", `/api/objects/${id}`),
+  restoreObject: (id: string) => call<unknown>("POST", `/api/objects/${id}/restore`),
+  bin: () => call<BinRow[]>("GET", "/api/bin"),
+  emptyBin: () => call<{ purged: number }>("POST", "/api/bin/empty"),
+  purge: (id: string) => call<unknown>("DELETE", `/api/bin/${id}`),
+  restoreTagOn: (id: string, tagId: number, o: OriginInfo) => call<Obj>("POST", `/api/objects/${id}/tags/${tagId}/restore`, o),
+  deleteTag: (id: number) => call<RemovedTag>("DELETE", `/api/tags/${id}`),
+  restoreTag: (r: RemovedTag) => call<unknown>("POST", "/api/tags/restore", r),
   merge: async (keepId: string, fromId: string, picks: Record<string, string> = {}): Promise<{ done: true } | { ask: MergeAsk[] }> => {
     const res = await fetch(`/api/objects/${keepId}/merge`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ from: fromId, picks }) });
     const j = await res.json().catch(() => ({}));

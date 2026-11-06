@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { api, displayTitle, TAG_COLORS, type Summary, type TagRow, type Types } from "./api";
+import { showToast } from "./toast";
 import { Icon, TagPill, TypeChip, formatDay, subOf, typeVar, tagVar } from "./ui";
 
 export function useList(q: { type?: string; tag?: string; since?: string; unreviewed?: string }, version: number) {
@@ -92,11 +93,24 @@ export function ThisWeek({ types, version, unreviewed, onNew, onOpen }: { types:
   );
 }
 
-export function TagsPage({ tag, types, version, onOpen, go }: { tag?: string; types: Types; version: number; onOpen: (id: string, ids: string[]) => void; go: (hash: string) => void }) {
+export function TagsPage({ tag, types, version, onOpen, go, onChanged }: { onChanged?: () => void; tag?: string; types: Types; version: number; onOpen: (id: string, ids: string[]) => void; go: (hash: string) => void }) {
   const [tags, setTags] = useState<TagRow[] | null>(null);
   useEffect(() => { api.tags().then(setTags); }, [version]);
   const rows = useList(tag ? { tag } : { tag: "\u0000none" }, version);
   const current = tags?.find((t) => t.name === tag);
+  const [confirming, setConfirming] = useState(false);
+  useEffect(() => setConfirming(false), [tag]);
+  const removeEverywhere = () => setConfirming(true);
+  // Asked first, then done at once with a few seconds of Undo.
+  const doRemove = async () => {
+    if (!current) return;
+    const gone = await api.deleteTag(current.id);
+    setConfirming(false);
+    go("#/tags");
+    api.tags().then(setTags);
+    onChanged?.();
+    showToast(`Tag #${gone.tag.name} removed from ${gone.objects} ${gone.objects === 1 ? "Object" : "Objects"}.`, async () => { await api.restoreTag(gone); api.tags().then(setTags); onChanged?.(); });
+  };
   return (
     <main className="contents wrap">
       <header className="vol"><h2>Tags{tags ? <em> {tags.length}</em> : null}</h2></header>
@@ -116,6 +130,14 @@ export function TagsPage({ tag, types, version, onOpen, go }: { tag?: string; ty
               <button key={c} className={`swatch ${current.color === c ? "on" : ""}`} style={tagVar(c)} aria-label={c} onClick={() => api.recolour(current.id, c).then(setTags)} />
             ))}
           </div>
+          <p><button className="pill action" onClick={removeEverywhere}>Remove #{current.name} from the whole Garden…</button></p>
+          {confirming && (
+            <p className="confirm" role="alertdialog">
+              Remove “{current.name}” from {current.count} {current.count === 1 ? "Object" : "Objects"}?{" "}
+              <button className="pill action danger" onClick={doRemove}>Remove</button>{" "}
+              <button className="pill toggle" onClick={() => setConfirming(false)}>Keep it</button>
+            </p>
+          )}
           <Grid rows={rows} types={types} onOpen={onOpen} empty="Nothing carries this Tag any more." />
         </>
       )}

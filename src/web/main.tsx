@@ -7,6 +7,8 @@ import { TagsPage, ThisWeek, TypeList, UnreviewedPage, statusLine, useList } fro
 import { ObjectPage } from "./ObjectPage";
 import { SidePane } from "./Connections";
 import { useRefresh } from "./refresh";
+import { Toasts } from "./toast";
+import { BinPage } from "./Bin";
 import type { Summary } from "./api";
 import { Icon, typeVar } from "./ui";
 import { Capture, captureKey, emptyDraft, isCaptureKey, type CaptureDraft } from "./Capture";
@@ -64,6 +66,7 @@ function TopBar({ hash, unreviewed, onCapture }: { hash: string; unreviewed: num
           <button aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen(!open)}>More <Icon name="chevron" /></button>
           {open && (
             <div className="menu" role="menu">
+              <a className="menu-link" href="#/bin" onClick={() => setOpen(false)}><span className="tick" />Bin</a>
               <a className="menu-link" href="#/bookmark" onClick={() => setOpen(false)}><span className="tick" />Save to Garden bookmark</a>
               <div className="menu-h">Appearance</div>
               {([["light", "Light"], ["dark", "Dark (Espresso)"], ["system", "Same as Mac"]] as [Appearance, string][]).map(([v, label]) => (
@@ -143,7 +146,7 @@ function Peek({ id, ids, types, pending, onChanged, onMove, onReview, onClose }:
           <button className="pill action" onClick={() => { onClose(); go(`#/o/${id}`); }}><Icon name="expand" /> Open full page</button>
           <button onClick={onClose} aria-label="Close"><Icon name="close" /></button>
         </div>
-        <div className="peek-body">{pending && <ReviewShell o={pending} />}<ObjectPage key={id} id={id} types={types} onChanged={onChanged} beside={(b) => go(`#/o/${id}/with/${b}`)} /></div>
+        <div className="peek-body">{pending && <ReviewShell o={pending} />}<ObjectPage key={id} id={id} types={types} onChanged={onChanged} beside={(b) => go(`#/o/${id}/with/${b}`)} onDeleted={onClose} /></div>
       </div>
     </div>
   );
@@ -216,7 +219,7 @@ function App() {
     page = (
       <main className={`wrap page ${paneId ? "split" : ""}`}>
         <div className="split-main">
-          <ObjectPage key={mainId} id={mainId} types={types} fresh={fresh === mainId} onChanged={changed} beside={beside} />
+          <ObjectPage key={mainId} id={mainId} types={types} fresh={fresh === mainId} onChanged={changed} beside={beside} onDeleted={() => go("#/")} />
         </div>
         {paneId && <SidePane paneId={paneId} mainId={mainId} types={types} onNavigate={beside} onClose={() => go(`#/o/${mainId}`)} onChanged={changed} />}
       </main>
@@ -225,10 +228,12 @@ function App() {
     page = <TypeList typeKey={TYPE_OF_ROUTE[parts[0]]} types={types} version={version} onNew={make} onOpen={open} />;
   } else if (parts[0] === "unreviewed") {
     page = <UnreviewedPage rows={unreviewed} types={types} onOpen={open} onReviewed={review} />;
+  } else if (parts[0] === "bin") {
+    page = <BinPage types={types} onChanged={changed} />;
   } else if (parts[0] === "bookmark") {
     page = <BookmarkPage />;
   } else if (parts[0] === "tags") {
-    page = <TagsPage tag={parts[1] ? decodeURIComponent(parts[1]) : undefined} types={types} version={version} onOpen={open} go={go} />;
+    page = <TagsPage tag={parts[1] ? decodeURIComponent(parts[1]) : undefined} types={types} version={version} onOpen={open} go={go} onChanged={changed} />;
   } else {
     page = <ThisWeek types={types} version={version} unreviewed={unreviewed?.length ?? 0} onNew={make} onOpen={open} />;
   }
@@ -237,6 +242,7 @@ function App() {
     <>
       <TopBar hash={hash} unreviewed={unreviewed?.length ?? 0} onCapture={() => { setPeek(null); setCapture(true); }} />
       {page}
+      <Toasts />
       {capture && (
         <Capture
           draft={draft}
