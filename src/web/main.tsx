@@ -60,6 +60,7 @@ function TopBar({ hash, onCapture }: { hash: string; onCapture: () => void }) {
           <button aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen(!open)}>More <Icon name="chevron" /></button>
           {open && (
             <div className="menu" role="menu">
+              <a className="menu-link" href="#/bookmark" onClick={() => setOpen(false)}><span className="tick" />Save to Garden bookmark</a>
               <div className="menu-h">Appearance</div>
               {([["light", "Light"], ["dark", "Dark (Espresso)"], ["system", "Same as Mac"]] as [Appearance, string][]).map(([v, label]) => (
                 <button key={v} role="menuitemradio" aria-checked={appearance === v} className={appearance === v ? "on" : ""} onClick={() => choose(v)}>
@@ -71,6 +72,27 @@ function TopBar({ hash, onCapture }: { hash: string; onCapture: () => void }) {
         </div>
       </nav>
     </header>
+  );
+}
+
+function BookmarkPage() {
+  const link = useRef<HTMLAnchorElement>(null);
+  // The bookmark is a tiny script, so it has to be set directly (React won't put a javascript: link in a page).
+  useEffect(() => {
+    const code = `(function(){window.open('${location.origin}/#/capture?url='+encodeURIComponent(location.href),'garden-capture','width=640,height=620');})();`;
+    link.current?.setAttribute("href", "javascript:" + encodeURIComponent(code));
+  }, []);
+  return (
+    <main className="wrap page bookmark-page">
+      <h2>Save to Garden</h2>
+      <p className="quiet">One click in your browser sends the page you're reading to Capture, with its link already filled in.</p>
+      <ol>
+        <li>Show your browser's bookmarks bar (in Chrome or Safari: View ▸ Show Bookmarks Bar).</li>
+        <li>Drag this button onto the bar: <a ref={link} className="bookmark-btn" onClick={(e) => e.preventDefault()}>Save to Garden</a></li>
+        <li>On any page, click it. A small Capture window opens. Press Save ⌘↩.</li>
+      </ol>
+      <p className="quiet small">It only talks to this Garden on your Mac ({location.origin}).</p>
+    </main>
   );
 }
 
@@ -119,6 +141,17 @@ function App() {
   const changed = useCallback(() => setVersion((v) => v + 1), []);
   useEffect(() => { api.types().then(setTypes); }, []);
   useEffect(() => setPeek(null), [hash]);
+  // "Save to Garden" bookmark: #/capture?url=… opens the window with that page's link already in it.
+  useEffect(() => {
+    if (!hash.startsWith("#/capture")) return;
+    const url = new URLSearchParams(hash.split("?")[1] ?? "").get("url");
+    history.replaceState(null, "", "#/");
+    window.dispatchEvent(new HashChangeEvent("hashchange"));
+    if (url && /^https?:\/\//i.test(url)) {
+      setDraft((d) => ({ ...d, links: d.links.includes(url) ? d.links : [...d.links, url], from: new URL(url).hostname.replace(/^www\./, ""), saved: null }));
+      setCapture(true);
+    }
+  }, [hash]);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (!isCaptureKey(e)) return;
@@ -150,6 +183,8 @@ function App() {
     );
   } else if (TYPE_OF_ROUTE[parts[0]]) {
     page = <TypeList typeKey={TYPE_OF_ROUTE[parts[0]]} types={types} version={version} onNew={make} onOpen={open} />;
+  } else if (parts[0] === "bookmark") {
+    page = <BookmarkPage />;
   } else if (parts[0] === "tags") {
     page = <TagsPage tag={parts[1] ? decodeURIComponent(parts[1]) : undefined} types={types} version={version} onOpen={open} go={go} />;
   } else {
@@ -166,7 +201,7 @@ function App() {
           setDraft={setDraft}
           onClose={() => setCapture(false)}
           onSaved={changed}
-          onOpen={(id) => { setCapture(false); setDraft({ ...draft, saved: null }); open(id, [id]); }}
+          onOpen={(id) => { setCapture(false); setDraft((d) => ({ ...d, saved: null })); open(id, [id]); }}
         />
       )}
       {peek && <Peek id={peek.id} ids={peek.ids} types={types} onChanged={changed} onMove={(id) => setPeek({ ...peek, id })} onClose={() => setPeek(null)} />}
