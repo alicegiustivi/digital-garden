@@ -1,0 +1,544 @@
+<!doctype html>
+<html lang="en" data-mode="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dark Issue and Capture</title>
+<!-- PROTOTYPE (throwaway) for issue 23 "Prototype: the dark Issue look and the Capture window".
+     Question: which warm near-black palette should dark "Issue" use, and is the Capture window laid out right?
+     Three dark palettes (Espresso, Graphite, Lamplight) share one softened set of Object Type and Tag colours.
+     Origin marks (✦ ✧ ❝) are glyphs, lines and italics only, never colour.
+     The Light / Dark / Same as Mac switch lives under More ▾ in the top bar, as it would in the Garden.
+     The bottom bar is not part of the design. Nothing is saved anywhere. -->
+<style>
+/* ---------- Light "Issue" (from issue 10 / 20) ---------- */
+:root{
+  --ink:#1d1d1b; --mute:#77756f; --faint:#a9a7a0; --line:#ece8e1; --ground:#f8f6f1; --sheet:#fffdf9; --card:#ffffff; --wash:#f2efe8; --chipmix:#ffffff;
+  --t-source:#2d7a99; --t-concept:#7657c2; --t-thought:#c08414; --t-person:#cf5c45;
+  --g-blue:#3d7fb8; --g-rose:#c4567a; --g-olive:#7d8a2e; --g-amber:#b7791f; --g-sky:#2f95b5; --g-lilac:#8a6bc9; --g-green:#3f8f5b; --g-peach:#d07a4a; --g-indigo:#5560c4;
+  --cover-mix:10%; --chip-mix:11%; --tagtext:80%;
+  --scrim:rgba(29,29,27,.28); --shadow:0 1px 4px rgba(60,50,30,.07); --shadow-up:0 20px 60px rgba(40,30,15,.22);
+  --btn-bg:#1d1d1b; --btn-fg:#fffdf9;
+  --sf:-apple-system,BlinkMacSystemFont,'SF Pro Text','SF Pro Display','Helvetica Neue',system-ui,sans-serif;
+  color-scheme:light;
+}
+/* ---------- Dark: softened type and Tag colours, shared by all three palettes ---------- */
+.dk-espresso,.dk-graphite,.dk-lamp{
+  --t-source:#72b2cb; --t-concept:#ab96e2; --t-thought:#dcae5c; --t-person:#e6907c;
+  --g-blue:#82b2dc; --g-rose:#dc8ca8; --g-olive:#b2bc6c; --g-amber:#d9aa5e; --g-sky:#70c1d8; --g-lilac:#b69ee0; --g-green:#80bf95; --g-peach:#e6a481; --g-indigo:#999fe0;
+  --cover-mix:14%; --chip-mix:16%; --tagtext:100%;
+  --scrim:rgba(0,0,0,.5); --shadow:0 1px 3px rgba(0,0,0,.35); --shadow-up:0 24px 70px rgba(0,0,0,.55);
+  color-scheme:dark;
+}
+/* A — Espresso: brown-black, like strong coffee; cards a step lighter */
+.dk-espresso{--ink:#ede6db; --mute:#a59c90; --faint:#6f675d; --line:#352f29; --ground:#191613; --sheet:#1f1b17; --card:#26221d; --wash:#2c2722; --chipmix:#26221d; --btn-bg:#ede6db; --btn-fg:#191613}
+/* B — Graphite: warm charcoal, closer to grey; the calmest */
+.dk-graphite{--ink:#eae8e3; --mute:#a09d96; --faint:#6c6a65; --line:#343330; --ground:#1b1b19; --sheet:#20201e; --card:#282826; --wash:#2e2d2a; --chipmix:#282826; --btn-bg:#eae8e3; --btn-fg:#1b1b19}
+/* C — Lamplight: deepest, with cream text, like reading under a lamp */
+.dk-lamp{--ink:#f3e9d8; --mute:#ab9d8a; --faint:#6e6456; --line:#2f2922; --ground:#12100d; --sheet:#181512; --card:#201c17; --wash:#27221c; --chipmix:#201c17; --btn-bg:#f3e9d8; --btn-fg:#12100d}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{min-height:100vh;padding-bottom:150px;background:var(--ground);color:var(--ink);font-family:var(--sf);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased;transition:background .2s,color .2s}
+button,input,textarea{font:inherit;color:inherit}
+button{background:none;border:0;cursor:pointer;padding:0;text-align:inherit}
+:focus-visible{outline:2px solid var(--ink);outline-offset:2px;border-radius:6px}
+.wrap{max-width:1240px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+svg.ic{width:1em;height:1em;flex:none;vertical-align:-.12em;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+h1,h2,h3,h4{font-weight:600;letter-spacing:-.02em;text-wrap:balance;margin:0}
+
+/* ---------- shared marks ---------- */
+.chip{display:inline-flex;align-items:center;gap:6px;padding:2px 10px 2px 8px;border-radius:999px;font-size:12.5px;font-weight:500;color:var(--c);background:color-mix(in srgb,var(--c) var(--chip-mix),var(--chipmix));white-space:nowrap}
+.ico{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:10px;color:var(--c);background:color-mix(in srgb,var(--c) 14%,var(--chipmix));flex:none}
+.tag{display:inline-flex;align-items:center;padding:2px 10px;border-radius:999px;font-size:12.5px;color:color-mix(in srgb,var(--c) var(--tagtext),var(--ink));background:color-mix(in srgb,var(--c) var(--chip-mix),var(--chipmix));white-space:nowrap}
+.tags{display:flex;flex-wrap:wrap;gap:5px}
+.mention{color:inherit;text-decoration:underline 1px var(--faint);text-underline-offset:3px}
+.mention svg{color:var(--c);margin-right:3px}
+/* Origin marks: no hue, ever. */
+.o-ai{text-decoration:underline dotted 1.5px color-mix(in srgb,currentColor 55%,transparent);text-underline-offset:4px}
+.o-ai::after{content:"✦";font-size:.62em;vertical-align:.45em;margin-left:.18em;font-style:normal;display:inline-block;text-decoration:none}
+.o-ai.appr{text-decoration:none}
+.o-ai.appr::after{content:"✧";opacity:.75}
+.tag.o-ai{text-decoration:none}
+.o-src{font-style:italic}
+.o-src::before{content:"❝";font-style:normal;font-size:.7em;vertical-align:.3em;margin-right:.2em;opacity:.7}
+.lock{font-size:.9em;opacity:.8}
+.btn{font-size:12.5px;padding:5px 14px;border-radius:999px;border:1px solid var(--line);background:var(--card)}
+.btn:hover{border-color:var(--mute)}
+.btn.solid{background:var(--btn-bg);color:var(--btn-fg);border-color:var(--btn-bg)}
+.key{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12.5px;color:var(--mute);margin-top:22px}
+.key b{color:var(--ink);font-weight:400}
+
+/* ---------- top bar ---------- */
+.mast{display:flex;align-items:center;gap:8px 18px;flex-wrap:wrap;padding-block:16px 6px;position:relative}
+.mast .wm{font-weight:600;font-size:24px;letter-spacing:-.02em}
+.mast nav{display:flex;gap:2px;flex-wrap:wrap;font-size:14px;color:var(--mute)}
+.mast nav > span,.mast nav > button{display:inline-flex;gap:6px;align-items:center;padding:6px 11px;border-radius:999px}
+.mast nav svg{color:var(--c)}
+.mast nav .on{background:var(--card);box-shadow:var(--shadow);color:var(--ink);font-weight:500}
+.mast nav .n{background:var(--ink);color:var(--ground);border-radius:999px;font-size:11px;padding:0 6px;font-weight:600}
+.mast nav button[aria-expanded="true"]{background:var(--card);color:var(--ink)}
+.mast .right{margin-left:auto;display:flex;align-items:center;gap:10px;font-size:13px;color:var(--mute);flex-wrap:wrap}
+.mast .s{background:var(--card);box-shadow:var(--shadow);border-radius:999px;padding:6px 16px}
+.mast .cap{display:inline-flex;align-items:center;gap:7px;background:var(--btn-bg);color:var(--btn-fg);border-radius:999px;padding:6px 14px 6px 12px;font-weight:500}
+.mast .cap kbd{font:inherit;font-size:12px;opacity:.65}
+/* More menu */
+.menu{position:absolute;z-index:30;top:58px;left:min(560px,40%);width:320px;background:var(--card);border-radius:22px;box-shadow:var(--shadow-up);padding:8px;border:1px solid var(--line)}
+.menu a{display:flex;justify-content:space-between;padding:8px 12px;border-radius:12px;color:var(--ink);text-decoration:none;font-size:14px}
+.menu a:hover{background:var(--wash)}
+.menu a small{color:var(--mute)}
+.menu hr{border:0;border-top:1px solid var(--line);margin:6px 8px}
+.menu .lbl{font-size:12px;color:var(--mute);padding:6px 12px 6px}
+.menu .ok{font-size:12.5px;color:var(--mute);padding:6px 12px 8px}
+.seg{display:flex;gap:2px;background:var(--wash);border-radius:999px;padding:3px;margin:0 8px 6px}
+.seg button{flex:1;white-space:nowrap;text-align:center;padding:6px 8px;border-radius:999px;font-size:13px;color:var(--mute)}
+.seg button[aria-pressed="true"]{background:var(--card);color:var(--ink);box-shadow:var(--shadow);font-weight:500}
+
+/* ---------- Object cover ---------- */
+.cover{margin-top:12px;border-radius:32px;background:color-mix(in srgb,var(--c) var(--cover-mix),var(--sheet))}
+.cover .in{padding:52px 48px 42px;display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:40px;align-items:end}
+.kicker{display:flex;gap:10px;align-items:center;font-size:13px;color:var(--c);font-weight:500}
+.kicker .big{width:44px;height:44px;border-radius:16px;display:grid;place-items:center;background:var(--card);color:var(--c);font-size:22px;box-shadow:var(--shadow)}
+.cover h1{font-size:clamp(2.6rem,6vw,4.4rem);line-height:1.04;letter-spacing:-.035em;margin:.3em 0 .25em}
+.standfirst{font-size:1.2rem;line-height:1.45;color:color-mix(in srgb,var(--ink) 78%,var(--ground));max-width:40rem;margin:0;letter-spacing:-.01em}
+.byline{display:flex;flex-wrap:wrap;gap:8px;font-size:13.5px;margin:22px 0 0}
+.byline div{display:inline-flex;gap:6px;background:color-mix(in srgb,var(--card) 70%,transparent);border-radius:999px;padding:4px 12px}
+.byline dt{color:var(--mute)}
+.byline dd{margin:0}
+.art{padding-block:44px;display:grid;grid-template-columns:minmax(0,40rem) minmax(0,1fr);gap:56px}
+.body{font-size:17px;line-height:1.72;color:color-mix(in srgb,var(--ink) 92%,var(--ground))}
+.body p{margin:0 0 1em}
+.body > p:first-child::first-letter{float:left;font-size:3.9em;line-height:.85;padding:4px 10px 0 0;font-weight:600;color:var(--c)}
+.b-src{position:relative;margin:1.5em 0;padding:20px 24px 18px 52px;border-radius:22px;background:var(--wash);font-style:italic;font-size:1.1em;line-height:1.5}
+.b-src::before{content:"❝";position:absolute;left:20px;top:12px;font-style:normal;font-size:1.6em;line-height:1}
+.b-src p{margin:0 0 .35em}
+.b-src cite{font-style:normal;font-size:13px;color:var(--mute)}
+.ocard{display:grid;grid-template-columns:auto minmax(0,1fr);gap:2px 12px;align-items:center;border-radius:20px;padding:12px 14px;margin:1.3em 0;background:var(--card);box-shadow:var(--shadow),0 0 0 1px var(--line);max-width:30rem;font-size:15px}
+.ocard .ico{grid-row:span 2}
+.ocard .t{font-weight:500}
+.ocard .m{font-size:12.5px;color:var(--mute);display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center}
+.margin{display:flex;flex-direction:column;gap:22px;font-size:14px}
+.margin > div{background:var(--card);border-radius:24px;padding:18px 20px;box-shadow:var(--shadow)}
+.margin h3{font-size:19px;margin:0 0 6px}
+.conn{display:grid;grid-template-columns:auto minmax(0,1fr);gap:2px 10px;padding:10px 0;border-top:1px solid var(--line)}
+.conn:first-of-type{border-top:0}
+.conn .ico{width:22px;height:22px;border-radius:7px;font-size:12px}
+.conn .k{font-size:12px;color:var(--mute)}
+.conn .t{font-weight:500}
+.conn .s{grid-column:2;font-size:13px;color:var(--mute);line-height:1.45}
+.ai-end{margin:0 auto 32px;background:var(--card);border-radius:32px;padding:30px 36px 36px;box-shadow:var(--shadow)}
+.ai-end .hd{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:18px}
+.ai-end .hd h2{font-size:19px}
+.ai-end .hd span{color:var(--mute);font-size:14px}
+.ai-end .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.b-ai,.sugg{border:1px dashed color-mix(in srgb,var(--ink) 30%,transparent);border-radius:20px;padding:14px 16px;background:var(--sheet);display:grid;gap:8px;align-content:start}
+.b-ai .lbl{font-size:12px;color:var(--mute)}
+.b-ai .lbl b{color:var(--ink);font-weight:600}
+.b-ai p{margin:0}
+.sugg .why{font-size:13px;color:var(--mute)}
+.acts{display:flex;flex-wrap:wrap;gap:8px}
+
+/* ---------- contents page ---------- */
+.contents{padding-block:34px}
+.vol{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:22px;gap:16px;flex-wrap:wrap}
+.vol h2{font-size:clamp(2.2rem,5vw,3.4rem);letter-spacing:-.035em;line-height:1}
+.vol h2 em{font-style:normal;color:var(--mute)}
+.vol span{color:var(--mute);font-size:14px}
+.lead{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:32px;background:var(--card);border-radius:32px;padding:20px;box-shadow:var(--shadow)}
+.lead > *{min-width:0}
+.lead .washbox{background:color-mix(in srgb,var(--c) var(--cover-mix),var(--sheet));border-radius:24px;padding:30px;display:flex;flex-direction:column;justify-content:space-between;gap:30px;min-height:230px}
+.lead .washbox .big{font-size:56px;color:var(--c)}
+.lead h3{font-size:2.3rem;line-height:1.05;margin:.3em 0 .3em;letter-spacing:-.035em}
+.lead p{font-size:1.15rem;color:color-mix(in srgb,var(--ink) 78%,var(--ground));margin:0 0 14px}
+.kk{font-size:12px;color:var(--c);font-weight:500;display:inline-flex;gap:6px;align-items:center;background:color-mix(in srgb,var(--c) var(--chip-mix),var(--chipmix));border-radius:999px;padding:3px 10px}
+.meta{font-size:12.5px;color:var(--mute);display:flex;flex-wrap:wrap;gap:5px 10px;align-items:center}
+.stories{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:18px;padding:22px 0}
+.story{background:var(--card);border-radius:24px;padding:18px 20px;box-shadow:var(--shadow);display:grid;gap:8px;align-content:start;justify-items:start;transition:transform .15s ease}
+.story:hover{transform:translateY(-2px)}
+.story h4{font-size:1.35rem;line-height:1.15}
+.firstline{color:var(--mute);font-style:normal;font-weight:400}
+
+/* ---------- compare ---------- */
+.cmp{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;padding-block:24px}
+.cmp > section{background:var(--ground);color:var(--ink);border-radius:28px;padding:18px;display:grid;gap:12px;align-content:start;box-shadow:0 0 0 1px rgba(128,120,110,.25)}
+.cmp .name{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.cmp .name b{font-size:17px}
+.cmp .name small{color:var(--mute);font-size:12.5px}
+.cmp .cover{margin:0;border-radius:24px}
+.cmp .cover .in{display:block;padding:22px}
+.cmp .cover h1{font-size:1.8rem;margin:.35em 0 .3em}
+.cmp .standfirst{font-size:.95rem}
+.cmp .story h4{font-size:1.1rem}
+.cmp .swatches{display:flex;flex-wrap:wrap;gap:5px}
+.cmp .pick{justify-self:start}
+.cmpnote{color:var(--mute);max-width:52rem;margin:22px 0 0}
+
+/* ---------- Capture window ---------- */
+#capture{position:fixed;inset:0;z-index:40;background:var(--scrim);display:flex;justify-content:center;align-items:flex-start;padding:12vh 16px 140px}
+.cw{width:min(580px,100%);background:var(--card);border-radius:26px;box-shadow:var(--shadow-up);border:1px solid var(--line);overflow:hidden;animation:pop .16s ease-out}
+@keyframes pop{from{opacity:0;transform:translateY(-6px) scale(.985)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.cw{animation:none}.story{transition:none}}
+.cw .top{display:flex;justify-content:space-between;align-items:center;padding:14px 18px 0;font-size:13px;color:var(--mute)}
+.cw .top b{color:var(--ink);font-weight:600;font-size:14px}
+.cw .from{margin:10px 18px 0;font-size:12.5px;color:var(--mute)}
+.cw .box{position:relative;margin:10px 12px 0;border-radius:18px;background:var(--sheet);border:1px solid var(--line);transition:border-color .15s,background .15s}
+.cw .box.drag{border:1.5px dashed var(--ink);background:var(--wash)}
+.cw textarea{display:block;width:100%;min-height:118px;max-height:40vh;resize:none;border:0;outline:0;background:transparent;padding:14px 16px;font-size:16px;line-height:1.55}
+.cw textarea::placeholder{color:var(--faint)}
+.atts{display:grid;gap:8px;padding:0 10px 10px}
+.att{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:2px 12px;align-items:center;background:var(--card);border-radius:14px;padding:9px 10px 9px 10px;box-shadow:0 0 0 1px var(--line)}
+.att .ico{grid-column:1;grid-row:1/3}
+.att .t{font-weight:500;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.att .m{font-size:12px;color:var(--mute)}
+.att .t,.att .m{grid-column:2}
+.att .x{grid-column:3;grid-row:1/3;width:26px;height:26px;border-radius:50%;color:var(--mute);text-align:center}
+.att .x:hover{background:var(--wash);color:var(--ink)}
+.att img,.att .thumb{width:44px;height:44px;border-radius:10px;object-fit:cover;grid-column:1;grid-row:1/3;background:linear-gradient(135deg,#d9d2c3,#a9b7a5)}
+.will{margin:10px 18px 0;font-size:13px;color:var(--mute);display:flex;gap:6px;flex-wrap:wrap;align-items:center;min-height:22px}
+.will .chip{font-size:12px}
+.foot{display:flex;align-items:center;gap:12px;padding:12px 12px 12px 18px;margin-top:10px;border-top:1px solid var(--line)}
+.foot .hint{font-size:12px;color:var(--faint);flex:1}
+.switch{display:inline-flex;align-items:center;gap:8px;font-size:13.5px;color:var(--mute);cursor:pointer;user-select:none}
+.switch .tr{width:34px;height:20px;border-radius:999px;background:var(--line);position:relative;transition:background .15s}
+.switch .tr::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:var(--card);box-shadow:0 1px 2px rgba(0,0,0,.3);transition:transform .15s}
+.switch[aria-checked="true"]{color:var(--ink)}
+.switch[aria-checked="true"] .tr{background:var(--ink)}
+.switch[aria-checked="true"] .tr::after{transform:translateX(14px);background:var(--ground)}
+.save{display:inline-flex;align-items:center;gap:8px;background:var(--btn-bg);color:var(--btn-fg);border-radius:999px;padding:8px 16px;font-weight:500;font-size:14px}
+.save:disabled{opacity:.35;cursor:default}
+.save kbd{font:inherit;font-size:12px;opacity:.65}
+.priv-line{margin:8px 18px 0;font-size:12.5px;color:var(--mute)}
+.saved{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 18px 0;font-size:13.5px;color:var(--mute)}
+.saved b{color:var(--ink);font-weight:500}
+.saved button{text-decoration:underline;text-underline-offset:3px;color:var(--ink)}
+.saved.flash{animation:fl .5s ease-out}
+@keyframes fl{from{opacity:0}to{opacity:1}}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:120px;z-index:60;background:var(--btn-bg);color:var(--btn-fg);padding:10px 16px;border-radius:14px;font-size:13.5px;max-width:min(520px,calc(100% - 32px));box-shadow:var(--shadow-up)}
+
+/* ---------- prototype bar (not part of the design; always the same) ---------- */
+#bar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:50;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px 12px;width:max-content;max-width:calc(100% - 24px);background:#0d0d0c;color:#f4f3ef;font:13px/1 system-ui,-apple-system,sans-serif;padding:8px 10px;border-radius:22px;box-shadow:0 10px 30px rgba(0,0,0,.4);border:1px solid #3a3935;color-scheme:dark}
+#bar .grp{display:flex;align-items:center;gap:2px;background:#262522;border-radius:999px;padding:3px}
+#bar .grp button{padding:7px 11px;border-radius:999px;color:#a7a59f}
+#bar .grp button[aria-pressed="true"]{background:#f4f3ef;color:#0d0d0c;font-weight:600}
+#bar .arrow{width:28px;height:28px;border-radius:50%;text-align:center;color:#f4f3ef}
+#bar .arrow:hover{background:#34332f}
+#bar .pal{min-width:150px;text-align:center;font-weight:600}
+#bar .pal small{color:#9c9a94;font-weight:400}
+#bar .row{flex-basis:100%;display:flex;justify-content:center;flex-wrap:wrap;gap:6px}
+#bar .lab{color:#9c9a94;margin-right:2px}
+
+@media (max-width:980px){.cover .in,.art,.lead{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:700px){.cover .in{padding:32px 22px 28px}.ai-end{padding:22px 18px}.mast .right{margin-left:0}.menu{left:16px;right:16px;width:auto}#bar .pal{min-width:110px}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="capture" hidden></div>
+<div id="toast" hidden></div>
+
+<nav id="bar" aria-label="Prototype controls">
+  <div style="display:flex;align-items:center;gap:2px">
+    <button class="arrow" id="prev" aria-label="Previous dark palette">←</button>
+    <div class="pal" id="palname"></div>
+    <button class="arrow" id="next" aria-label="Next dark palette">→</button>
+  </div>
+  <div class="grp" role="group" aria-label="Screen">
+    <button data-view="compare">All 3 side by side</button>
+    <button data-view="list">Contents page</button>
+    <button data-view="object">An Object</button>
+  </div>
+  <div class="row" id="caprow">
+    <span class="lab">Capture:</span>
+    <div class="grp" role="group" aria-label="Capture state">
+      <button data-cap="empty">Empty</button>
+      <button data-cap="text">Typed words</button>
+      <button data-cap="one">1 link + words</button>
+      <button data-cap="many">Several links</button>
+      <button data-cap="image">Image</button>
+      <button data-cap="bookmark">From the bookmark</button>
+      <button data-cap="saved">Just saved</button>
+    </div>
+  </div>
+</nav>
+
+<script>
+/* ---------------- icons, colours, marks ---------------- */
+const ICON = {
+  Source:'<path d="M2 3.5h4.2A1.8 1.8 0 0 1 8 5.3v8.2a1.6 1.6 0 0 0-1.6-1.6H2zM14 3.5H9.8A1.8 1.8 0 0 0 8 5.3v8.2a1.6 1.6 0 0 1 1.6-1.6H14z"/>',
+  Concept:'<circle cx="3.6" cy="4.4" r="1.4"/><circle cx="12.4" cy="5" r="1.4"/><circle cx="7.6" cy="12.2" r="1.4"/><path d="M5 4.5l6 .4M4.3 5.7l2.6 5.2M11.7 6.3l-3.2 4.8"/>',
+  Thought:'<path d="M8 2.2c3.3 2.2 4.4 5.4 2.4 8.6C9.3 12.6 8 13.8 8 13.8s-1.3-1.2-2.4-3C3.6 7.6 4.7 4.4 8 2.2z"/><path d="M8 13.8V7"/>',
+  Person:'<circle cx="8" cy="5.4" r="2.6"/><path d="M3 14c.8-3 2.7-4.6 5-4.6s4.2 1.6 5 4.6"/>',
+  Plus:'<path d="M8 3v10M3 8h10"/>',
+};
+const TCOL = {Source:'var(--t-source)', Concept:'var(--t-concept)', Thought:'var(--t-thought)', Person:'var(--t-person)'};
+const svg = t => `<svg class="ic" viewBox="0 0 16 16" aria-hidden="true">${ICON[t]}</svg>`;
+const ico = t => `<span class="ico" style="--c:${TCOL[t]}">${svg(t)}</span>`;
+const chip = (t, sub) => `<span class="chip" style="--c:${TCOL[t]}">${svg(t)}${t}${sub?' · '+sub:''}</span>`;
+const mention = (t, name) => `<a class="mention" href="#" style="--c:${TCOL[t]}">${svg(t)}${name}</a>`;
+const ai = (t, appr) => `<span class="o-ai${appr?' appr':''}" title="${appr?'AI, approved by you':'Added by the AI · Archivist · not approved yet'}">${t}</span>`;
+const src = t => `<span class="o-src" title="From a Source">${t}</span>`;
+const TAGC = {cognition:'--g-blue','embodied-mind':'--g-rose','note-taking':'--g-olive',writing:'--g-amber',planning:'--g-sky',memory:'--g-lilac',garden:'--g-green',habits:'--g-peach',attention:'--g-indigo','to-read':'--g-rose'};
+const tag = (n, isAi) => `<span class="tag${isAi?' o-ai':''}" style="--c:var(${TAGC[n]})">#${n}</span>`;
+const lock = '<span class="lock" aria-label="Private">🔒︎</span>';
+
+/* ---------------- palettes ---------------- */
+const PALS = [
+  {id:'espresso', name:'Espresso', blurb:'brown-black, like strong coffee'},
+  {id:'graphite', name:'Graphite', blurb:'warm charcoal, closest to grey'},
+  {id:'lamp',     name:'Lamplight', blurb:'deepest, with cream text'},
+];
+
+/* ---------------- sample Garden (made up) ---------------- */
+const LIST = [
+  {type:'Thought', title:ai('Notes are where thinking happens', 1), tags:[tag('writing')], n:4, when:'Yesterday'},
+  {type:'Thought', title:'<span class="firstline">I keep reorganizing instead of reading. Maybe the…</span>', tags:[tag('to-read')], n:0, when:'Yesterday', unrev:1},
+  {type:'Person', title:ai('Mara Ellison', 1), tags:[], n:2, when:'5 Nov'},
+  {type:'Source', sub:'Image', title:'Whiteboard from Sunday', tags:[tag('planning')], n:2, when:'4 Nov'},
+  {type:'Source', sub:'Article', title:ai('Why handwriting helps you remember'), tags:[tag('memory',1)], n:1, when:'3 Nov', wait:1, unrev:1},
+  {type:'Concept', title:'Thinking with things', tags:[tag('cognition')], n:9, when:'2 Nov'},
+  {type:'Thought', title:'Why I left Capacities', tags:[tag('garden'), tag('habits')], n:2, when:'2 Nov', priv:1},
+  {type:'Source', sub:'Podcast', title:ai('Walking meetings, revisited'), tags:[tag('attention',1)], n:0, when:'1 Nov', wait:2},
+];
+const SKULL = {tags:[tag('cognition'), tag('embodied-mind',1), tag('note-taking',1)],
+  stand:src('A science writer gathers research on how gestures, rooms and other people extend the mind, and what that means for how we learn and work.')};
+const story = o => `<article class="story" style="--c:${TCOL[o.type]}"><span class="kk">${svg(o.type)} ${o.type}${o.sub?' · '+o.sub:''}</span><h4>${o.title}</h4>
+  <div class="meta"><span>${o.when}</span><span>${o.n} Connections</span>${o.priv?`<span>${lock} Private</span>`:''}${o.wait?`<span>✦ ${o.wait} waiting</span>`:''}${o.unrev?'<span>Unreviewed</span>':''}</div>
+  ${o.tags.length?`<div class="tags">${o.tags.join('')}</div>`:''}</article>`;
+const KEY = `<div class="key"><span><b>Plain</b> your words</span><span>${src('From a Source')}</span><span>${ai('From the AI')}</span><span>${ai('AI, approved', 1)}</span><span>${lock} Private</span><span>Marks never use colour, in light or dark.</span></div>`;
+
+/* ---------------- state ---------------- */
+const state = {pal:0, mode:'dark', view:'compare', menu:false, cap:null};
+const mq = matchMedia('(prefers-color-scheme: dark)');
+const isDark = () => state.mode==='dark' || (state.mode==='mac' && mq.matches);
+
+/* ---------------- top bar ---------------- */
+function mast(on){
+  const nav = [['This week'],['Sources','Source'],['Concepts','Concept'],['Thoughts','Thought'],['People','Person']]
+    .map(([l,t]) => `<span class="${on===l?'on':''}"${t?` style="--c:${TCOL[t]}"`:''}>${t?svg(t):''}${l}</span>`).join('');
+  const modes = [['light','Light'],['dark','Dark'],['mac','Same as Mac']];
+  return `<header class="wrap mast"><div class="wm">Garden</div>
+    <nav aria-label="Garden">${nav}<span>Unreviewed <span class="n">4</span></span>
+      <button data-act="menu" aria-expanded="${state.menu}">More ▾</button></nav>
+    <div class="right"><button class="cap" data-act="capture">${svg('Plus')}Capture <kbd>⌘N</kbd></button><span class="s">Search ⌘K</span><span>AI · 612 calls left · 0 waiting</span></div>
+    ${state.menu?`<div class="menu" role="menu">
+      <a href="#">Inquiries</a><a href="#">Timeline</a><a href="#">Overview</a><a href="#">Bin <small>2 items</small></a><a href="#">Export my Garden…</a>
+      <hr><div class="lbl">Appearance</div>
+      <div class="seg" role="group" aria-label="Appearance">${modes.map(([k,l]) => `<button data-mode="${k}" aria-pressed="${state.mode===k}">${l}</button>`).join('')}</div>
+      ${state.mode==='mac'?`<div class="ok">Your Mac is in ${mq.matches?'Dark':'Light'} mode right now, so the Garden is too.</div>`:''}
+      <hr><div class="ok">Backed up today 03:12</div></div>`:''}
+  </header>`;
+}
+
+/* ---------------- screens ---------------- */
+function objectView(){
+  return `${mast('Sources')}<div class="wrap">
+    <section class="cover" style="--c:${TCOL.Source}"><div class="in"><div>
+      <div class="kicker"><span class="big">${svg('Source')}</span>Source · Book</div>
+      <h1>${ai('Thinking Outside the Skull')}</h1><p class="standfirst">${SKULL.stand}</p>
+      <dl class="byline"><div><dt>Author</dt><dd>${ai('Mara Ellison')}</dd></div><div><dt>Published</dt><dd>2021</dd></div><div><dt>Link</dt><dd>${src('harrowlyle.com/skull')}</dd></div><div><dt>Captured</dt><dd>28 Oct 2026</dd></div></dl></div>
+      <div class="tags">${SKULL.tags.join('')}</div></div></section>
+    <main class="art" style="--c:${TCOL.Source}"><div class="body">
+      <p>Ellison’s claim is that the brain is not the only place thinking happens. Gestures, rooms and other people do part of the work. I recognise this: I only understand an idea once I have written it down twice.</p>
+      <blockquote class="b-src"><p>A notebook is not a record of thought. It is one of the places where thought takes place.</p><cite>From ${mention('Source','Thinking Outside the Skull')}, p. 112</cite></blockquote>
+      <p>This is close to ${mention('Concept','Thinking with things')}, and to what I noticed on Sunday, when the plan only made sense once it was on the whiteboard:</p>
+      <div class="ocard">${ico('Source')}<div class="t">Whiteboard from Sunday</div><div class="m"><span>Source · Image</span><span>mentions</span><span>2 Connections</span>${tag('planning')}</div></div>
+      <p>Next: write the first draft of the talk on paper and see whether it changes what I say.</p></div>
+      <aside class="margin"><div><h3>Connections</h3>
+        ${[['authored by',ai('Mara Ellison',1),'Person','Suggested by the Archivist from the page’s author field.'],
+           ['built on by','Notes are where thinking happens','Thought','“…the page does part of the thinking.”'],
+           ['mentions','Thinking with things','Concept','“This is close to Thinking with things…”'],
+           ['mentions','Whiteboard from Sunday','Source','“…once it was on the whiteboard.”']]
+          .map(([k,t,ty,s]) => `<div class="conn">${ico(ty)}<div><div class="k">${k}</div><div class="t">${t}</div></div><div class="s">${s}</div></div>`).join('')}
+      </div></aside></main>
+    <section class="ai-end"><div class="hd"><h2>✦ From the AI</h2><span>Kept apart from your words. 1 Suggestion waiting.</span></div>
+      <div class="grid">
+        <div class="sugg"><div>${ai('related → Why handwriting helps you remember')}</div><span class="why">Both treat writing as part of thinking, not a record of it.</span><div class="acts"><button class="btn solid">Approve</button><button class="btn">Reject</button></div></div>
+        <div class="b-ai"><div class="lbl"><b>✦ AI Note</b> · Summary · Archivist</div><p>Argues that thinking draws on the body, on physical spaces and on other people, not on the brain alone.</p><div class="acts"><button class="btn">Start a Thought from this</button><button class="btn">Delete</button></div></div>
+      </div>${KEY}</section></div>`;
+}
+function listView(){
+  return `${mast('This week')}<main class="contents wrap"><div class="vol"><h2>This week in <em>your Garden</em></h2><span>No. 45 · 6 November 2026 · 9 Objects</span></div>
+    <article class="lead" style="--c:${TCOL.Source}"><div class="washbox"><span class="big">${svg('Source')}</span><div class="tags">${SKULL.tags.join('')}</div></div>
+      <div><span class="kk">${svg('Source')} Source · Book · Today</span><h3>${ai('Thinking Outside the Skull')}</h3><p>${SKULL.stand}</p>
+      <div class="meta">4 Connections · ✦ 2 Suggestions waiting · Unreviewed</div></div></article>
+    <div class="stories">${LIST.map(story).join('')}</div>${KEY}</main>`;
+}
+function compareView(){
+  const swatch = Object.keys(TCOL).map(t => chip(t)).join('') + ['cognition','embodied-mind','note-taking','writing','planning','memory','garden','habits','attention'].map(n => tag(n)).join('');
+  return `${mast('This week')}<main class="wrap">
+    <p class="cmpnote">The three dark palettes next to each other. Same Garden, same softened colours for every Object Type and Tag; only the background and the text colour change. Pick one to see it full size, or switch to Light under <b>More ▾</b> to compare with the light look.</p>
+    <div class="cmp">${PALS.map((p,i) => `<section class="dk-${p.id}">
+      <div class="name"><b>${'ABC'[i]} · ${p.name}</b><small>${p.blurb}</small></div>
+      <div class="cover" style="--c:${TCOL.Source}"><div class="in"><div class="kicker"><span class="big">${svg('Source')}</span>Source · Book</div>
+        <h1>${ai('Thinking Outside the Skull')}</h1><p class="standfirst">${SKULL.stand}</p></div></div>
+      ${story(LIST[0])}${story(LIST[5])}${story(LIST[6])}
+      <div class="swatches">${swatch}</div>
+      <button class="btn solid pick" data-pal="${i}">See ${p.name} full size</button></section>`).join('')}</div></main>`;
+}
+
+/* ---------------- Capture window ---------------- */
+const URL_RE = /\bhttps?:\/\/[^\s<>"]+/gi;
+const SAMPLE = {
+  'aeon.co/essays/why-walking-helps-us-think':'Why walking helps us think',
+  'www.youtube.com/watch?v=k3pX9':'How I take notes on paper · video',
+  'harrowlyle.com/skull':'Thinking Outside the Skull · Harrow & Lyle',
+  'www.newyorker.com/culture/the-art-of-the-margin':'The art of the margin',
+  'en.wikipedia.org/wiki/Extended_mind_thesis':'Extended mind thesis · Wikipedia',
+};
+const cap = {text:'', links:[], images:[], priv:false, saved:null, from:null};
+const host = u => u.replace(/^https?:\/\//,'').replace(/^www\./,'').split('/')[0];
+const titleOf = u => SAMPLE[u.replace(/^https?:\/\//,'')] || host(u);
+
+function willBe(){
+  const words = cap.text.trim().length>0, n = cap.links.length + cap.images.length;
+  if (!words && !n) return '';
+  const p = cap.priv ? ` · ${lock} Private` : '';
+  if (!n) return `Will save as ${chip('Thought')}${p}`;
+  if (n===1) return `Will save as ${chip('Source', cap.images.length?'Image':'Link')}${words?' with your words as its body':''}${p}`;
+  return `Will save as ${n}× ${chip('Source')}${words?` and ${chip('Thought')} with your words, mentioning them all`:''}${p}`;
+}
+function attHtml(){
+  return cap.links.map((u,i) => `<div class="att">${ico('Source')}<div class="t">${titleOf(u)}</div><div class="m">${host(u)} · read in the background after saving</div><button class="x" data-rm="l${i}" aria-label="Remove link">×</button></div>`).join('')
+       + cap.images.map((im,i) => `<div class="att">${im.src?`<img src="${im.src}" alt="">`:'<span class="thumb"></span>'}<div class="t">${im.name}</div><div class="m">Image · ${im.size}</div><button class="x" data-rm="i${i}" aria-label="Remove image">×</button></div>`).join('');
+}
+function capHtml(){
+  const can = cap.text.trim() || cap.links.length || cap.images.length;
+  return `<div class="cw" role="dialog" aria-label="Capture">
+    <div class="top"><b>Capture</b><span>Esc closes</span></div>
+    ${cap.from?`<div class="from">Opened from <b>Save to Garden</b> in your browser · ${cap.from}</div>`:''}
+    <div class="box" id="box"><textarea id="ta" placeholder="Type a thought, paste a link, or drop an image…" aria-label="Capture">${cap.text.replace(/</g,'&lt;')}</textarea>
+      <div class="atts" id="atts">${attHtml()}</div></div>
+    <div class="will" id="will">${willBe()}</div>
+    ${cap.priv?`<div class="priv-line">Private: no AI reads this, and nothing about it leaves your Mac.</div>`:''}
+    ${cap.saved?`<div class="saved flash">✓ <b>Saved</b> · ${cap.saved} · <button data-act="open">Open it</button></div>`:''}
+    <div class="foot"><span class="hint">Goes to Unreviewed. The Archivist looks at it in about 2 minutes.</span>
+      <button class="switch" role="switch" aria-checked="${cap.priv}" data-act="priv">${lock} Private <span class="tr"></span></button>
+      <button class="save" data-act="save" ${can?'':'disabled'}>Save <kbd>⌘↩</kbd></button></div></div>`;
+}
+const capEl = document.getElementById('capture');
+function renderCap(focus=true){
+  if (!state.cap){ capEl.hidden = true; capEl.innerHTML=''; return; }
+  const ta0 = document.getElementById('ta'), pos = ta0 ? ta0.selectionStart : null;
+  capEl.innerHTML = capHtml(); capEl.hidden = false;
+  const ta = document.getElementById('ta');
+  autosize(ta);
+  if (focus){ ta.focus(); const p = pos ?? ta.value.length; ta.setSelectionRange(p,p); }
+  wireBox();
+}
+function autosize(ta){ ta.style.height='auto'; ta.style.height = Math.min(ta.scrollHeight, innerHeight*.4)+'px'; }
+// A link is lifted out of the words into its own card once it is pasted, or once a space follows a typed one.
+function liftLinks(all){
+  const re = all ? URL_RE : /\bhttps?:\/\/[^\s<>"]+(?=\s)/gi;
+  const found = cap.text.match(re);
+  if (!found) return false;
+  found.forEach(u => { u = u.replace(/[.,)]+$/,''); if (!cap.links.includes(u)) cap.links.push(u); });
+  cap.text = cap.text.replace(re,'').replace(/[ \t]+\n/g,'\n').replace(/\n{3,}/g,'\n\n').replace(/^\s+/,'');
+  return true;
+}
+function wireBox(){
+  const ta = document.getElementById('ta'), box = document.getElementById('box');
+  ta.addEventListener('input', () => {
+    cap.text = ta.value; if (cap.saved) cap.saved = null;
+    if (liftLinks()) renderCap(); else { autosize(ta); document.getElementById('will').innerHTML = willBe(); document.querySelector('.save').disabled = !(cap.text.trim()||cap.links.length||cap.images.length); const s=document.querySelector('.saved'); if(s) s.remove(); }
+  });
+  ta.addEventListener('paste', e => {
+    const f = [...(e.clipboardData?.files||[])].filter(f => f.type.startsWith('image/'));
+    if (f.length){ e.preventDefault(); addFiles(f); }
+    else setTimeout(() => { cap.text = ta.value; if (liftLinks(true)) renderCap(); }, 0);
+  });
+  ['dragenter','dragover'].forEach(ev => box.addEventListener(ev, e => { e.preventDefault(); box.classList.add('drag'); }));
+  ['dragleave','drop'].forEach(ev => box.addEventListener(ev, e => { e.preventDefault(); box.classList.remove('drag'); }));
+  box.addEventListener('drop', e => {
+    const f = [...(e.dataTransfer?.files||[])].filter(f => f.type.startsWith('image/'));
+    if (f.length) addFiles(f);
+    else { const u = e.dataTransfer.getData('text/uri-list') || e.dataTransfer.getData('text'); if (u){ cap.text += (cap.text?'\n':'')+u; liftLinks(true); renderCap(); } }
+  });
+}
+function addFiles(files){
+  files.forEach(f => { const r = new FileReader(); r.onload = () => { cap.images.push({name:f.name||'Pasted image', size:Math.round(f.size/1024)+' KB · made smaller when saved', src:r.result}); cap.saved=null; renderCap(); }; r.readAsDataURL(f); });
+}
+function doSave(){
+  if (!(cap.text.trim()||cap.links.length||cap.images.length)) return;
+  const n = cap.links.length + cap.images.length, words = !!cap.text.trim();
+  let what = !n ? 'a Thought' : n===1 ? `a Source${words?' with your words':''}` : `${n} Sources${words?' and a Thought':''}`;
+  if (cap.priv) what += ' · Private';
+  Object.assign(cap, {text:'', links:[], images:[], priv:false, from:null, saved:what});
+  state.cap = 'saved'; syncBar(); renderCap();
+}
+function openCap(preset){
+  state.menu = false;
+  Object.assign(cap, {text:'', links:[], images:[], priv:false, saved:null, from:null});
+  if (preset==='text') cap.text = 'Walking without my phone gives me the best ideas. Maybe it isn’t the walking, it’s the not-checking.';
+  if (preset==='one'){ cap.links = ['https://aeon.co/essays/why-walking-helps-us-think']; cap.text = 'Same thing I noticed on Sunday’s walk. Read the part about rhythm again.'; }
+  if (preset==='many'){ cap.links = ['https://aeon.co/essays/why-walking-helps-us-think','https://www.youtube.com/watch?v=k3pX9','https://www.newyorker.com/culture/the-art-of-the-margin']; cap.text = 'Three takes on thinking with your body. Compare them for the talk.'; }
+  if (preset==='image'){ cap.images = [{name:'Whiteboard, 6 Nov.jpg', size:'3.1 MB · made smaller when saved'}]; cap.text = 'The plan only made sense once it was on the board.'; }
+  if (preset==='bookmark'){ cap.links = ['https://en.wikipedia.org/wiki/Extended_mind_thesis']; cap.from = 'en.wikipedia.org'; }
+  if (preset==='saved'){ cap.saved = 'a Source with your words'; }
+  state.cap = preset || 'empty'; render();
+}
+function closeCap(){ state.cap = null; syncBar(); renderCap(); }
+
+capEl.addEventListener('click', e => {
+  if (e.target===capEl) return closeCap();
+  const a = e.target.closest('[data-act]'), rm = e.target.closest('[data-rm]');
+  if (rm){ const k=rm.dataset.rm; (k[0]==='l'?cap.links:cap.images).splice(+k.slice(1),1); cap.saved=null; renderCap(); return; }
+  if (!a) return;
+  if (a.dataset.act==='priv'){ cap.priv = !cap.priv; cap.saved=null; renderCap(); }
+  if (a.dataset.act==='save') doSave();
+  if (a.dataset.act==='open'){ closeCap(); toast('In the Garden this opens what you just saved, in the peek window.'); }
+});
+
+/* ---------------- render ---------------- */
+const app = document.getElementById('app');
+function applyTheme(){
+  const h = document.documentElement;
+  PALS.forEach(p => h.classList.remove('dk-'+p.id));
+  if (isDark()) h.classList.add('dk-'+PALS[state.pal].id);
+}
+function syncBar(){
+  const p = PALS[state.pal];
+  document.getElementById('palname').innerHTML = `${'ABC'[state.pal]} · ${p.name} <small>${isDark()?'':'(showing Light)'}</small>`;
+  document.querySelectorAll('#bar [data-view]').forEach(b => b.setAttribute('aria-pressed', b.dataset.view===state.view));
+  document.querySelectorAll('#bar [data-cap]').forEach(b => b.setAttribute('aria-pressed', b.dataset.cap===state.cap));
+  try { history.replaceState(null,'',`#${p.id}-${state.view}-${state.mode}`); } catch(e){}
+}
+function render(){
+  applyTheme();
+  app.innerHTML = ({compare:compareView, list:listView, object:objectView})[state.view]();
+  syncBar(); renderCap();
+}
+function toast(t){ const el = document.getElementById('toast'); el.textContent = t; el.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => el.hidden = true, 3200); }
+
+app.addEventListener('click', e => {
+  if (e.target.closest('a[href="#"]')) e.preventDefault();
+  const a = e.target.closest('[data-act]'), m = e.target.closest('[data-mode]'), p = e.target.closest('[data-pal]');
+  if (a?.dataset.act==='menu'){ state.menu = !state.menu; render(); return; }
+  if (a?.dataset.act==='capture'){ openCap('empty'); return; }
+  if (m){ state.mode = m.dataset.mode; render(); return; }
+  if (p){ state.pal = +p.dataset.pal; state.mode='dark'; state.view='list'; render(); return; }
+  if (state.menu && !e.target.closest('.menu')){ state.menu=false; render(); }
+});
+mq.addEventListener('change', () => { if (state.mode==='mac') render(); });
+const cyc = d => { state.pal = (state.pal+d+3)%3; if (!isDark()) state.mode='dark'; if (state.view==='compare') state.view='list'; render(); };
+document.getElementById('prev').onclick = () => cyc(-1);
+document.getElementById('next').onclick = () => cyc(1);
+document.querySelectorAll('#bar [data-view]').forEach(b => b.onclick = () => { state.view = b.dataset.view; state.cap=null; render(); });
+document.querySelectorAll('#bar [data-cap]').forEach(b => b.onclick = () => openCap(b.dataset.cap));
+document.addEventListener('keydown', e => {
+  const typing = e.target.closest && e.target.closest('input,textarea,[contenteditable]');
+  if ((e.metaKey||e.ctrlKey) && e.key==='Enter' && state.cap){ e.preventDefault(); doSave(); return; }
+  if ((e.metaKey||e.ctrlKey) && (e.key==='n'||e.key==='N')){ e.preventDefault(); if(!state.cap) openCap('empty'); return; }
+  if (e.key==='Escape'){ if (state.cap) closeCap(); else if (state.menu){ state.menu=false; render(); } return; }
+  if (typing) return;
+  if (e.key==='n'||e.key==='N'){ e.preventDefault(); openCap('empty'); }  // stand-in: browsers keep ⌘N for a new window
+  else if (e.key==='ArrowLeft') cyc(-1);
+  else if (e.key==='ArrowRight') cyc(1);
+});
+
+const h = /^#(espresso|graphite|lamp)-(compare|list|object)-(light|dark|mac)$/.exec(location.hash);
+if (h){ state.pal = PALS.findIndex(p => p.id===h[1]); state.view = h[2]; state.mode = h[3]; }
+render();
+</script>
+</body>
+</html>
