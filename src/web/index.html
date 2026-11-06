@@ -4,6 +4,14 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Garden</title>
+    <script>
+      // Set light or dark before the page paints, so there is no flash.
+      try {
+        var a = localStorage.getItem("garden.appearance") || "system";
+        var dark = a === "dark" || (a === "system" && matchMedia("(prefers-color-scheme: dark)").matches);
+        document.documentElement.dataset.scheme = dark ? "dark" : "light";
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>

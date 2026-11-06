@@ -1,4 +1,4 @@
-// Drizzle's description of the tables in migrations/0001_init.sql.
+// Drizzle's description of the tables in migrations/ (0001_init.sql, 0002_objects.sql).
 // The SQL file is the source of truth (it holds the Origin rules and the search index).
 import { sqliteTable, text, integer, primaryKey } from "drizzle-orm/sqlite-core";
 
@@ -18,6 +18,7 @@ export const objects = sqliteTable("objects", {
   private: integer("private", { mode: "boolean" }).notNull().default(false),
   unreviewed: integer("unreviewed", { mode: "boolean" }).notNull().default(false),
   createdAt: text("created_at").notNull(),
+  updatedAt: text("updated_at"),
   deletedAt: text("deleted_at"),
 });
 
@@ -32,6 +33,7 @@ export const fieldValues = sqliteTable("field_values", {
 export const tags = sqliteTable("tags", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   name: text("name").notNull(),
+  color: text("color").notNull().default("blue"),
 });
 
 export const objectTags = sqliteTable(
@@ -55,3 +57,23 @@ export const blocks = sqliteTable("blocks", {
   text: text("text").notNull(),
   ...origin,
 });
+
+export const objectTypes = sqliteTable("object_types", {
+  key: text("key").primaryKey(),
+  label: text("label").notNull(),
+  plural: text("plural").notNull(),
+  position: integer("position").notNull(),
+});
+
+export const fieldDefinitions = sqliteTable("field_definitions", {
+  key: text("key").primaryKey(),
+  label: text("label").notNull(),
+  input: text("input").notNull(),
+  options: text("options"),
+});
+
+export const typeFields = sqliteTable(
+  "type_fields",
+  { type: text("type").notNull(), field: text("field").notNull(), position: integer("position").notNull(), lead: integer("lead", { mode: "boolean" }).notNull().default(false) },
+  (t) => [primaryKey({ columns: [t.type, t.field] })],
+);
