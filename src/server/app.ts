@@ -3,6 +3,7 @@ import { serveStatic } from "@hono/node-server/serve-static";
 import type Database from "better-sqlite3";
 import * as o from "./objects.ts";
 import { capture } from "./capture.ts";
+import * as k from "./connections.ts";
 import { extractInto } from "./extract.ts";
 import { readImage } from "./images.ts";
 
@@ -48,18 +49,35 @@ export function createApp(sqlite: Database.Database, opts: Options = {}) {
     } catch { return c.json({ error: "Not found" }, 404); }
   });
   app.post("/api/reviewed", async (c) => c.json(o.markReviewed(sqlite, (await c.req.json().catch(() => ({}))).ids)));
-  app.get("/api/objects/:id", (c) => {
-    const obj = o.getObject(sqlite, c.req.param("id"));
-    return obj ? c.json(obj) : c.json({ error: "Not found" }, 404);
-  });
-  app.patch("/api/objects/:id", async (c) => {
-    const obj = o.updateObject(sqlite, c.req.param("id"), await c.req.json().catch(() => ({})));
-    return obj ? c.json(obj) : c.json({ error: "Not found" }, 404);
-  });
+  // An Object with the Mentions its body makes, so the editor can draw them.
+  const withMentions = (obj: ReturnType<typeof o.getObject>) => (obj ? { ...obj, mentions: k.mentionInfo(sqlite, obj.id) } : null);
+  const found = (c: any, obj: unknown) => (obj ? c.json(obj) : c.json({ error: "Not found" }, 404));
+  app.get("/api/objects/:id", (c) => found(c, withMentions(o.getObject(sqlite, c.req.param("id")))));
+  app.patch("/api/objects/:id", async (c) => found(c, withMentions(o.updateObject(sqlite, c.req.param("id"), await c.req.json().catch(() => ({}))))));
+  app.delete("/api/objects/:id", (c) => (o.deleteObject(sqlite, c.req.param("id")) ? c.json({ deleted: true }) : c.json({ error: "Not found" }, 404)));
   app.put("/api/objects/:id/body", async (c) => {
     const body = await c.req.json().catch(() => ({}));
-    const obj = o.setBody(sqlite, c.req.param("id"), body.paragraphs);
-    return obj ? c.json(obj) : c.json({ error: "Not found" }, 404);
+    return found(c, withMentions(o.setBody(sqlite, c.req.param("id"), body.paragraphs)));
+  });
+
+  // Connections (issue #7)
+  app.get("/api/search", (c) =>
+    c.json(k.searchObjects(sqlite, { q: c.req.query("q"), type: c.req.query("type"), exclude: c.req.query("exclude"), limit: Number(c.req.query("limit")) || undefined })),
+  );
+  app.get("/api/connection-kinds", (c) => c.json(k.kindChoices));
+  app.get("/api/objects/:id/connections", (c) => found(c, k.connectionsOf(sqlite, c.req.param("id"))));
+  app.get("/api/objects/:id/shares-words", (c) => found(c, k.sharesWords(sqlite, c.req.param("id"))));
+  app.post("/api/connections", async (c) => c.json(k.connect(sqlite, await c.req.json().catch(() => ({}))), 201));
+  app.patch("/api/connections/:id", async (c) => {
+    const r = k.updateConnection(sqlite, Number(c.req.param("id")), await c.req.json().catch(() => ({})));
+    return found(c, r);
+  });
+  app.delete("/api/connections/:id", (c) => (k.disconnect(sqlite, Number(c.req.param("id"))) ? c.json({ removed: true }) : c.json({ error: "Not found" }, 404)));
+  // Merge two Objects of the same type into the kept one. If two Connections disagree it answers 409 with what to ask.
+  app.post("/api/objects/:id/merge", async (c) => {
+    const body = await c.req.json().catch(() => ({}));
+    const r = k.mergeObjects(sqlite, c.req.param("id"), String(body.from ?? ""), body.picks ?? {});
+    return "needsChoice" in r ? c.json(r, 409) : c.json(r);
   });
 
   app.post("/api/objects/:id/tags", async (c) => {

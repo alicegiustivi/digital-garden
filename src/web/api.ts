@@ -7,7 +7,16 @@ export type Summary = {
   id: string; type: string; private: boolean; unreviewed: boolean; hasImage: boolean; createdAt: string; updatedAt: string;
   fields: Field[]; firstLine: string; tags: Tag[]; connectionCount: number;
 };
-export type Obj = Summary & { blocks: Block[] };
+export type MentionInfo = { id: string; missing: boolean; type?: string; title?: string; private?: boolean; tags?: Tag[]; connectionCount?: number; kind?: string | null; label?: string | null };
+export type Obj = Summary & { blocks: Block[]; mentions?: Record<string, MentionInfo> };
+export type Found = Summary & { title: string; connected: boolean };
+export type Brief = { id: string; type: string; title: string; private: boolean; tags: Tag[]; connectionCount: number };
+export type Connection = {
+  id: number; other: Brief; kind: string; label: string; subject: boolean; note: string; sentence: string | null; sentenceBy: "other" | "me" | null; fromText: boolean;
+} & OriginInfo;
+export type KindChoice = { kind: string; subject: boolean; label: string };
+export type Shares = Brief & { shared: string[]; sharedTags: string[] };
+export type MergeAsk = { otherId: string; other: Brief; keep: { kind: string; label: string; note: string }; drop: { kind: string; label: string; note: string } };
 export type FieldDef = { key: string; label: string; input: "text" | "longtext" | "select"; options: string[] | null; lead?: boolean };
 export type TypeDef = { key: string; label: string; plural: string; fields: FieldDef[] };
 export type Types = { types: TypeDef[]; fieldLabels: Record<string, FieldDef> };
@@ -42,6 +51,21 @@ export const api = {
   setBody: (id: string, paragraphs: string[]) => call<Obj>("PUT", `/api/objects/${id}/body`, { paragraphs }),
   addTag: (id: string, name: string) => call<Obj>("POST", `/api/objects/${id}/tags`, { name }),
   removeTag: (id: string, tagId: number) => call<Obj>("DELETE", `/api/objects/${id}/tags/${tagId}`),
+  search: (q: { q?: string; type?: string; exclude?: string; limit?: number }) =>
+    call<Found[]>("GET", "/api/search?" + new URLSearchParams(Object.entries(q).filter(([, v]) => v !== undefined && v !== "").map(([k, v]) => [k, String(v)]))),
+  connections: (id: string) => call<Connection[]>("GET", `/api/objects/${id}/connections`),
+  kinds: () => call<KindChoice[]>("GET", "/api/connection-kinds"),
+  sharesWords: (id: string) => call<Shares[]>("GET", `/api/objects/${id}/shares-words`),
+  connect: (a: string, b: string) => call<Connection>("POST", "/api/connections", { a, b }),
+  setConnection: (id: number, patch: { kind?: string; subject?: string; note?: string }) => call<unknown>("PATCH", `/api/connections/${id}`, patch),
+  disconnect: (id: number) => call<unknown>("DELETE", `/api/connections/${id}`),
+  merge: async (keepId: string, fromId: string, picks: Record<string, string> = {}): Promise<{ done: true } | { ask: MergeAsk[] }> => {
+    const res = await fetch(`/api/objects/${keepId}/merge`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ from: fromId, picks }) });
+    const j = await res.json().catch(() => ({}));
+    if (res.status === 409) return { ask: j.needsChoice };
+    if (!res.ok) throw new Error(j.error ?? res.statusText);
+    return { done: true };
+  },
   tags: () => call<TagRow[]>("GET", "/api/tags"),
   recolour: (id: number, color: string) => call<TagRow[]>("PATCH", `/api/tags/${id}`, { color }),
 };

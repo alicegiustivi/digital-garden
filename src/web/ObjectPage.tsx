@@ -2,11 +2,15 @@ import { useEffect, useState } from "react";
 import { api, fieldOf, type FieldDef, type Obj, type TagRow, type TypeDef, type Types } from "./api";
 import { BodyEditor } from "./BodyEditor";
 import { Editable } from "./Editable";
+import { ConnectionsPanel, MergeDialog } from "./Connections";
+import { refresh, useRefresh } from "./refresh";
 import { Icon, Marked, TagPill, TypeChip, formatDay, subOf, typeVar } from "./ui";
 
-type Props = { id: string; types: Types; fresh?: boolean; onChanged: () => void };
+type Props = { id: string; types: Types; fresh?: boolean; onChanged: () => void; beside: (id: string) => void };
 
-export function ObjectPage({ id, types, fresh, onChanged }: Props) {
+export function ObjectPage({ id, types, fresh, onChanged, beside }: Props) {
+  const tick = useRefresh();
+  const [merging, setMerging] = useState(false);
   const [obj, setObj] = useState<Obj | null>(null);
   const [error, setError] = useState<string>();
   const [allTags, setAllTags] = useState<TagRow[]>([]);
@@ -14,7 +18,7 @@ export function ObjectPage({ id, types, fresh, onChanged }: Props) {
   useEffect(() => {
     api.get(id).then(setObj).catch((e) => setError(e.message));
     api.tags().then(setAllTags);
-  }, [id]);
+  }, [id, tick]);
 
   // One keystroke: press t (when you're not typing) to jump to the Tag box.
   useEffect(() => {
@@ -85,6 +89,8 @@ export function ObjectPage({ id, types, fresh, onChanged }: Props) {
 
           <div className="byline">
             {pills.map((f) => <FieldPill key={f.key} def={f} obj={obj} onSave={(v) => saveFields({ [f.key]: v })} />)}
+            <button className="pill toggle" onClick={() => setMerging(true)} title="Merge a duplicate of this into one Object">Merge…</button>
+            <button className="pill toggle" onClick={() => beside(obj.id)} title="Open a second pane beside this one (⌥-click any Object to put it there)">Beside</button>
             <button className={`pill toggle ${obj.private ? "on" : ""}`} aria-pressed={obj.private} onClick={() => api.patch(obj.id, { private: !obj.private }).then(update)}>
               <Icon name="lock" /> Private
             </button>
@@ -115,13 +121,26 @@ export function ObjectPage({ id, types, fresh, onChanged }: Props) {
             <blockquote key={b.id} className="b-src"><Marked o={b}>{b.text}</Marked></blockquote>
           ))}
           <BodyEditor
+            selfId={obj.id}
+            types={types}
+            info={obj.mentions ?? {}}
+            open={(mid, alt) => (alt ? beside(mid) : (location.hash = `#/o/${mid}`))}
             autofocus={!!fresh && obj.type === "thought"}
             paragraphs={ownerBlocks.map((b) => b.text)}
             placeholder={obj.type === "thought" ? "Write the thought…" : "Write in your own words…"}
-            onSave={(p) => api.setBody(obj.id, p).then(() => onChanged())}
+            onSave={(p) => api.setBody(obj.id, p).then((o) => { setObj((cur) => (cur ? { ...cur, mentions: o.mentions, connectionCount: o.connectionCount } : cur)); onChanged(); refresh(); })}
           />
+          <ConnectionsPanel obj={obj} types={types} beside={beside} />
         </div>
       </div>
+      {merging && (
+        <MergeDialog
+          obj={obj}
+          types={types}
+          onClose={() => setMerging(false)}
+          onDone={(keepId) => { setMerging(false); onChanged(); if (keepId !== obj.id) location.hash = `#/o/${keepId}`; }}
+        />
+      )}
     </article>
   );
 }

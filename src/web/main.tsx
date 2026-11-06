@@ -5,6 +5,8 @@ import { api, type Types } from "./api";
 import { Appearance, getAppearance, setAppearance, startFollowingMac } from "./theme";
 import { TagsPage, ThisWeek, TypeList, UnreviewedPage, statusLine, useList } from "./Lists";
 import { ObjectPage } from "./ObjectPage";
+import { SidePane } from "./Connections";
+import { useRefresh } from "./refresh";
 import type { Summary } from "./api";
 import { Icon, typeVar } from "./ui";
 import { Capture, captureKey, emptyDraft, isCaptureKey, type CaptureDraft } from "./Capture";
@@ -141,7 +143,7 @@ function Peek({ id, ids, types, pending, onChanged, onMove, onReview, onClose }:
           <button className="pill action" onClick={() => { onClose(); go(`#/o/${id}`); }}><Icon name="expand" /> Open full page</button>
           <button onClick={onClose} aria-label="Close"><Icon name="close" /></button>
         </div>
-        <div className="peek-body">{pending && <ReviewShell o={pending} />}<ObjectPage key={id} id={id} types={types} onChanged={onChanged} /></div>
+        <div className="peek-body">{pending && <ReviewShell o={pending} />}<ObjectPage key={id} id={id} types={types} onChanged={onChanged} beside={(b) => go(`#/o/${id}/with/${b}`)} /></div>
       </div>
     </div>
   );
@@ -157,6 +159,9 @@ function App() {
   const [draft, setDraft] = useState<CaptureDraft>(emptyDraft);
   const changed = useCallback(() => setVersion((v) => v + 1), []);
   const unreviewed = useList({ unreviewed: "1" }, version);
+  // A Connection changed somewhere on screen: lists and counts reload.
+  const connectionsTick = useRefresh();
+  useEffect(() => { if (connectionsTick) changed(); }, [connectionsTick, changed]);
   useEffect(() => { api.types().then(setTypes); }, []);
   useEffect(() => setPeek(null), [hash]);
   // "Save to Garden" bookmark: #/capture?url=… opens the window with that page's link already in it.
@@ -205,9 +210,15 @@ function App() {
   const parts = hash.slice(2).split("/");
   let page;
   if (parts[0] === "o" && parts[1]) {
+    const mainId = parts[1];
+    const paneId = parts[2] === "with" ? parts[3] : undefined;
+    const beside = (b: string) => go(`#/o/${mainId}/with/${b}`);
     page = (
-      <main className="wrap page">
-        <ObjectPage key={parts[1]} id={parts[1]} types={types} fresh={fresh === parts[1]} onChanged={changed} />
+      <main className={`wrap page ${paneId ? "split" : ""}`}>
+        <div className="split-main">
+          <ObjectPage key={mainId} id={mainId} types={types} fresh={fresh === mainId} onChanged={changed} beside={beside} />
+        </div>
+        {paneId && <SidePane paneId={paneId} mainId={mainId} types={types} onNavigate={beside} onClose={() => go(`#/o/${mainId}`)} onChanged={changed} />}
       </main>
     );
   } else if (TYPE_OF_ROUTE[parts[0]]) {
