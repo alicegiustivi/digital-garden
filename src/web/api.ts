@@ -4,7 +4,7 @@ export type Field = { key: string; value: string } & OriginInfo;
 export type Tag = { id: number; name: string; color: string } & OriginInfo;
 export type Block = { id: number; text: string } & OriginInfo;
 export type Summary = {
-  id: string; type: string; private: boolean; createdAt: string; updatedAt: string;
+  id: string; type: string; private: boolean; unreviewed: boolean; createdAt: string; updatedAt: string;
   fields: Field[]; firstLine: string; tags: Tag[]; connectionCount: number;
 };
 export type Obj = Summary & { blocks: Block[] };
@@ -23,6 +23,7 @@ export const api = {
   types: () => call<Types>("GET", "/api/types"),
   list: (q: { type?: string; tag?: string; since?: string } = {}) =>
     call<Summary[]>("GET", "/api/objects?" + new URLSearchParams(q as Record<string, string>)),
+  capture: (text: string, isPrivate: boolean) => call<Obj>("POST", "/api/capture", { text, private: isPrivate }),
   get: (id: string) => call<Obj>("GET", `/api/objects/${id}`),
   create: (type: string) => call<Obj>("POST", "/api/objects", { type }),
   patch: (id: string, patch: { type?: string; private?: boolean; fields?: Record<string, string | null> }) =>

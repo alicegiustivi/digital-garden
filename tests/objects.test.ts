@@ -129,3 +129,28 @@ describe("lists", () => {
     expect(r).toHaveLength(1);
   });
 });
+
+describe("Mac Capture of text", () => {
+  it("saves typed words as an Unreviewed Thought in the owner's words", async () => {
+    const r = await call("POST", "/api/capture", { text: "Walking helps me think.\n\nEspecially alone." });
+    expect(r.status).toBe(201);
+    expect(r.json.type).toBe("thought");
+    expect(r.json.unreviewed).toBe(true);
+    expect(r.json.private).toBe(false);
+    expect(r.json.blocks.map((b: any) => [b.text, b.origin])).toEqual([["Walking helps me think.", "owner"], ["Especially alone.", "owner"]]);
+    expect((await call("GET", `/api/objects/${r.json.id}`)).json.blocks).toHaveLength(2);
+  });
+  it("stores a Private capture as Private, and nothing else as Private", async () => {
+    const p = await call("POST", "/api/capture", { text: "secret", private: true });
+    expect(p.json.private).toBe(true);
+    expect((await call("POST", "/api/capture", { text: "open", private: "yes" })).json.private).toBe(false);
+  });
+  it("refuses an empty capture and leaves ordinary Objects reviewed", async () => {
+    expect((await call("POST", "/api/capture", { text: "  \n " })).status).toBe(400);
+    expect((await make("thought", "mine")).unreviewed).toBe(false);
+  });
+  it("is on disk the moment it is saved", async () => {
+    const r = await call("POST", "/api/capture", { text: "kept" });
+    expect((sqlite.prepare("SELECT text FROM blocks WHERE object_id = ?").get(r.json.id) as any).text).toBe("kept");
+  });
+});

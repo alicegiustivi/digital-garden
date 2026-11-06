@@ -6,6 +6,7 @@ import { Appearance, getAppearance, setAppearance, startFollowingMac } from "./t
 import { TagsPage, ThisWeek, TypeList } from "./Lists";
 import { ObjectPage } from "./ObjectPage";
 import { Icon, typeVar } from "./ui";
+import { Capture, captureKey, emptyDraft, isCaptureKey, type CaptureDraft } from "./Capture";
 
 startFollowingMac();
 
@@ -30,7 +31,7 @@ const NAV = [
 ];
 const TYPE_OF_ROUTE: Record<string, string> = { sources: "source", concepts: "concept", thoughts: "thought", people: "person" };
 
-function TopBar({ hash }: { hash: string }) {
+function TopBar({ hash, onCapture }: { hash: string; onCapture: () => void }) {
   const [open, setOpen] = useState(false);
   const [appearance, setAppearanceState] = useState<Appearance>(getAppearance());
   const box = useRef<HTMLDivElement>(null);
@@ -54,6 +55,7 @@ function TopBar({ hash }: { hash: string }) {
             {n.label}
           </a>
         ))}
+        <button className="cap" onClick={onCapture} title="Capture a thought"><Icon name="plus" /> Capture <kbd>{captureKey()}</kbd></button>
         <div className="more" ref={box}>
           <button aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen(!open)}>More <Icon name="chevron" /></button>
           {open && (
@@ -112,9 +114,21 @@ function App() {
   const [version, setVersion] = useState(0);
   const [peek, setPeek] = useState<{ id: string; ids: string[] } | null>(null);
   const [fresh, setFresh] = useState<string | null>(null);
+  const [capture, setCapture] = useState(false);
+  const [draft, setDraft] = useState<CaptureDraft>(emptyDraft);
   const changed = useCallback(() => setVersion((v) => v + 1), []);
   useEffect(() => { api.types().then(setTypes); }, []);
   useEffect(() => setPeek(null), [hash]);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!isCaptureKey(e)) return;
+      e.preventDefault();
+      setPeek(null);
+      setCapture(true);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   if (!types) return <p className="quiet pad">Opening the Garden…</p>;
 
@@ -144,8 +158,17 @@ function App() {
 
   return (
     <>
-      <TopBar hash={hash} />
+      <TopBar hash={hash} onCapture={() => { setPeek(null); setCapture(true); }} />
       {page}
+      {capture && (
+        <Capture
+          draft={draft}
+          setDraft={setDraft}
+          onClose={() => setCapture(false)}
+          onSaved={changed}
+          onOpen={(id) => { setCapture(false); setDraft({ ...draft, saved: null }); open(id, [id]); }}
+        />
+      )}
       {peek && <Peek id={peek.id} ids={peek.ids} types={types} onChanged={changed} onMove={(id) => setPeek({ ...peek, id })} onClose={() => setPeek(null)} />}
     </>
   );
