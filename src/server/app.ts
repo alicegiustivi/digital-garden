@@ -25,7 +25,7 @@ export function createApp(sqlite: Database.Database, opts: Options = {}) {
   app.get("/api/types", (c) => c.json(o.listTypes(sqlite)));
 
   app.get("/api/objects", (c) =>
-    c.json(o.listObjects(sqlite, { type: c.req.query("type"), tag: c.req.query("tag"), since: c.req.query("since") })),
+    c.json(o.listObjects(sqlite, { type: c.req.query("type"), tag: c.req.query("tag"), since: c.req.query("since"), unreviewed: c.req.query("unreviewed") })),
   );
   app.post("/api/objects", async (c) => c.json(o.createObject(sqlite, await c.req.json().catch(() => ({}))), 201));
   // Capture takes JSON (words and links) or a form with the same JSON in "payload" plus picture files in "images".
@@ -47,6 +47,7 @@ export function createApp(sqlite: Database.Database, opts: Options = {}) {
       return new Response(new Uint8Array(await readImage(id, c.req.param("kind") === "thumb")), { headers: { "content-type": "image/jpeg", "cache-control": "max-age=86400" } });
     } catch { return c.json({ error: "Not found" }, 404); }
   });
+  app.post("/api/reviewed", async (c) => c.json(o.markReviewed(sqlite, (await c.req.json().catch(() => ({}))).ids)));
   app.get("/api/objects/:id", (c) => {
     const obj = o.getObject(sqlite, c.req.param("id"));
     return obj ? c.json(obj) : c.json({ error: "Not found" }, 404);

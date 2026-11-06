@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { api, displayTitle, TAG_COLORS, type Summary, type TagRow, type Types } from "./api";
 import { Icon, TagPill, TypeChip, formatDay, subOf, typeVar, tagVar } from "./ui";
 
-export function useList(q: { type?: string; tag?: string; since?: string }, version: number) {
+export function useList(q: { type?: string; tag?: string; since?: string; unreviewed?: string }, version: number) {
   const [rows, setRows] = useState<Summary[] | null>(null);
   const key = JSON.stringify(q);
   useEffect(() => { api.list(q).then(setRows); }, [key, version]);
@@ -60,7 +60,7 @@ function Grid({ rows, types, onOpen, empty }: { rows: Summary[] | null; types: T
   return <div className="stories">{rows.map((o) => <Card key={o.id} o={o} types={types} onOpen={() => onOpen(o.id, ids)} />)}</div>;
 }
 
-export function ThisWeek({ types, version, onNew, onOpen }: { types: Types; version: number; onNew: (t: string) => void; onOpen: (id: string, ids: string[]) => void }) {
+export function ThisWeek({ types, version, unreviewed, onNew, onOpen }: { types: Types; version: number; unreviewed: number; onNew: (t: string) => void; onOpen: (id: string, ids: string[]) => void }) {
   const [since] = useState(() => new Date(Date.now() - 7 * 864e5).toISOString());
   const rows = useList({ since }, version);
   const lead = rows?.find((r) => r.type === "source");
@@ -72,6 +72,7 @@ export function ThisWeek({ types, version, onNew, onOpen }: { types: Types; vers
         <h2>This week <em>in your Garden</em></h2>
         <NewButtons types={types} onNew={onNew} />
       </header>
+      {unreviewed > 0 && <a className="banner" href="#/unreviewed">{unreviewed} Unreviewed <span aria-hidden="true">→</span></a>}
       {rows && lead && (
         <article className="lead" style={typeVar("source")} tabIndex={0} role="button" onClick={() => onOpen(lead.id, ids)} onKeyDown={(e) => e.key === "Enter" && onOpen(lead.id, ids)}>
           <div className="washbox">
@@ -123,3 +124,47 @@ export function TagsPage({ tag, types, version, onOpen, go }: { tag?: string; ty
 }
 
 export { TypeChip };
+
+const DAY = 864e5;
+/** Today / This week / Earlier, by when each was captured. */
+function groupByAge(rows: Summary[]) {
+  const startToday = new Date().setHours(0, 0, 0, 0);
+  const groups: { name: string; rows: Summary[] }[] = [{ name: "Today", rows: [] }, { name: "This week", rows: [] }, { name: "Earlier", rows: [] }];
+  for (const r of rows) {
+    const t = new Date(r.createdAt).getTime();
+    groups[t >= startToday ? 0 : t >= startToday - 6 * DAY ? 1 : 2].rows.push(r);
+  }
+  return groups.filter((g) => g.rows.length);
+}
+
+/** The status line on a capture (issue #16). The AI tickets fill in the other states; for now: Waiting, or Private, not read. */
+export const statusLine = (o: Summary) => (o.private ? "Private, not read" : "Waiting");
+
+export function UnreviewedPage({ rows, types, onOpen, onReviewed }: {
+  rows: Summary[] | null; types: Types; onOpen: (id: string, ids: string[]) => void; onReviewed: (ids: string[]) => void;
+}) {
+  const ids = rows?.map((r) => r.id) ?? []; // the order they appear on the page, top group first
+  return (
+    <main className="contents wrap">
+      <header className="vol"><h2>Unreviewed{rows ? <em> {rows.length}</em> : null}</h2></header>
+      {rows && !rows.length && <p className="quiet">Nothing waiting. Everything you capture shows up here until you tick it Reviewed.</p>}
+      {rows && rows.length > 0 && <p className="quiet small">Open one to step through them with the arrow keys. Press R to tick Reviewed and move on. Reviewed only means “I’ve looked at this”.</p>}
+      {rows && groupByAge(rows).map((g) => (
+        <section key={g.name} className="ugroup">
+          <div className="ugroup-h">
+            <h3>{g.name} <span className="quiet">{g.rows.length}</span></h3>
+            <button className="pill action" onClick={() => onReviewed(g.rows.map((r) => r.id))}>Mark all reviewed</button>
+          </div>
+          <div className="stories">
+            {g.rows.map((o) => (
+              <div key={o.id} className="ucard">
+                <Card o={o} types={types} onOpen={() => onOpen(o.id, ids)} />
+                <div className="ustatus quiet small">Archivist: {statusLine(o).toLowerCase()}</div>
+              </div>
+            ))}
+          </div>
+        </section>
+      ))}
+    </main>
+  );
+}

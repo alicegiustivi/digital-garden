@@ -83,14 +83,17 @@ function summarise(db: Db, rows: any[]) {
   }));
 }
 
-export function listObjects(db: Db, q: { type?: string; tag?: string; since?: string }) {
+export function listObjects(db: Db, q: { type?: string; tag?: string; since?: string; unreviewed?: string }) {
   const where = ["o.deleted_at IS NULL"];
   const args: unknown[] = [];
   if (q.type) { where.push("o.type = ?"); args.push(q.type); }
   if (q.tag) { where.push("EXISTS (SELECT 1 FROM object_tags ot JOIN tags t ON t.id = ot.tag_id WHERE ot.object_id = o.id AND t.name = ?)"); args.push(q.tag); }
   if (q.since) { where.push("coalesce(o.updated_at, o.created_at) >= ?"); args.push(q.since.replace("T", " ").replace(/\.\d+Z$|Z$/, "")); }
+  // Unreviewed is newest captured first; every other list goes by when it last changed.
+  if (q.unreviewed) where.push("o.unreviewed = 1");
+  const order = q.unreviewed ? "o.created_at DESC, o.rowid DESC" : "coalesce(o.updated_at, o.created_at) DESC, o.rowid DESC";
   const rows = db
-    .prepare(`SELECT o.* FROM objects o WHERE ${where.join(" AND ")} ORDER BY coalesce(o.updated_at, o.created_at) DESC, o.rowid DESC`)
+    .prepare(`SELECT o.* FROM objects o WHERE ${where.join(" AND ")} ORDER BY ${order}`)
     .all(...args);
   return summarise(db, rows);
 }
@@ -207,4 +210,12 @@ export function setTagColor(db: Db, tagId: number, color: unknown) {
   if (!TAG_COLORS.includes(color as any)) throw new BadRequest("unknown colour");
   db.prepare("UPDATE tags SET color = ? WHERE id = ?").run(color, tagId);
   return listTags(db);
+}
+
+/** The owner's tick that they have looked at these. It approves and rejects nothing (issue #16). */
+export function markReviewed(db: Db, ids: unknown) {
+  if (!Array.isArray(ids) || ids.some((i) => typeof i !== "string")) throw new BadRequest("ids must be a list");
+  const upd = db.prepare("UPDATE objects SET unreviewed = 0 WHERE id = ? AND unreviewed = 1");
+  db.transaction(() => { for (const id of ids as string[]) upd.run(id); })();
+  return { reviewed: ids.length };
 }

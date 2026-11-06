@@ -22,7 +22,7 @@ async function call<T>(method: string, path: string, body?: unknown): Promise<T>
 
 export const api = {
   types: () => call<Types>("GET", "/api/types"),
-  list: (q: { type?: string; tag?: string; since?: string } = {}) =>
+  list: (q: { type?: string; tag?: string; since?: string; unreviewed?: string } = {}) =>
     call<Summary[]>("GET", "/api/objects?" + new URLSearchParams(q as Record<string, string>)),
   capture: async (c: { text: string; links: string[]; images: File[]; private: boolean }): Promise<CaptureResult> => {
     const payload = JSON.stringify({ text: c.text, links: c.links, private: c.private });
@@ -34,6 +34,7 @@ export const api = {
     if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error ?? res.statusText);
     return res.json();
   },
+  reviewed: (ids: string[]) => call<{ reviewed: number }>("POST", "/api/reviewed", { ids }),
   get: (id: string) => call<Obj>("GET", `/api/objects/${id}`),
   create: (type: string) => call<Obj>("POST", "/api/objects", { type }),
   patch: (id: string, patch: { type?: string; private?: boolean; fields?: Record<string, string | null> }) =>
