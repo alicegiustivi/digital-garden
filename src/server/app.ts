@@ -22,6 +22,7 @@ export function createApp(sqlite: Database.Database) {
     c.json(o.listObjects(sqlite, { type: c.req.query("type"), tag: c.req.query("tag"), since: c.req.query("since") })),
   );
   app.post("/api/objects", async (c) => c.json(o.createObject(sqlite, await c.req.json().catch(() => ({}))), 201));
+  app.post("/api/capture", async (c) => c.json(o.captureText(sqlite, await c.req.json().catch(() => ({}))), 201));
   app.get("/api/objects/:id", (c) => {
     const obj = o.getObject(sqlite, c.req.param("id"));
     return obj ? c.json(obj) : c.json({ error: "Not found" }, 404);
