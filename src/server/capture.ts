@@ -8,6 +8,7 @@ import { randomUUID } from "node:crypto";
 import type Database from "better-sqlite3";
 import { BadRequest, getObject } from "./objects.ts";
 import { shrinkImage } from "./images.ts";
+import { mentionToken } from "./mentions.ts";
 import { canonicalLink } from "./links.ts";
 import { rm } from "node:fs/promises";
 import { imagesDir } from "./paths.ts";
@@ -99,6 +100,10 @@ export async function capture(db: Db, input: CaptureInput, readLater: (id: strin
       addBody(db, thoughtId, text);
       const ins = db.prepare("INSERT OR IGNORE INTO connections (from_id, to_id, kind, origin) VALUES (?, ?, 'mentions', 'owner')");
       for (const s of sources) ins.run(thoughtId, s);
+      // Each Source is a Mention on its own line in the Thought, so the body shows what the Connections say.
+      const start = paragraphsOf(text).length;
+      const body = db.prepare("INSERT INTO blocks (object_id, position, text, origin) VALUES (?, ?, ?, 'owner')");
+      sources.forEach((s, i) => body.run(thoughtId, start + i, mentionToken(s)));
     }
   })();
 

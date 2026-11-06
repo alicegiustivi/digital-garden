@@ -1,6 +1,7 @@
 // Reading and writing Objects. Every value the owner types is saved with Origin "owner" (ADR 0001).
 import { randomUUID } from "node:crypto";
 import type Database from "better-sqlite3";
+import { MENTION, syncMentions } from "./mentions.ts";
 
 type Db = Database.Database;
 
@@ -52,7 +53,7 @@ function tagsFor(db: Db, ids: string[]) {
   return by;
 }
 
-function summarise(db: Db, rows: any[]) {
+export function summarise(db: Db, rows: any[]) {
   const ids = rows.map((r) => r.id);
   const marks = ids.map(() => "?").join(",") || "NULL";
   const fields = db.prepare(`SELECT * FROM field_values WHERE object_id IN (${marks})`).all(...ids) as any[];
@@ -63,6 +64,7 @@ function summarise(db: Db, rows: any[]) {
     .prepare(
       `SELECT o.id AS id, count(c.id) AS n FROM objects o
        JOIN connections c ON (c.from_id = o.id OR c.to_id = o.id)
+       JOIN objects other ON other.id = CASE WHEN c.from_id = o.id THEN c.to_id ELSE c.from_id END AND other.deleted_at IS NULL
        WHERE o.id IN (${marks}) GROUP BY o.id`,
     )
     .all(...ids) as any[];
@@ -77,7 +79,7 @@ function summarise(db: Db, rows: any[]) {
     createdAt: iso(r.created_at),
     updatedAt: iso(r.updated_at ?? r.created_at),
     fields: fields.filter((f) => f.object_id === r.id).map((f) => ({ key: f.field, value: f.value, ...originOf(f) })),
-    firstLine: (firstBlocks.find((b) => b.object_id === r.id)?.text ?? "").slice(0, 200),
+    firstLine: (firstBlocks.find((b) => b.object_id === r.id)?.text ?? "").replace(MENTION, "").trim().slice(0, 200),
     tags: tags.get(r.id) ?? [],
     connectionCount: counts.find((c) => c.id === r.id)?.n ?? 0,
   }));
@@ -106,6 +108,20 @@ export function getObject(db: Db, id: string) {
     id: b.id, text: b.text, ...originOf(b),
   }));
   return { ...summary, blocks };
+}
+
+/** What an Object is called in a list or a sentence: its title, or for an untitled Thought its first line. */
+export function titleOf(db: Db, id: string): string {
+  const o = db.prepare("SELECT title FROM objects WHERE id = ?").get(id) as any;
+  if (o?.title) return o.title;
+  const b = db.prepare("SELECT text FROM blocks WHERE object_id = ? ORDER BY position LIMIT 1").get(id) as any;
+  return (b?.text ?? "").replace(MENTION, "").trim().slice(0, 80) || "Untitled";
+}
+
+/** Delete (to the Bin): hidden from every view. Its Connections are kept but hidden, and Mentions of it read as missing. */
+export function deleteObject(db: Db, id: string) {
+  const r = db.prepare("UPDATE objects SET deleted_at = datetime('now') WHERE id = ? AND deleted_at IS NULL").run(id);
+  return r.changes > 0;
 }
 
 const touch = (db: Db, id: string) => db.prepare("UPDATE objects SET updated_at = datetime('now') WHERE id = ?").run(id);
@@ -163,6 +179,7 @@ export function setBody(db: Db, id: string, paragraphs: unknown) {
     const max = (db.prepare("SELECT coalesce(max(position), -1) AS m FROM blocks WHERE object_id = ?").get(id) as any).m;
     const ins = db.prepare("INSERT INTO blocks (object_id, position, text, origin) VALUES (?, ?, ?, 'owner')");
     mine.forEach((text, i) => ins.run(id, max + 1 + i, text));
+    syncMentions(db, id);
     touch(db, id);
   })();
   return getObject(db, id);
