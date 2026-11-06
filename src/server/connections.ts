@@ -139,7 +139,7 @@ export function mentionInfo(db: Db, id: string) {
   const ids = [...mentionsInBody(db, id)];
   const out: Record<string, any> = {};
   for (const m of ids) {
-    if (!live(db, m)) { out[m] = { id: m, missing: true }; continue; }
+    if (!live(db, m)) { out[m] = { id: m, missing: true, inBin: !!db.prepare("SELECT 1 FROM objects WHERE id = ?").get(m) }; continue; }
     const c = db.prepare("SELECT * FROM connections WHERE (from_id = ? AND to_id = ?) OR (from_id = ? AND to_id = ?)").get(id, m, m, id) as any;
     out[m] = { ...shapeOther(db, m), missing: false, kind: c?.kind ?? null, label: c ? labelFor(c.kind, c.from_id === id) : null };
   }

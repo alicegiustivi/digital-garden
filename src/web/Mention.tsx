@@ -29,7 +29,7 @@ function MentionView({ node }: NodeViewProps) {
   if (m.missing)
     return (
       <NodeViewWrapper as="span" className="mention-wrap">
-        <span className="mention missing" title="This Object was deleted">missing Object</span>
+        <span className="mention missing" title={m.inBin ? "Deleted for now. Restore it from the Bin (under More) and this reads normally again." : "This Object was deleted for good"}>{m.inBin ? "in the Bin" : "missing Object"}</span>
       </NodeViewWrapper>
     );
   const go = (e: React.MouseEvent) => { e.preventDefault(); open(id, e.altKey); };

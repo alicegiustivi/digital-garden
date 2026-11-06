@@ -62,7 +62,7 @@ describe("Mentions", () => {
     await body(t, `See ${tok(s)}.`);
     expect((await call("DELETE", `/api/objects/${s.id}`)).status).toBe(200);
     const r = (await call("GET", `/api/objects/${t.id}`)).json;
-    expect(r.mentions[s.id]).toEqual({ id: s.id, missing: true });
+    expect(r.mentions[s.id]).toEqual({ id: s.id, missing: true, inBin: true });
     expect(await conns(t)).toEqual([]);
     expect(r.connectionCount).toBe(0);
   });

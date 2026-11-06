@@ -4,11 +4,12 @@ import { BodyEditor } from "./BodyEditor";
 import { Editable } from "./Editable";
 import { ConnectionsPanel, MergeDialog } from "./Connections";
 import { refresh, useRefresh } from "./refresh";
+import { showToast } from "./toast";
 import { Icon, Marked, TagPill, TypeChip, formatDay, subOf, typeVar } from "./ui";
 
-type Props = { id: string; types: Types; fresh?: boolean; onChanged: () => void; beside: (id: string) => void };
+type Props = { id: string; types: Types; fresh?: boolean; onChanged: () => void; beside: (id: string) => void; onDeleted?: () => void };
 
-export function ObjectPage({ id, types, fresh, onChanged, beside }: Props) {
+export function ObjectPage({ id, types, fresh, onChanged, beside, onDeleted }: Props) {
   const tick = useRefresh();
   const [merging, setMerging] = useState(false);
   const [obj, setObj] = useState<Obj | null>(null);
@@ -55,6 +56,18 @@ export function ObjectPage({ id, types, fresh, onChanged, beside }: Props) {
     api.tags().then(setAllTags);
   };
 
+  const remove = async () => {
+    await api.deleteObject(obj.id);
+    const name = fieldOf(obj, "title")?.value || obj.firstLine || "Untitled";
+    onChanged();
+    onDeleted?.();
+    showToast(`“${name}” moved to the Bin.`, async () => { await api.restoreObject(obj.id); onChanged(); refresh(); location.hash = `#/o/${obj.id}`; });
+  };
+  const removeTagHere = async (t: Obj["tags"][number]) => {
+    update(await api.removeTag(obj.id, t.id));
+    showToast(`Tag #${t.name} removed from this one.`, async () => { update(await api.restoreTagOn(obj.id, t.id, t)); });
+  };
+
   return (
     <article className="object" style={typeVar(obj.type)}>
       <section className="cover">
@@ -91,13 +104,14 @@ export function ObjectPage({ id, types, fresh, onChanged, beside }: Props) {
             {pills.map((f) => <FieldPill key={f.key} def={f} obj={obj} onSave={(v) => saveFields({ [f.key]: v })} />)}
             <button className="pill toggle" onClick={() => setMerging(true)} title="Merge a duplicate of this into one Object">Merge…</button>
             <button className="pill toggle" onClick={() => beside(obj.id)} title="Open a second pane beside this one (⌥-click any Object to put it there)">Beside</button>
+            <button className="pill toggle" onClick={remove} title="Move to the Bin. You can undo, and restore it for 30 days.">Delete</button>
             <button className={`pill toggle ${obj.private ? "on" : ""}`} aria-pressed={obj.private} onClick={() => api.patch(obj.id, { private: !obj.private }).then(update)}>
               <Icon name="lock" /> Private
             </button>
           </div>
 
           <div className="tags">
-            {obj.tags.map((t) => <TagPill key={t.id} tag={t} onRemove={() => api.removeTag(obj.id, t.id).then(update)} />)}
+            {obj.tags.map((t) => <TagPill key={t.id} tag={t} onRemove={() => removeTagHere(t)} />)}
             <TagInput known={allTags} onAdd={addTag} />
           </div>
 
