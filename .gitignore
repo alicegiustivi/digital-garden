@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.DS_Store
+*.log
+# The Garden's data lives in ~/Garden, never here. Belt and braces:
+*.db
+*.sqlite
+Garden/
