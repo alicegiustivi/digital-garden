@@ -116,6 +116,16 @@ _Avoid_: Endorse, accept, confirm
 Marks an Object that no AI role may ever read, and whose content the Garden itself never sends to any outside service. Content the owner sends into the Garden through an outside route, such as a message to the phone Capture bot, has already passed through that route; Private protects it from the moment it arrives. The AI does not learn a Private Object exists, even where another Object mentions it. Private belongs to one Object only and is never inherited through Connections. The owner's own search and linking still work on Private Objects.
 _Avoid_: Hidden, locked, secret
 
+### Keeping the Garden
+
+**Backup**:
+An automatic, encrypted copy of the Garden kept so the Garden itself can be put back exactly as it was. Only the Garden can read it. Restoring is always done from a Backup, never from an Export.
+_Avoid_: Export, snapshot, sync
+
+**Export**:
+A complete copy of the Garden, made when the owner asks, that can be read without the Garden: readable files for people plus one complete data file. It keeps every Origin and everything the Garden remembers, includes Private Objects unless the owner leaves them out, and is not encrypted. It is never used to restore the Garden.
+_Avoid_: Backup, dump, download
+
 ### CODE stages
 
 **Capture**:
