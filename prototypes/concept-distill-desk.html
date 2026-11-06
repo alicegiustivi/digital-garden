@@ -1,0 +1,675 @@
+<title>Concept Distill Desk</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<!-- PROTOTYPE (throwaway) for issue 20, "Prototype: the Concept page as a Distill desk" (settled rules from issue 19).
+     Three layouts of the same Concept page, in the settled "Issue" look (issue 10) behind the settled top bar (issue 17):
+     A Your view leads   = an essay page: cover, a slim row of Open Questions, the owner's view as the article with
+                           Tensions and Ask in the margin, then everything in the Concept grouped by kind in four columns.
+     B Questions lead    = the cover carries the Open Questions as its headline; Tensions get a wide band of pairs;
+                           then the view beside Ask; Connections as tabs, one kind at a time.
+     C Desk              = a working desk: a short cover, then three columns: To think about (questions, Tensions) |
+                           Your view (the writing surface) | In this Concept (grouped lists, type filter, Ask on top).
+     The second control swaps the content: a typical Concept (14 Objects), a large one (60), a brand-new one, and
+     This week with the "From your Garden" strip (placed differently in A, B and C).
+     Switch with the bottom bar (←/→ or keys 1–3). All content is made up. Nothing is saved.
+     A deliberate light look only: the dark version is still open (issue 10). -->
+<style>
+/* Layout concept: the Issue look (soft rounded magazine in SF Pro); the Concept's cover in violet; each layout owns the page below the top bar. */
+:root{
+  --ink:#1d1d1b; --mute:#77756f; --faint:#a9a7a0; --line:#ece8e1; --ground:#f8f6f1; --sheet:#fffdf9; --white:#ffffff; --wash:#f2efe8;
+  --t-source:#2d7a99; --t-concept:#7657c2; --t-thought:#c08414; --t-person:#cf5c45;
+  --g-blue:#3d7fb8; --g-rose:#c4567a; --g-olive:#7d8a2e; --g-amber:#b7791f; --g-sky:#2f95b5; --g-lilac:#8a6bc9; --g-green:#3f8f5b; --g-peach:#d07a4a; --g-indigo:#5560c4;
+  --bar-bg:#1d1d1b; --bar-fg:#f4f3ef; --bar-mute:#9c9a94; --bar-hi:#34332f; --scrim:rgba(29,29,27,.28);
+  --shadow:0 1px 4px rgba(60,50,30,.07); --shadow-up:0 6px 18px rgba(60,50,30,.1);
+  --sf:-apple-system,BlinkMacSystemFont,'SF Pro Text','SF Pro Display','Helvetica Neue',system-ui,sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+body{min-height:100vh;padding-bottom:130px;background:var(--ground);color:var(--ink);font-family:var(--sf);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button,select,input{font:inherit;color:inherit}
+button{background:none;border:0;cursor:pointer;padding:0;text-align:inherit}
+:focus-visible{outline:2px solid var(--ink);outline-offset:2px;border-radius:6px}
+.wrap{max-width:1240px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+svg.ic{width:1em;height:1em;flex:none;vertical-align:-.12em;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+h1,h2,h3,h4{font-weight:600;letter-spacing:-.02em;text-wrap:balance;margin:0}
+.num{font-variant-numeric:tabular-nums}
+
+/* ---- shared marks ---- */
+.chip{display:inline-flex;align-items:center;gap:6px;padding:2px 10px 2px 8px;border-radius:999px;font-size:12.5px;font-weight:500;color:var(--c);background:color-mix(in srgb,var(--c) 11%,var(--white));white-space:nowrap}
+.ico{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:10px;color:var(--c);background:color-mix(in srgb,var(--c) 12%,var(--white));flex:none}
+.tag{display:inline-flex;align-items:center;gap:4px;padding:2px 10px;border-radius:999px;font-size:12.5px;color:color-mix(in srgb,var(--c) 80%,var(--ink));background:color-mix(in srgb,var(--c) 13%,var(--white));white-space:nowrap}
+.tags{display:flex;flex-wrap:wrap;gap:5px}
+.o-ai{text-decoration:underline dotted 1.5px color-mix(in srgb,currentColor 55%,transparent);text-underline-offset:4px}
+.o-ai::after{content:"✦";font-size:.62em;vertical-align:.45em;margin-left:.18em;display:inline-block;text-decoration:none}
+.o-src{font-style:italic}
+.o-src::before{content:"❝ ";font-style:normal;color:var(--mute)}
+.appr{font-size:12px;color:var(--mute)}
+.lock{color:var(--mute);display:inline-flex}
+.btn{font-size:12.5px;padding:5px 14px;border-radius:999px;background:var(--white);box-shadow:0 0 0 1px var(--line);white-space:nowrap}
+.btn:hover{box-shadow:0 0 0 1px var(--ink)}
+.btn.dark{background:var(--ink);color:var(--sheet);box-shadow:none}
+.btn[disabled]{color:var(--mute);cursor:default;box-shadow:0 0 0 1px var(--line);background:var(--wash)}
+.link{color:var(--ink);text-decoration:underline 1px var(--faint);text-underline-offset:3px}
+.link:hover{text-decoration-color:var(--ink)}
+.kick{font-size:12px;color:var(--mute);letter-spacing:.06em;text-transform:uppercase;font-weight:500}
+.sub{color:var(--mute);font-size:13.5px;margin:2px 0 0}
+.empty{color:var(--mute);font-size:14px;background:var(--sheet);border-radius:16px;padding:14px 16px;box-shadow:0 0 0 1px var(--line);margin:0}
+
+/* ---- top bar (settled in issue 17) ---- */
+.mast{display:flex;align-items:center;gap:8px 18px;flex-wrap:wrap;padding-block:16px 6px}
+.mast .wm{font-weight:600;font-size:24px;letter-spacing:-.02em}
+.mast nav{display:flex;gap:2px;flex-wrap:wrap;font-size:14px;color:var(--mute)}
+.mast nav span{display:inline-flex;gap:6px;align-items:center;padding:6px 11px;border-radius:999px}
+.mast nav svg{color:var(--c)}
+.mast nav .on{background:var(--white);box-shadow:var(--shadow);color:var(--ink);font-weight:500}
+.mast nav .n{background:var(--ink);color:var(--sheet);border-radius:999px;font-size:11px;padding:0 6px;font-weight:600}
+.mast .right{margin-left:auto;display:flex;align-items:center;gap:12px;font-size:13px;color:var(--mute);flex-wrap:wrap}
+.mast .s{background:var(--white);box-shadow:var(--shadow);border-radius:999px;padding:6px 16px}
+
+/* ---- the Concept's cover ---- */
+.cover{--c:var(--t-concept);margin-top:12px;border-radius:32px;background:color-mix(in srgb,var(--c) 10%,var(--sheet))}
+.cover .in{padding:40px 44px 34px;display:grid;gap:14px}
+.kicker{display:flex;gap:10px;align-items:center;font-size:13px;color:var(--c);font-weight:500}
+.kicker .big{width:40px;height:40px;border-radius:14px;display:grid;place-items:center;background:var(--sheet);color:var(--c);font-size:20px;box-shadow:var(--shadow)}
+.cover h1{font-size:clamp(2.4rem,5.5vw,4rem);line-height:1.02;letter-spacing:-.035em}
+.standfirst{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:14px;color:color-mix(in srgb,var(--ink) 75%,var(--c))}
+.mix{display:flex;height:6px;border-radius:999px;overflow:hidden;background:var(--line);max-width:340px}
+.mix i{display:block;background:var(--c)}
+@media (max-width:700px){.cover .in{padding:28px 22px 24px}}
+
+/* ---- shared blocks ---- */
+.card{background:var(--white);border-radius:26px;padding:20px 22px;box-shadow:var(--shadow);min-width:0}
+.card > h2,.bh{font-size:1.2rem;display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.bh small,.card > h2 small{font-size:13px;color:var(--mute);font-weight:400}
+
+.ed{outline:none;min-height:3em;white-space:pre-wrap}
+.ed p{margin:0 0 1em}
+.ed:empty::before{content:attr(data-ph);color:var(--faint)}
+.view h2{font-size:1.2rem;margin-bottom:10px;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.view h2 small{font-size:13px;color:var(--mute);font-weight:400}
+.view .ed{font-size:17px;line-height:1.72;color:#2a2925}
+.view .vfoot{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center;font-size:13px;color:var(--mute);margin-top:6px}
+
+.q{display:grid;grid-template-columns:auto minmax(0,1fr);gap:2px 10px;align-items:start;padding:10px 0;border-top:1px solid var(--line)}
+.q:first-child{border-top:0}
+.q .qt{font-weight:500;font-size:15px;line-height:1.35}
+.q .qm{grid-column:2;font-size:12.5px;color:var(--mute);display:flex;gap:4px 8px;flex-wrap:wrap}
+.qs{display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:2px 9px;border-radius:999px;white-space:nowrap;margin-top:1px}
+.qs.open{background:var(--ink);color:var(--sheet)}
+.qs.set{box-shadow:inset 0 0 0 1px var(--faint);color:var(--mute)}
+.q.settled .qt{color:var(--mute)}
+
+.pair{display:grid;gap:8px;padding:12px;border-radius:18px;background:var(--sheet);box-shadow:0 0 0 1px var(--line)}
+.pair .pa{display:flex;gap:8px;align-items:center;font-size:14px;font-weight:500;min-width:0;text-align:left}
+.pair .pa span.t{min-width:0}
+.pair .vs{font-size:12px;color:var(--mute);padding-left:34px}
+.pair .btn{justify-self:start}
+
+.row{display:grid;grid-template-columns:auto minmax(0,1fr);gap:0 10px;align-items:center;padding:7px 8px;border-radius:12px;width:100%}
+.row:hover{background:var(--wash)}
+.row .ico{grid-row:span 2;width:24px;height:24px;font-size:12px}
+.row .t{font-size:14px;font-weight:500;line-height:1.3;display:flex;gap:6px;align-items:baseline;min-width:0}
+.row .t > span:first-child{min-width:0}
+.row .meta{font-size:12px;color:var(--mute)}
+.grp h3{font-size:.98rem;display:flex;gap:8px;align-items:baseline;padding:0 8px 4px}
+.grp h3 small{color:var(--mute);font-weight:400;font-size:13px}
+.grp .more{font-size:13px;padding:6px 8px;color:var(--mute)}
+.grp .more:hover{color:var(--ink)}
+.grp .gmix{font-size:12px;color:var(--mute);padding:0 8px 6px;display:flex;gap:8px;flex-wrap:wrap}
+.sugline{display:inline-flex;gap:6px;align-items:center;font-size:13px;padding:4px 12px;border-radius:999px;border:1.5px dashed var(--faint);color:var(--ink)}
+.sugline:hover{border-color:var(--ink)}
+
+.ask{display:grid;gap:8px}
+.ask .btns{display:flex;flex-wrap:wrap;gap:6px}
+.ask .note{font-size:12.5px;color:var(--mute);margin:0}
+.ask .privline{font-size:12.5px;color:var(--mute);display:flex;gap:6px;align-items:center}
+
+.key{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:12.5px;color:var(--mute);padding:26px 0 0}
+.key span{display:inline-flex;gap:6px;align-items:center}
+
+/* =================== A — Your view leads =================== */
+.A .qband{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:14px 0 0}
+.A .qband .lab{font-size:13px;color:var(--mute);margin-right:4px}
+.A .qpill{display:inline-flex;gap:8px;align-items:center;background:var(--white);border-radius:999px;padding:6px 14px 6px 6px;box-shadow:var(--shadow);font-size:14px;font-weight:500;max-width:100%;text-align:left}
+.A .qpill.settled{background:transparent;box-shadow:0 0 0 1px var(--line);color:var(--mute);font-weight:400}
+.A .qpill .qs{flex:none}
+.A .art{display:grid;grid-template-columns:minmax(0,40rem) minmax(0,1fr);gap:48px;padding-block:30px 10px}
+.A .view h2{font-size:1.2rem;margin-bottom:10px;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.A .view h2 small{font-size:13px;color:var(--mute);font-weight:400}
+.A .view .ed{font-size:19px;line-height:1.7}
+.A .view .ed > p:first-child::first-letter{float:left;font-size:3.7em;line-height:.85;padding:5px 10px 0 0;font-weight:600;color:var(--t-concept)}
+.A .view .ed:empty{min-height:5em;font-size:22px;letter-spacing:-.01em}
+.A .margin{display:grid;gap:16px;align-content:start}
+.A .margin .pairs{display:grid;gap:10px;margin-top:10px}
+.A .inside{margin-top:28px}
+.A .inside .hd{display:flex;justify-content:space-between;align-items:end;gap:8px 20px;flex-wrap:wrap;margin-bottom:14px}
+.A .inside .hd h2{font-size:1.6rem;letter-spacing:-.03em}
+.A .cols{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;align-items:start}
+.A .cols .grp{background:var(--white);border-radius:24px;padding:14px 8px 8px;box-shadow:var(--shadow)}
+@media (max-width:1050px){.A .cols{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:900px){.A .art{grid-template-columns:minmax(0,1fr);gap:24px}}
+@media (max-width:600px){.A .cols{grid-template-columns:minmax(0,1fr)}}
+
+/* =================== B — Questions lead =================== */
+.B .cover .in{grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:24px 48px;align-items:end}
+.B .cover .who{display:grid;gap:14px;align-content:end}
+.B .cover h1{font-size:clamp(2.2rem,4.6vw,3.4rem)}
+.B .cq{display:grid;gap:4px}
+.B .cq .kick{color:color-mix(in srgb,var(--ink) 70%,var(--t-concept));margin-bottom:4px}
+.B .cq .q{border-top-color:color-mix(in srgb,var(--t-concept) 18%,transparent)}
+.B .cq .q .qt{font-size:clamp(1.15rem,2.2vw,1.45rem);letter-spacing:-.02em;font-weight:600;line-height:1.25}
+.B .cq .q.settled .qt{font-size:1.02rem;font-weight:500}
+.B .cq .empty{background:color-mix(in srgb,var(--sheet) 70%,transparent);box-shadow:none}
+.B .tens{margin-top:18px}
+.B .tens .hd{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.B .tens .hd h2{font-size:1.4rem;letter-spacing:-.03em}
+.B .tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr));gap:12px}
+.B .tpair{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:10px;align-items:stretch;background:var(--white);border-radius:24px;padding:14px;box-shadow:var(--shadow)}
+.B .tpair .side{display:grid;gap:6px;align-content:start;padding:10px 12px;border-radius:16px;background:var(--sheet);box-shadow:0 0 0 1px var(--line);text-align:left;font-weight:500;font-size:14px;line-height:1.3}
+.B .tpair .side .meta{font-size:12px;color:var(--mute);font-weight:400}
+.B .tpair .x{align-self:center;font-size:11.5px;color:var(--mute);writing-mode:vertical-rl;transform:rotate(180deg);letter-spacing:.06em;text-transform:uppercase}
+.B .tpair .btn{grid-column:1/-1;justify-self:start}
+.B .mid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:18px;margin-top:18px;align-items:start}
+.B .mid .view{padding:24px 28px}
+.B .tabs{display:flex;gap:4px;flex-wrap:wrap;margin:14px 0 12px}
+.B .tabs button{font-size:13.5px;padding:6px 14px;border-radius:999px;box-shadow:0 0 0 1px var(--line);color:var(--mute)}
+.B .tabs button[aria-pressed="true"]{background:var(--ink);color:var(--sheet);box-shadow:none}
+.B .cardgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,230px),1fr));gap:10px}
+.B .oc{display:grid;gap:6px;align-content:start;background:var(--sheet);border-radius:18px;padding:12px 14px;box-shadow:0 0 0 1px var(--line);text-align:left}
+.B .oc:hover{box-shadow:0 0 0 1px var(--faint),var(--shadow-up)}
+.B .oc h4{font-size:15px;line-height:1.3;font-weight:600}
+.B .oc .meta{font-size:12px;color:var(--mute);display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+@media (max-width:900px){.B .cover .in,.B .mid{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:520px){.B .tpair{grid-template-columns:minmax(0,1fr)}.B .tpair .x{writing-mode:horizontal-tb;transform:none}}
+
+/* =================== C — Desk =================== */
+.C .cover .in{grid-template-columns:minmax(0,1fr) auto;align-items:end;padding:26px 32px 24px;gap:10px 24px}
+.C .cover h1{font-size:clamp(2rem,4vw,2.8rem)}
+.C .desk{display:grid;grid-template-columns:300px minmax(0,1fr) 340px;gap:16px;margin-top:16px;align-items:start}
+.C .stack{display:grid;gap:16px;align-content:start;min-width:0}
+.C .sheet{background:var(--sheet);border-radius:28px;padding:28px 32px;box-shadow:0 0 0 1px var(--line),var(--shadow);min-height:420px}
+.C .sheet .ed{font-size:17px}
+.C .sheet .ed:empty{min-height:12em;font-size:21px;letter-spacing:-.01em}
+.C .pairs{display:grid;gap:10px;margin-top:10px}
+.C .filt{display:flex;gap:4px;flex-wrap:wrap;margin:10px 0 6px}
+.C .filt button{font-size:12.5px;padding:4px 11px;border-radius:999px;color:var(--mute);box-shadow:0 0 0 1px var(--line)}
+.C .filt button[aria-pressed="true"]{background:var(--ink);color:var(--sheet);box-shadow:none}
+.C details.grp{border-top:1px solid var(--line);padding:8px 0 4px}
+.C details.grp:first-of-type{border-top:0}
+.C details.grp summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:baseline;padding:4px 8px;border-radius:10px;font-weight:600;font-size:.98rem}
+.C details.grp summary::-webkit-details-marker{display:none}
+.C details.grp summary::after{content:"▾";color:var(--mute);font-size:12px;margin-left:8px}
+.C details.grp:not([open]) summary::after{content:"▸"}
+.C details.grp summary small{color:var(--mute);font-weight:400;font-size:13px;margin-left:auto}
+.C details.grp summary:hover{background:var(--wash)}
+.C .ask{padding-bottom:14px;border-bottom:1px solid var(--line);margin-bottom:6px}
+@media (max-width:1150px){.C .desk{grid-template-columns:minmax(0,1fr) 340px}.C .stack.left{grid-column:1/-1;grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:800px){.C .desk{grid-template-columns:minmax(0,1fr)}.C .stack.left{grid-template-columns:minmax(0,1fr)}.C .cover .in{grid-template-columns:minmax(0,1fr)}.C .sheet{padding:22px 20px}}
+
+/* =================== This week + From your Garden =================== */
+.wk .vol{display:flex;justify-content:space-between;align-items:baseline;gap:8px 16px;flex-wrap:wrap;padding-block:30px 18px}
+.wk .vol h1{font-size:clamp(2.2rem,5vw,3.4rem);letter-spacing:-.035em;line-height:1}
+.wk .vol h1 em{font-style:normal;color:var(--mute)}
+.wk .vol span{color:var(--mute);font-size:14px}
+.wk .stories{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,230px),1fr));gap:14px}
+.wk .story{background:var(--white);border-radius:24px;padding:18px 20px;box-shadow:var(--shadow);display:grid;gap:6px;align-content:start;text-align:left;transition:transform .15s ease}
+.wk .story:hover{transform:translateY(-2px)}
+.wk .story h4{font-size:1.25rem;line-height:1.2;letter-spacing:-.02em}
+.wk .story .m{font-size:12.5px;color:var(--mute);display:flex;flex-wrap:wrap;gap:5px 10px;align-items:center}
+.wk .lead{grid-column:span 2;background:color-mix(in srgb,var(--c) 9%,var(--white))}
+.wk .lead h4{font-size:1.9rem}
+.wk .daygrp{font-size:13px;color:var(--mute);margin:22px 0 10px}
+.fyg .fh{display:flex;justify-content:space-between;align-items:baseline;gap:6px 14px;flex-wrap:wrap}
+.fyg .fh h2{font-size:1.1rem;letter-spacing:-.01em}
+.fyg .fh .hide{font-size:12.5px;color:var(--mute)}
+.fyg .fh .hide:hover{color:var(--ink)}
+.fyg .it{position:relative;display:grid;gap:6px;align-content:start;text-align:left;min-width:0}
+.fyg .why{padding-right:24px;font-size:12.5px;color:color-mix(in srgb,var(--ink) 70%,var(--t-concept))}
+.fyg .it h4{font-size:15px;line-height:1.3;font-weight:600;padding-right:22px}
+.fyg .x{position:absolute;top:8px;right:8px;width:24px;height:24px;border-radius:50%;color:var(--mute);display:grid;place-items:center;font-size:14px}
+.fyg .x:hover{background:var(--wash);color:var(--ink)}
+.fyg .done{font-size:13.5px;color:var(--mute)}
+/* A: a quiet row up top */
+.fyg.top{background:color-mix(in srgb,var(--white) 55%,transparent);border-radius:26px;padding:14px 16px 16px;box-shadow:0 0 0 1px var(--line);margin-bottom:6px}
+.fyg.top .items{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:10px}
+.fyg.top .it{background:var(--white);border-radius:18px;padding:12px 14px;box-shadow:var(--shadow)}
+@media (max-width:760px){.fyg.top .items{grid-template-columns:minmax(0,1fr)}}
+/* B: in the margin */
+.wk .two{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:20px;align-items:start}
+.fyg.side{position:sticky;top:14px;padding:4px 2px}
+.fyg.side .items{display:grid;gap:4px;margin-top:8px}
+.fyg.side .it{padding:10px 12px;border-radius:16px}
+.fyg.side .it:hover{background:var(--white);box-shadow:var(--shadow)}
+.fyg.side .it .ico{width:22px;height:22px;font-size:11px}
+@media (max-width:900px){.wk .two{grid-template-columns:minmax(0,1fr)}.fyg.side{position:static}}
+/* C: at the end, a back page */
+.fyg.end{margin-top:30px;background:color-mix(in srgb,var(--t-concept) 6%,var(--sheet));border-radius:32px;padding:26px 28px 28px}
+.fyg.end .fh h2{font-size:1.5rem;letter-spacing:-.03em}
+.fyg.end .lede{color:var(--mute);font-size:14px;margin:4px 0 14px}
+.fyg.end .items{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,260px),1fr));gap:14px}
+.fyg.end .it{background:var(--white);border-radius:22px;padding:18px 20px;box-shadow:var(--shadow)}
+.fyg.end .it h4{font-size:1.2rem;letter-spacing:-.02em}
+.fyg.end .why{font-style:italic}
+
+/* ---- peek window ---- */
+#peek{position:fixed;inset:0;z-index:45;background:var(--scrim);display:grid;place-items:center;padding:24px max(16px,env(safe-area-inset-left,0px)) 110px}
+#peek .pk{width:min(640px,100%);max-height:100%;overflow:auto;background:var(--sheet);border-radius:28px;box-shadow:0 20px 60px rgba(0,0,0,.18);padding:22px 30px 28px}
+#peek .pk-top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+#peek h2{font-size:1.9rem;line-height:1.1;letter-spacing:-.03em;margin:.3em 0 .4em}
+#peek p{margin:0 0 12px}
+#peek .mute{color:var(--mute)}
+#peek .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
+#peek .sugg{border:1.5px dashed var(--faint);border-radius:20px;padding:14px 16px;display:grid;gap:8px;margin-top:10px;background:var(--white)}
+#peek .sugg .k{font-size:12.5px;color:var(--mute)}
+#peek .ver{display:flex;justify-content:space-between;gap:10px;padding:10px 6px;border-top:1px solid var(--line);width:100%;border-radius:8px}
+#peek .ver:hover{background:var(--wash)}
+#peek .oldview{background:var(--white);border-radius:18px;padding:16px 18px;box-shadow:0 0 0 1px var(--line);font-size:15.5px;line-height:1.65;margin-top:8px}
+#peek .oldview p{margin:0 0 .8em}
+#peek .newt input{width:100%;border:0;background:none;font-size:1.7rem;font-weight:600;letter-spacing:-.03em;outline:none;padding:4px 0}
+#peek .newt .ed{background:var(--white);border-radius:18px;padding:14px 16px;box-shadow:0 0 0 1px var(--line);min-height:7em;font-size:16px;line-height:1.6}
+#peek .both{display:grid;gap:6px;margin:12px 0}
+#peek .both .r{display:flex;gap:8px;align-items:center;font-size:14px}
+#peek select{border-radius:999px;border:0;box-shadow:0 0 0 1px var(--line);background:var(--white);padding:4px 10px;font-size:13px}
+#peek .switch{display:flex;gap:10px;align-items:center;font-size:14px;margin:10px 0}
+#peek .switch i{width:34px;height:20px;border-radius:999px;background:var(--ink);position:relative;flex:none}
+#peek .switch i::after{content:"";position:absolute;right:3px;top:3px;width:14px;height:14px;border-radius:50%;background:var(--sheet)}
+
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:60;background:var(--white);color:var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.16);border-radius:18px;padding:12px 18px;font-size:14px;max-width:min(560px,calc(100% - 32px))}
+
+/* ---- switcher (not part of any design) ---- */
+#bar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:50;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px 14px;max-width:calc(100% - 32px);background:var(--bar-bg);color:var(--bar-fg);font:13px/1 system-ui,-apple-system,sans-serif;padding:8px 10px;border-radius:999px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+#bar .dir{display:flex;align-items:center;gap:4px}
+#bar .arrow{width:30px;height:30px;border-radius:50%;font-size:15px;text-align:center}
+#bar .arrow:hover{background:var(--bar-hi)}
+#bar .name{min-width:170px;text-align:center;font-weight:600}
+#bar .views{display:flex;flex-wrap:wrap;gap:2px;background:var(--bar-hi);border-radius:999px;padding:3px}
+#bar .views button{padding:7px 12px;border-radius:999px;color:var(--bar-mute)}
+#bar .views button[aria-pressed="true"]{background:var(--bar-fg);color:var(--bar-bg)}
+@media (max-width:760px){#bar{border-radius:18px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div id="app"></div>
+<div id="peek" hidden></div>
+<div id="toast" hidden role="status"></div>
+<nav id="bar" aria-label="Prototype switcher">
+  <div class="dir">
+    <button class="arrow" id="prev" aria-label="Previous layout">←</button>
+    <div class="name" id="dirname"></div>
+    <button class="arrow" id="next" aria-label="Next layout">→</button>
+  </div>
+  <div class="views" role="group" aria-label="What to show">
+    <button data-g="typical">Concept · 14</button>
+    <button data-g="large">Concept · 60</button>
+    <button data-g="fresh">Brand new</button>
+    <button data-g="week">This week strip</button>
+  </div>
+</nav>
+
+<script>
+/* ---------------- icons, colours, marks (same as the issue 10 and 18 prototypes) ---------------- */
+const ICON = {
+  Source:'<path d="M2 3.5h4.2A1.8 1.8 0 0 1 8 5.3v8.2a1.6 1.6 0 0 0-1.6-1.6H2zM14 3.5H9.8A1.8 1.8 0 0 0 8 5.3v8.2a1.6 1.6 0 0 1 1.6-1.6H14z"/>',
+  Concept:'<circle cx="3.6" cy="4.4" r="1.4"/><circle cx="12.4" cy="5" r="1.4"/><circle cx="7.6" cy="12.2" r="1.4"/><path d="M5 4.5l6 .4M4.3 5.7l2.6 5.2M11.7 6.3l-3.2 4.8"/>',
+  Thought:'<path d="M8 2.2c3.3 2.2 4.4 5.4 2.4 8.6C9.3 12.6 8 13.8 8 13.8s-1.3-1.2-2.4-3C3.6 7.6 4.7 4.4 8 2.2z"/><path d="M8 13.8V7"/>',
+  Person:'<circle cx="8" cy="5.4" r="2.6"/><path d="M3 14c.8-3 2.7-4.6 5-4.6s4.2 1.6 5 4.6"/>',
+  Lock:'<rect x="3.5" y="7" width="9" height="6.5" rx="1.6"/><path d="M5.5 7V5.2a2.5 2.5 0 0 1 5 0V7"/>',
+};
+const TCOL = {Source:'var(--t-source)',Concept:'var(--t-concept)',Thought:'var(--t-thought)',Person:'var(--t-person)'};
+const PL = {Source:'Sources',Concept:'Concepts',Thought:'Thoughts',Person:'People'};
+const svg = t => `<svg class="ic" viewBox="0 0 16 16" aria-hidden="true">${ICON[t]}</svg>`;
+const ico = t => `<span class="ico" style="--c:${TCOL[t]}">${svg(t)}</span>`;
+const chip = (t,sub) => `<span class="chip" style="--c:${TCOL[t]}">${svg(t)}${t}${sub?' · '+sub:''}</span>`;
+const lock = `<span class="lock" title="Private: the AI never reads it">${svg('Lock')}</span>`;
+const TAGC = {cognition:'--g-blue','embodied-mind':'--g-rose',attention:'--g-indigo',habits:'--g-peach',memory:'--g-lilac',sleep:'--g-sky',writing:'--g-amber'};
+const tag = n => `<span class="tag" style="--c:var(${TAGC[n]||'--g-green'})">#${n}</span>`;
+const KINDS = [['supports','Supports'],['contradicts','Contradicts'],['builds','Builds on'],['related','Related']];
+const KLABEL = Object.fromEntries(KINDS);
+const TYPES = {S:'Source',T:'Thought',P:'Person'};
+
+/* One Object from a compact line: "S:Article:Title|when|flags". Flags: * title by the AI, + Connection approved from a Suggestion, ! Private, u Unreviewed. */
+function O(code){
+  const [head, when='', flags=''] = code.split('|');
+  const [t, sub, ...rest] = head.split(':');
+  const plain = rest.join(':');
+  return {type:TYPES[t], sub, plain, when, ai:flags.includes('*'), appr:flags.includes('+'), priv:flags.includes('!'), unrev:flags.includes('u')};
+}
+const title = o => o.ai ? `<span class="o-ai">${o.plain}</span>` : o.plain;
+const meta = o => `${o.type}${o.sub?' · '+o.sub:''} · ${o.when}${o.unrev?' · Unreviewed':''}`;
+
+/* ---------------- the made-up Garden ---------------- */
+const RAW = {
+  typical:{
+    title:'Thinking with things', since:'12 Oct', last:'Tuesday', tags:['cognition','embodied-mind'],
+    view:[
+      'For now I think a good part of my thinking really does happen outside my head: on paper, on the whiteboard, on walks. The things aren’t storage. They push back, and that’s where the ideas come from.',
+      'Where I’m less sure: maybe it’s only that slowing down helps, and the tool is incidental. The replication thread made me doubt the handwriting part.',
+      'What I want to watch is whether the Garden itself becomes one of these things, or just another place to file.'],
+    versions:[['4 Nov','current'],['28 Oct'],['19 Oct'],['12 Oct']],
+    questions:[
+      {t:'Does writing something down change what I think, or only what I remember?', open:true, since:'3 Oct', touched:'2 Nov'},
+      {t:'Is a whiteboard for thinking or for showing?', open:false, date:'21 Oct', by:'Whiteboards are for after, not during'}],
+    groups:{
+      supports:['S:Book:Thinking Outside the Skull|28 Oct|*','T::Notes are where thinking happens|Yesterday|','S:Image:Whiteboard from Sunday|27 Oct|','S:Article:Gesture and the hidden work of the hands|20 Oct|*+','P::Mara Ellison|14 Oct|*'],
+      contradicts:['S:Article:The illusion of the extended mind|22 Oct|','S:Post:Thread: tools don’t think, people do|30 Oct|'],
+      builds:['T::Whiteboards are for after, not during|21 Oct|','T::Walking as a way of sorting|16 Oct|','S:Podcast:Walking meetings, revisited|Tuesday|*'],
+      related:['S:Article:Why handwriting helps you remember|26 Oct|*','S:Article:Typing is fine: the study that didn’t replicate|1 Nov|','T::Why I left Capacities|12 Oct|!','S:Book:The Shallows|24 Oct|']},
+    tensions:[['Notes are where thinking happens','The illusion of the extended mind'],['Why handwriting helps you remember','Typing is fine: the study that didn’t replicate']],
+    pending:[{o:'S:Podcast:Episode 212: Rooms that think|2 Nov|*', kind:'supports', why:'Both are about how rooms and objects shape what people can think.'}],
+  },
+  large:{
+    title:'Attention', since:'8 Sep', last:'Today', tags:['attention','habits'],
+    view:[
+      'Where I stand for now: my attention isn’t broken, it’s spent. Most days I give the best of it away before ten, to messages, and then wonder why the afternoon feels thin.',
+      'I used to think this was about willpower. The no-meeting day and the phone-free mornings changed my mind: it’s about the shape of the day, not about trying harder. What I protect, I notice.',
+      'I’m not convinced by the strong claims, though. The goldfish statistic is made up, and some of the “switching is always bad” research is weaker than it sounds. Background noise helps me sometimes. Words in music never do.',
+      'Still open: whether my problem is attention at all, or what I choose to attend to.'],
+    versions:[['5 Nov','current'],['1 Nov'],['24 Oct'],['17 Oct'],['11 Oct'],['2 Oct'],['22 Sep'],['14 Sep'],['8 Sep']],
+    questions:[
+      {t:'Is my problem attention, or what I choose to attend to?', open:true, since:'17 Oct', touched:'4 Nov'},
+      {t:'Can a tool protect attention, or only the habits around it?', open:true, since:'2 Oct', touched:'21 Oct'},
+      {t:'Are phone-free mornings worth the hassle?', open:false, date:'4 Nov', by:'What I protect, I notice'},
+      {t:'Does music help me focus?', open:false, date:'20 Sep', by:'Music with words breaks my focus'}],
+    groups:{
+      supports:['S:Book:The Shallows|24 Oct|','S:Article:Deep work is a luxury good|Yesterday|','S:Article:Your phone in another room still costs you|3 Nov|*','S:Article:Attention residue and unfinished tasks|1 Nov|*+','T::My best hours are before ten|30 Oct|','T::Reading on paper holds me longer|28 Oct|','S:Image:Desk with nothing on it|27 Oct|','S:Podcast:The attention economy, explained|25 Oct|*','P::Gloria Mark|22 Oct|*+','S:Article:Multitasking is just fast switching|20 Oct|','T::Walks reset me better than breaks|18 Oct|','S:Video:How monks train attention|15 Oct|','S:Article:Open offices and the cost of interruption|12 Oct|*','S:Post:A month of no-phone mornings|10 Oct|','S:Article:Boredom is where ideas start|8 Oct|','T::Notifications off: week one|6 Oct|!','S:Book:Four Thousand Weeks|3 Oct|','S:Article:Why single-tasking feels slow but isn’t|1 Oct|*','S:Image:Library reading room, Porto|28 Sep|','S:Article:The 90-minute focus cycle|24 Sep|*+','T::Music with words breaks my focus|20 Sep|','S:Podcast:Episode 88: Monotasking|15 Sep|*'],
+      contradicts:['S:Article:Distraction is a myth we tell ourselves|2 Nov|','S:Post:Thread: switching is a skill you can train|29 Oct|','S:Article:Background noise helps some people focus|21 Oct|*','T::Maybe I focus fine and just pick the wrong work|17 Oct|','S:Article:The “goldfish” attention-span figure is made up|9 Oct|','S:Video:In praise of the open office|30 Sep|','S:Article:Short breaks beat long sessions|19 Sep|*+'],
+      builds:['T::Attention is a budget, not a muscle|31 Oct|','T::What I protect, I notice|26 Oct|','T::Focus needs a reason, not a rule|19 Oct|','S:Article:From deep work to deep rest|14 Oct|*','T::A no-meeting day, two months in|11 Oct|','S:Podcast:Walking meetings, revisited|Tuesday|*','T::Why the Garden opens on This week|7 Oct|','S:Article:Designing a calmer phone|4 Oct|','T::My attention follows my energy|29 Sep|','S:Book:Slow Productivity|26 Sep|','T::Morning pages as a warm-up|22 Sep|','S:Article:Attention restoration theory, simply|18 Sep|*'],
+      related:['S:Image:Screenshot of my screen-time report|Today|u','S:Article:Sleep and memory consolidation|30 Oct|*','T::Do I take notes to remember or to think?|28 Oct|','S:Article:Calendar blocking, a year later|21 Oct|','T::Why I left Capacities|12 Oct|!','P::Cal Newport|9 Oct|*','S:Post:Thread on index cards|30 Oct|','S:Article:Habit stacking, explained|2 Oct|','S:Podcast:Rest is a skill|25 Sep|*','S:Article:The case for a dumb phone|21 Sep|','S:Video:A tour of a paper-only workflow|16 Sep|','P::Johann Hari|12 Sep|*+','S:Article:Meetings are a symptom|10 Sep|','S:Image:Whiteboard from Sunday|27 Oct|','S:Article:How children learn to concentrate|8 Sep|*','T::Is busy the same as distracted?|5 Sep|','S:Article:Email batching, tested|3 Sep|','S:Book:Stolen Focus|1 Sep|','S:Article:Quiet hours in shared houses|29 Aug|*']},
+    tensions:[['Deep work is a luxury good','Distraction is a myth we tell ourselves'],['Multitasking is just fast switching','Thread: switching is a skill you can train'],['Open offices and the cost of interruption','In praise of the open office'],['Music with words breaks my focus','Background noise helps some people focus']],
+    pending:[
+      {o:'S:Podcast:Rooms that think|2 Nov|*', kind:'supports', why:'Says quiet, single-purpose rooms help people focus.'},
+      {o:'S:Article:The myth of the focused genius|1 Nov|*', kind:'contradicts', why:'Argues that most good work happens in scattered short bursts.'},
+      {o:'S:Video:Attention, a short history|31 Oct|*', kind:'related', why:'Covers the same research as several Sources here.'}],
+  },
+  fresh:{
+    title:'Memory', since:'today', last:'Today', tags:['memory'], from:'#memory',
+    view:[], versions:[], questions:[],
+    groups:{supports:[],contradicts:[],builds:[],related:['S:Article:Sleep and memory consolidation|30 Oct|*','S:Article:Why we forget names|19 Oct|','S:Article:Why handwriting helps you remember|26 Oct|*']},
+    tensions:[], pending:[],
+  },
+};
+const WEEK = {
+  stories:[
+    {o:'S:Book:Thinking Outside the Skull|Today|*u', n:4, tags:['cognition','embodied-mind'], lead:true},
+    {o:'S:Image:Screenshot of my screen-time report|Today|u', n:1, tags:['attention']},
+    {o:'T::The best ideas this month came on walks|Yesterday|', n:2, tags:['habits']},
+    {o:'S:Article:Deep work is a luxury good|Yesterday|', n:3, tags:['attention']},
+    {o:'S:Podcast:Walking meetings, revisited|Tuesday|*', n:3, tags:['habits']},
+    {o:'S:Article:Typing is fine: the study that didn’t replicate|1 Nov|', n:2, tags:['writing']},
+    {o:'T::Do I take notes to remember or to think?|Sunday|', n:1, tags:['writing']},
+  ],
+  strip:[
+    {o:'S:Article:On keeping a commonplace book|6 Nov 2025|', why:'A year ago today'},
+    {o:'T::What would a slower Garden look like?|2 Sep|', why:'An open question you haven’t touched in 2 months', q:true},
+    {o:'T::Why I left Capacities|12 Oct|!', why:'Just got a new Connection, from “Deep work is a luxury good”'},
+  ],
+};
+const ASKS = ['What here disagrees?','What’s missing or one-sided?','Suggest questions'];
+const ASKBACK = ['Any contradictions it finds come back as Suggestions.','Its answer stays in the Inquiry.','Its questions come back as AI Notes, never as Open Questions.'];
+
+/* ---------------- state ---------------- */
+const NAMES = {A:'A · Your view leads', B:'B · Questions lead', C:'C · Desk'};
+const WNAMES = {A:'Strip A · a row up top', B:'Strip B · in the margin', C:'Strip C · at the end'};
+const ORDER = ['A','B','C'], GARDENS = ['typical','large','fresh','week'];
+const fresh = () => ({
+  data: Object.fromEntries(Object.entries(RAW).map(([k,d]) => [k, {...d,
+    view:[...d.view], questions:d.questions.map(q=>({...q})),
+    groups:Object.fromEntries(Object.entries(d.groups).map(([g,l]) => [g, l.map(O)])),
+    pending:d.pending.map(p => ({...p, o:O(p.o)}))}])),
+  dismissed:new Set(), hidden:false, asked:{}, exp:{}, tab:'supports', tf:'all'});
+const state = {v:'A', g:'typical', ...fresh()};
+function readHash(){
+  const m = /^#?([ABC])-(typical|large|fresh|week)$/.exec(location.hash||'');
+  if (m){ state.v=m[1]; state.g=m[2]; return; }
+  try{ const s = JSON.parse(localStorage.getItem('distill-desk-proto')||'{}'); if (ORDER.includes(s.v)) state.v=s.v; if (GARDENS.includes(s.g)) state.g=s.g; }catch(e){}
+}
+const save = () => { try{ localStorage.setItem('distill-desk-proto', JSON.stringify({v:state.v,g:state.g})); history.replaceState(null,'','#'+state.v+'-'+state.g); }catch(e){} };
+const D = () => state.data[state.g];
+const all = d => KINDS.flatMap(([k]) => d.groups[k].map(o => ({...o, kind:k})));
+const find = (d,plain) => all(d).find(o => o.plain===plain);
+const privCount = d => all(d).filter(o => o.priv).length;
+
+/* ---------------- shared pieces ---------------- */
+let P = [];
+const pk = obj => `data-peek="${P.push(obj)-1}"`;
+function mast(on){
+  const nav = [['This week'],['Sources','Source'],['Concepts','Concept'],['Thoughts','Thought'],['People','Person']]
+    .map(([l,t]) => `<span class="${(on===l)?'on':''}"${t?` style="--c:${TCOL[t]}"`:''}>${t?svg(t):''}${l}</span>`).join('');
+  return `<header class="wrap mast"><div class="wm">Garden</div>
+    <nav aria-label="Garden">${nav}<span>Unreviewed <span class="n">4</span></span><span>More ▾</span></nav>
+    <div class="right"><span class="s">Search ⌘K</span><span>AI · 612 calls left · 0 waiting</span></div></header>`;
+}
+const key = `<div class="key"><span>Plain text is yours</span><span><span class="o-ai">dotted</span> written by the AI</span><span>✧ an AI Suggestion you approved</span><span><span class="o-src">italic</span> from the Source</span><span>${lock} Private</span></div>`;
+
+function cover(d, extra=''){
+  const a = all(d), n = a.length;
+  const c = {Source:0,Thought:0,Person:0}; a.forEach(o => c[o.type]++);
+  const mix = n ? `<div class="mix" aria-hidden="true">${['Source','Thought','Person'].map(t => c[t]?`<i style="--c:${TCOL[t]};width:${c[t]/n*100}%"></i>`:'').join('')}</div>` : '';
+  return `<div class="who"><div class="kicker"><span class="big">${svg('Concept')}</span>Concept</div>
+    <h1>${d.title}</h1>
+    <div class="standfirst"><span><b class="num">${n}</b> Objects connected</span>${['Source','Thought','Person'].filter(t=>c[t]).map(t=>`<span>${c[t]} ${c[t]===1?t:PL[t]}</span>`).join('')}<span>Concept since ${d.since}${d.from?` · made from ${d.from}`:''}</span></div>
+    ${mix}<div class="tags">${d.tags.map(tag).join('')}</div>${extra}</div>`;
+}
+
+function row(o){
+  return `<button class="row" ${pk({k:'obj',o})}>${ico(o.type)}<span class="t"><span>${title(o)}</span>${o.priv?lock:''}${o.appr?'<span class="appr" title="An AI Suggestion you approved">✧</span>':''}</span><span class="meta">${meta(o)}</span></button>`;
+}
+function viewBlock(d, h='Your view'){
+  const empty = !d.view.length;
+  const vers = d.versions.length;
+  return `<section class="view">${h?`<h2>${h} <small>${empty?'in your words, whenever you’re ready':'in your words · last changed '+d.versions[0][0]}</small></h2>`:''}
+    <div class="ed" contenteditable="true" spellcheck="false" id="ed-${state.g}" data-ph="Where do you stand on this, for now?">${d.view.map(p=>`<p>${p}</p>`).join('')}</div>
+    <div class="vfoot">${vers?`<button class="link" data-act="versions">Your view over time · ${vers} versions</button><span>One version is kept each day you change it.</span>`:'<span>Leaving it empty is fine. When you write, one version is kept each day you change it.</span>'}</div></section>`;
+}
+function qItem(q){
+  const byO = q.by && find(D(), q.by);
+  return `<div class="q${q.open?'':' settled'}">${q.open?'<span class="qs open">Open</span>':'<span class="qs set">Settled for now</span>'}
+    <button class="qt" style="text-align:left" ${pk({k:'q',q})}>${q.t}</button>
+    <div class="qm">${q.open?`<span>Open since ${q.since}</span><span>last followed up ${q.touched}</span>`:`<span>${q.date}</span>${byO?`<span>by <button class="link" ${pk({k:'obj',o:byO})}>${q.by}</button></span>`:''}`}</div></div>`;
+}
+const qEmpty = '<p class="empty">No open questions here yet. Any Thought connected to this Concept can become one: open it and switch on “This is an open question”.</p>';
+function questions(d){ return d.questions.length ? d.questions.map(qItem).join('') : qEmpty; }
+function pairs(d){
+  if (!d.tensions.length) return '<p class="empty">No tensions yet. When two things in this Concept contradict each other, the pair shows up here.</p>';
+  return d.tensions.map(([a,b],i) => { const A=find(d,a), B=find(d,b);
+    return `<div class="pair"><button class="pa" ${pk({k:'obj',o:A})}>${ico(A.type)}<span class="t">${title(A)}</span></button><span class="vs">contradicts</span><button class="pa" ${pk({k:'obj',o:B})}>${ico(B.type)}<span class="t">${title(B)}</span></button><button class="btn" data-act="write" data-i="${i}">Write a Thought about these</button></div>`; }).join('');
+}
+function askBlock(d, withHead=true){
+  const pc = privCount(d), n = all(d).length;
+  return `<div class="ask">${withHead?'<h2 class="bh">Ask about this Concept</h2>':''}
+    <div class="btns">${ASKS.map((q,i) => state.asked[state.g+i] ? `<button class="btn" disabled>✓ ${q} · in Inquiries</button>` : `<button class="btn" data-act="ask" data-i="${i}">${q}</button>`).join('')}</div>
+    <p class="note">Each starts an Inquiry about the ${n} Objects here. The answers never replace your view.</p>
+    ${pc?`<div class="privline">${lock}<span>${pc} Private Object${pc>1?'s':''} here won’t be sent to the AI.</span></div>`:''}</div>`;
+}
+const sugLine = d => d.pending.length ? `<button class="sugline" data-act="suggested">✦ ${d.pending.length} suggested</button>` : '';
+function groupList(d, k, limit){
+  let list = d.groups[k];
+  if (state.tf!=='all') list = list.filter(o => o.type===state.tf);
+  const id = state.g+'-'+k, open = state.exp[id], shown = open ? list : list.slice(0, limit);
+  if (!list.length) return `<p class="sub" style="padding:2px 8px 8px">${d.groups[k].length?'None of this type.':'Nothing yet.'}</p>`;
+  return shown.map(row).join('') + (list.length>limit ? `<button class="more" data-act="exp" data-k="${k}">${open?'Show fewer':`Show all ${list.length}`}</button>` : '');
+}
+const typeMix = l => { const c={}; l.forEach(o=>c[o.type]=(c[o.type]||0)+1); return Object.entries(c).map(([t,n])=>`<span>${n} ${n===1?t:PL[t]}</span>`).join(''); };
+
+/* =================== A — Your view leads =================== */
+function A(){
+  const d = D(), big = all(d).length > 20;
+  const qband = d.questions.length
+    ? d.questions.map(q => `<button class="qpill${q.open?'':' settled'}" ${pk({k:'q',q})}>${q.open?'<span class="qs open">Open</span>':`<span class="qs set">Settled · ${q.date}</span>`}<span>${q.t}</span></button>`).join('')
+    : `<span class="sub">No open questions yet. Mark a Thought here as an open question and it shows up in this row.</span>`;
+  return `<main class="A">
+    <section class="wrap"><div class="cover"><div class="in">${cover(d)}</div></div>
+      <div class="qband"><span class="lab">Open questions</span>${qband}</div></section>
+    <section class="wrap art">${viewBlock(d)}
+      <aside class="margin"><div class="card"><h2>Tensions <small>${d.tensions.length||''}</small></h2><div class="pairs">${pairs(d)}</div></div>
+        <div class="card">${askBlock(d)}</div></aside></section>
+    <section class="wrap inside"><div class="hd"><div><h2>What’s in this Concept</h2><p class="sub">Everything connected straight to it, grouped by how it’s connected.</p></div>${sugLine(d)}</div>
+      <div class="cols">${KINDS.map(([k,l]) => `<div class="grp"><h3>${l} <small class="num">${d.groups[k].length}</small></h3>${big&&d.groups[k].length?`<div class="gmix">${typeMix(d.groups[k])}</div>`:''}${groupList(d,k,big?5:99)}</div>`).join('')}</div>
+      ${key}</section></main>`;
+}
+
+/* =================== B — Questions lead =================== */
+function B(){
+  const d = D(), big = all(d).length > 20;
+  const cq = `<div class="cq"><div class="kick">Open questions</div>${questions(d)}</div>`;
+  const list = d.groups[state.tab].filter(o => state.tf==='all' || o.type===state.tf);
+  const lim = big ? 12 : 99, id = state.g+'-'+state.tab, shown = state.exp[id] ? list : list.slice(0,lim);
+  return `<main class="B">
+    <section class="wrap"><div class="cover"><div class="in">${cover(d)}${cq}</div></div></section>
+    <section class="wrap tens"><div class="hd"><div><h2>Tensions</h2><p class="sub">Pairs in this Concept that contradict each other.</p></div></div>
+      ${d.tensions.length ? `<div class="tgrid">${d.tensions.map(([a,b],i) => { const A=find(d,a), B2=find(d,b);
+        return `<div class="tpair"><button class="side" ${pk({k:'obj',o:A})}>${ico(A.type)}<span>${title(A)}</span><span class="meta">${meta(A)}</span></button><span class="x">contradicts</span><button class="side" ${pk({k:'obj',o:B2})}>${ico(B2.type)}<span>${title(B2)}</span><span class="meta">${meta(B2)}</span></button><button class="btn" data-act="write" data-i="${i}">Write a Thought about these</button></div>`; }).join('')}</div>` : pairs(d)}</section>
+    <section class="wrap mid"><div class="card view">${viewBlock(d)}</div><div class="card">${askBlock(d)}</div></section>
+    <section class="wrap" style="margin-top:18px"><div class="card"><h2>What’s in this Concept <small>${all(d).length} Objects, connected straight to it</small></h2>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><div class="tabs" role="tablist">${KINDS.map(([k,l]) => `<button data-act="tab" data-k="${k}" aria-pressed="${state.tab===k}">${l} <span class="num">${d.groups[k].length}</span></button>`).join('')}</div>${sugLine(d)}</div>
+      ${list.length ? `<div class="cardgrid">${shown.map(o => `<button class="oc" ${pk({k:'obj',o})}>${chip(o.type,o.sub)}<h4>${title(o)}</h4><span class="meta">${o.when}${o.priv?lock:''}${o.appr?'<span class="appr">✧ approved</span>':''}${o.unrev?'<span>Unreviewed</span>':''}</span></button>`).join('')}</div>${list.length>lim?`<div style="margin-top:10px"><button class="btn" data-act="exp" data-k="${state.tab}">${state.exp[id]?'Show fewer':`Show all ${list.length}`}</button></div>`:''}`
+        : `<p class="empty">Nothing ${KLABEL[state.tab].toLowerCase()} this Concept yet.</p>`}
+      ${key}</div></section></main>`;
+}
+
+/* =================== C — Desk =================== */
+function C(){
+  const d = D(), big = all(d).length > 20;
+  const filt = `<div class="filt">${[['all','All'],['Source','Sources'],['Thought','Thoughts'],['Person','People']].map(([v,l]) => `<button data-act="tf" data-v="${v}" aria-pressed="${state.tf===v}">${l}</button>`).join('')}</div>`;
+  return `<main class="C">
+    <section class="wrap"><div class="cover"><div class="in">${cover(d)}<div style="display:flex;gap:8px;flex-wrap:wrap">${sugLine(d)}</div></div></div></section>
+    <section class="wrap desk">
+      <div class="stack left"><div class="card"><h2>Open questions</h2><div style="margin-top:6px">${questions(d)}</div></div>
+        <div class="card"><h2>Tensions <small>${d.tensions.length||''}</small></h2><div class="pairs">${pairs(d)}</div></div></div>
+      <div class="sheet view"><div class="kick" style="margin-bottom:10px">Your view</div>${viewBlock(d,'')}</div>
+      <div class="stack"><div class="card">${askBlock(d)}
+        <h2 style="margin-top:6px">In this Concept <small>${all(d).length}</small></h2>${big?filt:''}
+        ${KINDS.map(([k,l]) => `<details class="grp" ${d.groups[k].length?'open':''}><summary>${l}<small class="num">${d.groups[k].length}</small></summary>${groupList(d,k,big?6:99)}</details>`).join('')}
+      </div></div>
+    </section><div class="wrap">${key}</div></main>`;
+}
+
+/* =================== This week + From your Garden =================== */
+function strip(where){
+  const items = WEEK.strip.map((s,i) => ({...s, i, o:O(s.o)})).filter(s => !state.dismissed.has(s.i));
+  if (state.hidden) return `<div class="fyg ${where}"><div class="fh"><span class="sub">From your Garden is hidden for today.</span><button class="hide" data-act="unhide">Show it again</button></div></div>`;
+  const it = s => `<div class="it">${where==='side'?'':chip(s.o.type,s.o.sub)}<span class="why">${s.why}</span>
+      <h4><button style="text-align:left" ${pk({k:'obj',o:s.o})}>${where==='side'?ico(s.o.type)+' ':''}${title(s.o)}</button> ${s.o.priv?lock:''}</h4>
+      ${where==='end'?`<span class="sub" style="font-size:12.5px">${meta(s.o)}</span>`:''}
+      <button class="x" data-act="dismiss" data-i="${s.i}" aria-label="Not today">×</button></div>`;
+  const body = items.length ? `<div class="items">${items.map(it).join('')}</div>` : `<p class="done" style="margin:8px 0 0">That’s all for today. Tomorrow brings different ones.</p>`;
+  return `<section class="fyg ${where}"><div class="fh"><h2>From your Garden</h2><button class="hide" data-act="hide">Hide for today</button></div>
+    ${where==='end'?'<p class="lede">A few older things that came up again. Nothing to do with them unless you want to.</p>':''}${body}</section>`;
+}
+function week(){
+  const st = WEEK.stories.map(s => ({...s, o:O(s.o)}));
+  const story = s => `<button class="story${s.lead?' lead':''}" style="--c:${TCOL[s.o.type]}" ${pk({k:'obj',o:s.o})}>${chip(s.o.type,s.o.sub)}<h4>${title(s.o)}</h4>
+    <span class="m"><span>${s.o.when}</span><span>${s.n} Connection${s.n>1?'s':''}</span>${s.o.unrev?'<span>Unreviewed</span>':''}</span><div class="tags">${s.tags.map(tag).join('')}</div></button>`;
+  const vol = `<div class="vol"><h1>This week in <em>your Garden</em></h1><span>No. 45 · 6 November 2026 · ${st.length} new Objects</span></div>`;
+  const stories = `<div class="stories">${st.map(story).join('')}</div>`;
+  let main;
+  if (state.v==='A') main = `${vol}${strip('top')}<div class="daygrp">New this week</div>${stories}`;
+  else if (state.v==='B') main = `${vol}<div class="two"><div>${stories}</div>${strip('side')}</div>`;
+  else main = `${vol}${stories}${strip('end')}`;
+  return `<main class="wrap wk">${main}${key}</main>`;
+}
+
+/* ---------------- peek window ---------------- */
+const peek = document.getElementById('peek');
+const BLURB = {Source:'Captured from outside the Garden. In the real app the full text, its Connections and From the Archivist sit here.', Thought:'Your own words. In the real app the whole Thought and its Connections sit here.', Person:'Someone who matters to your Garden, with the Sources and Thoughts connected to them.'};
+let peekCtx = null;
+function openPeek(html, ctx){ peekCtx = ctx||null; peek.innerHTML = `<div class="pk" role="dialog" aria-modal="true">${html}</div>`; peek.hidden = false; const f = peek.querySelector('input,[contenteditable],button'); f && f.focus(); }
+function closePeek(){ peek.hidden = true; peek.innerHTML = ''; peekCtx = null; }
+const pkTop = (l) => `<div class="pk-top"><span>${l}</span><span style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn" data-pact="beside">Open beside</button><button class="btn" data-pact="full">Open full page</button><button class="btn" data-pact="close">Close</button></span></div>`;
+function peekObj(o){
+  const kind = o.kind ? `<p class="mute" style="font-size:13.5px">Connected to this Concept as <b style="color:var(--ink);font-weight:500">${KLABEL[o.kind].toLowerCase()}</b>${o.appr?' · ✧ you approved this AI Suggestion':' · you made this Connection'}</p>` : '';
+  openPeek(`${pkTop(chip(o.type,o.sub))}<h2>${title(o)}</h2><p class="mute" style="font-size:13.5px">${meta(o)}${o.priv?' · Private: the AI never reads it':''}</p>${kind}
+    <p>${o.type==='Source'?`<span class="o-src">${BLURB.Source}</span>`:BLURB[o.type]}</p>`);
+}
+function peekQ(q){
+  const byO = q.by && find(D(), q.by);
+  openPeek(`${pkTop(chip('Thought'))}<h2>${q.t}</h2><div class="switch"><i></i>This is an open question</div>
+    <p class="mute">${q.open?`Open since ${q.since}. Last followed up ${q.touched}. Later Thoughts connect to it as “builds on”.`:`Settled for now on ${q.date}${byO?`, by “${q.by}”`:''}. It stays visible here with its date.`}</p>
+    <div class="acts">${q.open?'<button class="btn dark" data-pact="settle">Settle for now</button>':'<button class="btn" data-pact="reopen">Reopen</button>'}</div>`, {q});
+}
+function peekVersions(){
+  const d = D();
+  openPeek(`<div class="pk-top"><span>${chip('Concept')}</span><button class="btn" data-pact="close">Close</button></div><h2>Your view over time</h2>
+    <p class="mute">${d.title}: one version a day, kept when you leave the page after changing it.</p>
+    ${d.versions.map(([dt,cur],i) => `<button class="ver" data-pact="ver" data-i="${i}"><span>${dt}</span><span class="mute">${cur?'Current view':'Read this version'}</span></button>`).join('')}<div id="oldv"></div>`);
+}
+function oldView(i){
+  const d = D(); const v = d.versions[i];
+  const txt = i===0 ? d.view : i===d.versions.length-1 ? [d.view[0].split('. ')[0]+'.'] : d.view.slice(0, Math.max(1, d.view.length-i));
+  document.getElementById('oldv').innerHTML = `<div class="oldview"><div class="kick" style="margin-bottom:6px">${v[0]}</div>${txt.map(p=>`<p>${p}</p>`).join('')}</div>`;
+}
+function peekSuggested(){
+  const d = D();
+  openPeek(`<div class="pk-top"><span>${chip('Concept')}</span><button class="btn" data-pact="close">Close</button></div><h2>✦ ${d.pending.length} suggested for ${d.title}</h2>
+    <p class="mute">Suggested by the Archivist. Nothing is connected until you approve it.</p>
+    ${d.pending.map((p,i) => `<div class="sugg"><span class="k">✦ Connect as <b>${KLABEL[p.kind].toLowerCase()}</b></span><div style="display:flex;gap:8px;align-items:center">${ico(p.o.type)}<b style="font-weight:600">${title(p.o)}</b></div>
+      <span class="o-ai" style="font-size:14px">${p.why}</span><div class="acts" style="margin-top:4px"><button class="btn dark" data-pact="approve" data-i="${i}">Approve</button><button class="btn" data-pact="reject" data-i="${i}">Reject</button></div></div>`).join('')}`);
+}
+function peekWrite(i){
+  const d = D(); const [a,b] = d.tensions[i]; const A=find(d,a), B2=find(d,b);
+  openPeek(`<div class="pk-top"><span>${chip('Thought')} <span class="mute" style="font-size:13px">New</span></span><button class="btn" data-pact="close">Discard</button></div>
+    <div class="newt"><input id="nt-title" placeholder="Untitled Thought" aria-label="Title">
+    <div class="both">${[A,B2].map(o => `<div class="r">${ico(o.type)}<span>${title(o)}</span></div>`).join('')}
+      <label class="r mute" style="font-size:13px">Connected to both as <select id="nt-kind">${['related','supports','contradicts','builds on'].map(k=>`<option>${k}</option>`).join('')}</select></label></div>
+    <div class="ed" contenteditable="true" data-ph="What do you make of these two, in your own words?"></div></div>
+    <div class="acts"><button class="btn dark" data-pact="savethought">Save Thought</button></div>`);
+}
+peek.addEventListener('click', e => {
+  if (e.target===peek) return closePeek();
+  const b = e.target.closest('[data-pact]'); if (!b){ const p = e.target.closest('[data-peek]'); if (p){ const x = P[+p.dataset.peek]; x.k==='q'?peekQ(x.q):peekObj(x.o); } return; }
+  const a = b.dataset.pact, d = D();
+  if (a==='close') closePeek();
+  if (a==='full'){ closePeek(); toast('In the real app this opens the Object’s full page.'); }
+  if (a==='beside'){ closePeek(); toast('Opens in the second pane beside this Concept (⌥-click does the same). With two Objects side by side, “Write a Thought about these” appears there too.'); }
+  if (a==='ver') oldView(+b.dataset.i);
+  if (a==='settle'||a==='reopen'){ const q = peekCtx.q; q.open = a==='reopen'; if (!q.open){ q.date='6 Nov'; } else { q.since=q.since||'6 Nov'; q.touched='6 Nov'; } render(); peekQ(q); }
+  if (a==='approve'){ const p = d.pending.splice(+b.dataset.i,1)[0]; p.o.appr = true; d.groups[p.kind].unshift(p.o); render(); d.pending.length?peekSuggested():closePeek(); toast(`Approved. It’s now under ${KLABEL[p.kind]}, and keeps its AI origin (✧).`); }
+  if (a==='reject'){ d.pending.splice(+b.dataset.i,1); render(); d.pending.length?peekSuggested():closePeek(); toast('Rejected. The Garden remembers, so it won’t suggest this again.'); }
+  if (a==='savethought'){ const t = document.getElementById('nt-title').value.trim()||'Untitled Thought', k = document.getElementById('nt-kind').value; closePeek(); toast(`Saved “${t}”, connected to both as ${k}.`); }
+});
+document.addEventListener('keydown', e => { if (e.key==='Escape' && !peek.hidden) closePeek(); });
+
+let tt; const toastEl = document.getElementById('toast');
+function toast(msg){ toastEl.textContent = msg; toastEl.hidden = false; clearTimeout(tt); tt = setTimeout(() => toastEl.hidden = true, 5200); }
+
+/* ---------------- render + switcher ---------------- */
+const app = document.getElementById('app');
+function render(){
+  P = [];
+  const onWeek = state.g==='week';
+  app.innerHTML = mast(onWeek?'This week':'Concepts') + (onWeek ? week() : ({A,B,C})[state.v]());
+  document.getElementById('dirname').textContent = onWeek ? WNAMES[state.v] : NAMES[state.v];
+  document.querySelectorAll('#bar [data-g]').forEach(b => b.setAttribute('aria-pressed', b.dataset.g===state.g));
+  save();
+}
+app.addEventListener('input', e => { const ed = e.target.closest('.view .ed'); if (!ed) return;
+  const ps = [...ed.querySelectorAll('p')].map(p => p.innerHTML).filter(t => t.trim());
+  D().view = ps.length ? ps : (ed.textContent.trim() ? [ed.textContent] : []); });
+app.addEventListener('click', e => {
+  const p = e.target.closest('[data-peek]');
+  if (p){ const x = P[+p.dataset.peek]; return x.k==='q' ? peekQ(x.q) : peekObj(x.o); }
+  const b = e.target.closest('[data-act]'); if (!b) return;
+  const a = b.dataset.act, d = D();
+  if (a==='versions') peekVersions();
+  if (a==='suggested') peekSuggested();
+  if (a==='write') peekWrite(+b.dataset.i);
+  if (a==='ask'){ const i = +b.dataset.i; state.asked[state.g+i] = true; render();
+    const pc = privCount(d); toast(`Inquiry started: “${ASKS[i]}” about ${d.title}. ${ASKBACK[i]}${pc?` The Garden didn’t send ${pc} Private Object${pc>1?'s':''}.`:''} Find it under More › Inquiries.`); }
+  if (a==='exp'){ const id = state.g+'-'+b.dataset.k; state.exp[id] = !state.exp[id]; render(); }
+  if (a==='tab'){ state.tab = b.dataset.k; render(); }
+  if (a==='tf'){ state.tf = b.dataset.v; render(); }
+  if (a==='dismiss'){ state.dismissed.add(+b.dataset.i); render(); toast('Gone for today. It won’t come back in this strip.'); }
+  if (a==='hide'){ state.hidden = true; render(); }
+  if (a==='unhide'){ state.hidden = false; render(); }
+});
+const step = n => { state.v = ORDER[(ORDER.indexOf(state.v)+n+3)%3]; render(); };
+document.getElementById('prev').onclick = () => step(-1);
+document.getElementById('next').onclick = () => step(1);
+document.querySelectorAll('#bar [data-g]').forEach(b => b.onclick = () => { state.g = b.dataset.g; render(); });
+document.addEventListener('keydown', e => {
+  if (e.target.closest && e.target.closest('[contenteditable],input,select') || !peek.hidden) return;
+  if (e.key==='ArrowLeft') step(-1); if (e.key==='ArrowRight') step(1);
+  if (['1','2','3'].includes(e.key)){ state.v = ORDER[+e.key-1]; render(); }
+});
+addEventListener('hashchange', () => { readHash(); render(); });
+readHash(); render();
+</script>
