@@ -35,14 +35,35 @@ async function parse(html: string, url: string): Promise<Reading> {
   };
 }
 
-async function viaFetch(url: string): Promise<Reading | { binary: string }> {
+/**
+ * Share links (Substack's "open.substack.com", for one) answer with a tiny page whose only job is to send the browser
+ * on to the real article, by a meta refresh or a line of script. The real page is where the words are, so we follow it.
+ * Only very small pages are treated this way, so a real article that happens to contain such a line is never mistaken for one.
+ */
+export function clientRedirect(html: string, base: string): string | null {
+  if (html.length > 6000) return null;
+  const decode = (s: string) => s.replace(/&#38;|&amp;/g, "&");
+  const meta = html.match(/<meta[^>]+http-equiv=["']?refresh["']?[^>]*content=["']?\s*\d+\s*;\s*url=([^"'>]+)/i);
+  const script = html.match(/location\.(?:replace\(|href\s*=)\s*["']([^"']+)["']/i);
+  const target = meta?.[1] ?? script?.[1];
+  if (!target) return null;
+  try {
+    const next = new URL(decode(target.trim()), base);
+    return /^https?:$/.test(next.protocol) && next.href !== base ? next.href : null;
+  } catch { return null; }
+}
+
+async function viaFetch(url: string, hops = 0): Promise<Reading | { binary: string }> {
   const res = await fetch(url, { headers: { "user-agent": UA, accept: "text/html,*/*" }, redirect: "follow", signal: AbortSignal.timeout(20_000) });
   if (!res.ok) throw new Error(`The page answered ${res.status}`);
   const type = res.headers.get("content-type") ?? "";
   if (/pdf/i.test(type)) return { binary: "document" };
   if (/^image\//i.test(type)) return { binary: "image" };
   if (!/html|xml/i.test(type)) return { binary: "document" };
-  return parse(await res.text(), res.url || url);
+  const html = await res.text();
+  const next = hops < 3 ? clientRedirect(html, res.url || url) : null;
+  if (next) return viaFetch(next, hops + 1);
+  return parse(html, res.url || url);
 }
 
 async function viaChrome(url: string): Promise<Reading> {
