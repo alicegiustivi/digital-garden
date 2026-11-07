@@ -431,3 +431,86 @@ mark { background: color-mix(in srgb, var(--t-thought) 28%, transparent); color:
 .shelf-item.on { border-color: var(--t-concept); }
 .connect-here { justify-self: start; }
 .several li { display: flex; gap: 6px; flex-wrap: wrap; align-items: baseline; }
+
+/* ---- Build 12: the Concept page as a Distill desk (issue #35) ---- */
+.desk-sum { display: grid; gap: 6px; width: 100%; max-width: 40rem; }
+.desk-sum p { margin: 0; }
+.desk-sum .mixbar { max-width: 22rem; }
+.oq { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.oq .pill.oq-open { background: color-mix(in srgb, var(--c) 14%, var(--card)); }
+.oq a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+
+.desk-wrap { container-type: inline-size; container-name: desk; margin-top: 24px; }
+.desk { --left: 250px; --right: 320px; }
+.desk > * { min-width: 0; }
+.desk { display: grid; grid-template-columns: var(--left) minmax(0, 1fr) var(--right); gap: 18px; align-items: start; }
+.desk-left, .desk-right { display: grid; gap: 14px; align-content: start; }
+.dcard { background: var(--card); border-radius: 22px; padding: 16px 18px; box-shadow: var(--shadow); display: grid; gap: 10px; align-content: start; }
+.dcard h3 { font-size: 1rem; letter-spacing: -.01em; margin: 0; }
+.dhead { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.dcard p { margin: 0; }
+.dqs, .dtens, .dgroup ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.dq { display: grid; gap: 2px; }
+.dq > a { font-weight: 500; overflow-wrap: anywhere; }
+.dq.settled > a { color: var(--mute); }
+.dtens li { display: grid; gap: 8px; justify-items: start; }
+.pair { display: grid; gap: 2px; }
+.pair a { color: var(--c); font-weight: 500; overflow-wrap: anywhere; }
+.desk-mid .sheet { background: var(--sheet); border-radius: 28px; box-shadow: var(--shadow), 0 0 0 1px var(--line); padding: 28px 32px; font-size: 17px; line-height: 1.72; min-height: 18rem; }
+.desk-mid .body-editor .ProseMirror { min-height: 14rem; }
+.view-hint { margin: 0; }
+.vfoot { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 10px; }
+.versions { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 14px; }
+.versions li { background: var(--card); border-radius: 18px; padding: 14px 18px; box-shadow: var(--shadow); }
+.versions h4 { margin: 0 0 4px; font-size: .95rem; color: var(--mute); }
+.versions p { margin: 0 0 .6em; }
+.asks { display: grid; gap: 8px; justify-items: start; }
+.asks .pill { opacity: .6; cursor: not-allowed; }
+.dfilter { display: flex; flex-wrap: wrap; gap: 6px; }
+.dgroup { border-top: 1px solid var(--line); padding-top: 8px; }
+.dgroup summary { cursor: pointer; display: flex; gap: 8px; align-items: baseline; font-weight: 600; list-style: none; }
+.dgroup summary::-webkit-details-marker { display: none; }
+.dgroup summary em { font-style: normal; color: var(--mute); font-weight: 400; }
+.dgroup ul { margin-top: 8px; gap: 6px; }
+.dgroup li { display: flex; gap: 6px; align-items: baseline; color: var(--c); }
+.dgroup li > a { min-width: 0; }
+.dgroup li .ic { flex: none; }
+.dgroup li a { color: var(--ink); overflow-wrap: anywhere; }
+.dgroup li a:hover { text-decoration: underline; }
+.dgroup .grow-r { margin-left: auto; white-space: nowrap; padding-left: 6px; }
+.dgroup .pill.toggle { margin-top: 6px; }
+.manage-conns { margin-top: 28px; }
+.manage-conns > summary { cursor: pointer; color: var(--mute); }
+@container desk (max-width: 1050px) {
+  .desk { grid-template-columns: minmax(0, 1fr) var(--right); }
+  .desk-left { grid-column: 1 / -1; grid-template-columns: 1fr 1fr; order: -1; }
+}
+@container desk (max-width: 720px) {
+  .desk { grid-template-columns: minmax(0, 1fr); }
+  .desk-left { grid-template-columns: minmax(0, 1fr); }
+  .desk-mid .sheet { padding: 20px; }
+}
+
+/* This week: the stories, and "From your Garden" in the margin */
+.weekgrid { display: grid; grid-template-columns: minmax(0, 1fr) 270px; gap: 24px; align-items: start; }
+.week-main { min-width: 0; }
+.garden-strip { position: sticky; top: 12px; background: var(--card); border-radius: 22px; padding: 14px 16px; box-shadow: var(--shadow); display: grid; gap: 10px; }
+.garden-strip p { margin: 0; }
+.gs-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.gs-head h3 { margin: 0; font-size: 1rem; }
+.garden-strip ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.garden-strip li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 6px; align-items: start; }
+.garden-strip li > .quiet { grid-column: 1 / -1; }
+.gs-open { display: flex; gap: 6px; align-items: baseline; text-align: left; color: var(--c); font: inherit; font-weight: 500; }
+.gs-open span { color: var(--ink); overflow-wrap: anywhere; }
+.gs-open:hover span { text-decoration: underline; }
+@media (max-width: 900px) { .weekgrid { grid-template-columns: minmax(0, 1fr); } .garden-strip { position: static; } }
+
+/* Questions under More */
+.qlist { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.qrow { display: grid; gap: 2px; background: var(--card); border-radius: 18px; padding: 12px 16px; box-shadow: var(--shadow); }
+.qrow > a { font-weight: 500; overflow-wrap: anywhere; }
+.qrow .quiet a { text-decoration: underline; text-underline-offset: 3px; }
+.desk-mid .body-editor .ProseMirror > p:first-child:not(.is-empty)::first-letter { font-weight: inherit; font-size: inherit; padding: 0; float: none; line-height: inherit; color: inherit; }
+.gs-head { flex-wrap: wrap; }
+.gs-head h3 { white-space: nowrap; }

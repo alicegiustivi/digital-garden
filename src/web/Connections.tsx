@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { api, type Connection, type Found, type KindChoice, type MergeAsk, type Obj, type Shares, type Types, displayTitle } from "./api";
 import { Editable } from "./Editable";
+import { ThoughtAbout } from "./Desk";
 import { refresh, useRefresh } from "./refresh";
 import { showToast } from "./toast";
 import { Icon, Marked, TagPill, TypeChip, typeVar } from "./ui";
@@ -264,6 +265,7 @@ export function SidePane({ paneId, mainId, types, onNavigate, onClose, onChanged
                 </button>
               ) : link ? <span className="quiet small">{link.label} · {displayTitle(main).slice(0, 24)}</span> : null
             )}
+            {paneId !== mainId && main && <ThoughtAbout a={mainId} b={paneId} />}
           </div>
           {tab === "object" && <SideObject id={paneId} types={types} onChanged={onChanged} beside={beside} />}
           {tab === "connections" && (

@@ -292,6 +292,8 @@ export function mergeObjects(db: Db, keepId: string, dropId: string, picks: Reco
       db.prepare("INSERT INTO blocks (object_id, position, text, origin, ai_role, ai_model, ai_date) VALUES (?, ?, ?, ?, ?, ?, ?)").run(keepId, ++pos, b.text, b.origin, b.ai_role, b.ai_model, b.ai_date);
     db.prepare("DELETE FROM blocks WHERE object_id = ?").run(dropId);
     db.prepare("UPDATE OR IGNORE source_images SET object_id = ? WHERE object_id = ?").run(keepId, dropId);
+    db.prepare("UPDATE OR IGNORE open_questions SET object_id = ? WHERE object_id = ?").run(keepId, dropId);
+    db.prepare("DELETE FROM open_questions WHERE object_id = ?").run(dropId);
     // Mentions of the merged Object, anywhere, now point at the kept one.
     for (const b of db.prepare("SELECT id, text FROM blocks WHERE instr(text, ?) > 0").all(mentionToken(dropId)) as any[])
       db.prepare("UPDATE blocks SET text = ? WHERE id = ?").run(b.text.split(mentionToken(dropId)).join(mentionToken(keepId)), b.id);

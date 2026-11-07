@@ -1,4 +1,5 @@
 import { CardStatus } from "./Ai";
+import { GardenStrip } from "./Garden";
 import { useEffect, useState } from "react";
 import { api, displayTitle, TAG_COLORS, type Filters, type Summary, type TagRow, type Types } from "./api";
 import { FilterBar, noFilters, useFilterQuery, useSort, type FilterState } from "./Filters";
@@ -85,6 +86,8 @@ export function ThisWeek({ types, version, unreviewed, onNew, onOpen }: { types:
         {unreviewed > 0 && <a className="banner" href="#/unreviewed">{unreviewed} Unreviewed <span aria-hidden="true">→</span></a>}
         <a className="banner" href="#/timeline">Timeline, day by day <span aria-hidden="true">→</span></a>
       </div>
+      <div className="weekgrid">
+      <div className="week-main">
       {rows && lead && (
         <article className="lead" style={typeVar("source")} tabIndex={0} role="button" onClick={() => onOpen(lead.id, ids)} onKeyDown={(e) => e.key === "Enter" && onOpen(lead.id, ids)}>
           <div className="washbox">
@@ -100,6 +103,9 @@ export function ThisWeek({ types, version, unreviewed, onNew, onOpen }: { types:
         </article>
       )}
       <Grid rows={rows ? rest : null} types={types} onOpen={onOpen} empty={lead ? "" : "Nothing new this week yet. Make something with the buttons above."} />
+      </div>
+      <GardenStrip onOpen={onOpen} version={version} />
+      </div>
     </main>
   );
 }

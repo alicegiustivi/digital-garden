@@ -11,6 +11,7 @@ import { search, briefs } from "./search.ts";
 import { timeline } from "./timeline.ts";
 import * as tg from "./tags.ts";
 import * as ov from "./overview.ts";
+import * as dk from "./desk.ts";
 import { createAi, type Ai } from "./ai-queue.ts";
 import * as sg from "./suggestions.ts";
 import { createGate, forgetKey, GateError, looksLikeKey, saveKey } from "./ai-gate.ts";
@@ -78,7 +79,9 @@ export function createApp(sqlite: Database.Database, opts: Options = {}) {
   app.delete("/api/bin/:id", (c) => (bin.purgeObjects(sqlite, [c.req.param("id")]) ? c.json({ purged: 1 }) : c.json({ error: "Not found" }, 404)));
   app.put("/api/objects/:id/body", async (c) => {
     const body = await c.req.json().catch(() => ({}));
-    return found(c, withMentions(o.setBody(sqlite, c.req.param("id"), body.paragraphs)));
+    const saved = o.setBody(sqlite, c.req.param("id"), body.paragraphs);
+    if (saved) dk.saveVersion(sqlite, saved.id); // a Concept's view is kept by day (issue #35)
+    return found(c, withMentions(saved));
   });
 
   // Connections (issue #7)
@@ -136,6 +139,17 @@ export function createApp(sqlite: Database.Database, opts: Options = {}) {
     return r ? c.json(r, 201) : c.json({ error: "Not found" }, 404);
   });
   app.post("/api/concepts/undo", async (c) => c.json(ov.undoTurnIntoConcept(sqlite, await c.req.json().catch(() => ({})), bin.restoreTag)));
+  // The Concept page as a Distill desk, Open Questions and "From your Garden" (issue #35)
+  app.get("/api/concepts/:id/desk", (c) => found(c, dk.deskOf(sqlite, c.req.param("id"))));
+  app.get("/api/objects/:id/question", (c) => c.json(dk.questionOf(sqlite, c.req.param("id"))));
+  app.put("/api/objects/:id/question", async (c) => {
+    const r = dk.setQuestion(sqlite, c.req.param("id"), await c.req.json().catch(() => ({})));
+    return r === undefined ? c.json({ error: "Not found" }, 404) : c.json(r);
+  });
+  app.get("/api/questions", (c) => c.json(dk.allQuestions(sqlite)));
+  app.post("/api/thoughts/about", async (c) => c.json({ id: dk.thoughtAbout(sqlite, await c.req.json().catch(() => ({}))) }, 201));
+  app.get("/api/garden", (c) => c.json(dk.fromYourGarden(sqlite)));
+  app.post("/api/garden/dismiss", async (c) => c.json(dk.dismissFromGarden(sqlite, (await c.req.json().catch(() => ({}))).id)));
   app.post("/api/tags/unmerge", async (c) => c.json(tg.undoMerge(sqlite, await c.req.json().catch(() => ({})))));
   app.patch("/api/tags/:id", async (c) => {
     const body = await c.req.json().catch(() => ({}));

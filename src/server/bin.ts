@@ -41,7 +41,8 @@ export function purgeObjects(db: Db, ids: string[]) {
       if (!db.prepare("SELECT 1 FROM objects WHERE id = ? AND deleted_at IS NOT NULL").get(id)) continue; // only the Bin can be purged
       for (const table of ["connections"]) db.prepare(`DELETE FROM ${table} WHERE from_id = ? OR to_id = ?`).run(id, id);
       db.prepare("DELETE FROM ai_suggestions WHERE json_extract(data, '$.otherId') = ?").run(id);
-      for (const table of ["object_tags", "field_values", "blocks", "source_images", "ai_jobs", "ai_runs", "ai_rejected", "ai_notes", "ai_suggestions"]) db.prepare(`DELETE FROM ${table} WHERE object_id = ?`).run(id);
+      for (const table of ["object_tags", "field_values", "blocks", "source_images", "ai_jobs", "ai_runs", "ai_rejected", "ai_notes", "ai_suggestions", "concept_versions", "open_questions", "garden_dismissed"]) db.prepare(`DELETE FROM ${table} WHERE object_id = ?`).run(id);
+      db.prepare("UPDATE open_questions SET settled_by = NULL WHERE settled_by = ?").run(id);
       db.prepare("DELETE FROM objects WHERE id = ?").run(id);
       gone.push(id);
     }
