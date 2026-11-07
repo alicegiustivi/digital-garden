@@ -51,6 +51,14 @@ export type Brief2 = { id: string; type: string; title: string; private: boolean
 export type TimelineEvent = { kind: "captured" | "written" | "connected"; detail: "started" | "edited" | null; at: string; object: Brief2; other: Brief2 | null; connectionKind: string | null };
 export type RenamedTag = { tags: TagRow[]; was: { name: string; on: unknown[] } };
 export type MergedTag = { tags: TagRow[]; merged: { from: TagRow; into: TagRow; on: unknown[]; added: string[] } };
+export type IslandBrief = { id: string; type: string; title: string; private: boolean };
+export type Island = { id: string; title: string; private: boolean; size: number; mix: Record<string, number>; weeks: number[]; recent: IslandBrief[] };
+export type OverviewData = {
+  islands: Island[]; several: (IslandBrief & { concepts: { id: string; title: string }[] })[];
+  shelf: (IslandBrief & { tags: string[] })[]; shelfTotal: number; dashed: TagRow[];
+};
+export type LightUp = { tags: string[]; islands: { id: string; shared: string[]; connected: boolean }[] };
+export type TurnedIntoConcept = { concept: { id: string; title: string }; connected: number; removed: RemovedTag | null };
 export type TagRow = { id: number; name: string; color: string; count: number };
 
 async function call<T>(method: string, path: string, body?: unknown): Promise<T> {
@@ -129,6 +137,10 @@ export const api = {
     if (!res.ok) throw new Error(j.error ?? res.statusText);
     return { done: true };
   },
+  overview: () => call<OverviewData>("GET", "/api/overview"),
+  lightUp: (id: string) => call<LightUp>("GET", `/api/objects/${id}/light-up`),
+  turnIntoConcept: (tagId: number, removeTag: boolean) => call<TurnedIntoConcept>("POST", `/api/tags/${tagId}/concept`, { removeTag }),
+  undoConcept: (r: TurnedIntoConcept) => call<unknown>("POST", "/api/concepts/undo", { conceptId: r.concept.id, removed: r.removed }),
   tags: () => call<TagRow[]>("GET", "/api/tags"),
   recolour: (id: number, color: string) => call<TagRow[]>("PATCH", `/api/tags/${id}`, { color }),
 };

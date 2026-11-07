@@ -113,7 +113,8 @@ export function TagsPage({ tag, types, version, onOpen, go, onChanged }: { onCha
   const query = useFilterQuery({ ...filters, tag: tag ?? "\u0000none" }, sort);
   const rows = useList(query, version);
   const current = tags?.find((t) => t.name === tag);
-  const [mode, setMode] = useState<"remove" | "rename" | "merge" | null>(null);
+  const [mode, setMode] = useState<"remove" | "rename" | "merge" | "concept" | null>(null);
+  const [keepTag, setKeepTag] = useState(false);
   const [name, setName] = useState("");
   const [into, setInto] = useState("");
   const [problem, setProblem] = useState("");
@@ -127,6 +128,16 @@ export function TagsPage({ tag, types, version, onOpen, go, onChanged }: { onCha
     go("#/tags");
     reload();
     showToast(`Tag #${gone.tag.name} removed from ${gone.objects} ${gone.objects === 1 ? "Object" : "Objects"}.`, async () => { await api.restoreTag(gone); reload(); });
+  };
+  const doConcept = async () => {
+    if (!current) return;
+    try {
+      const r = await api.turnIntoConcept(current.id, !keepTag);
+      setMode(null);
+      go(`#/o/${r.concept.id}`);
+      reload();
+      showToast(`Made the Concept “${r.concept.title}” and connected ${r.connected} ${r.connected === 1 ? "Object" : "Objects"}${r.removed ? `; #${current.name} is removed` : ""}.`, async () => { await api.undoConcept(r); go("#/tags"); reload(); });
+    } catch (e) { setProblem((e as Error).message); }
   };
   const doRename = async () => {
     if (!current) return;
@@ -173,6 +184,7 @@ export function TagsPage({ tag, types, version, onOpen, go, onChanged }: { onCha
           <p className="tag-actions">
             <button className="pill action" onClick={() => { setMode("rename"); setName(current.name); setProblem(""); }}>Rename…</button>
             <button className="pill action" disabled={(tags?.length ?? 0) < 2} onClick={() => { setMode("merge"); setInto(""); setProblem(""); }}>Merge into another…</button>
+            <button className="pill action" onClick={() => { setMode("concept"); setKeepTag(false); setProblem(""); }}>Turn into Concept…</button>
             <button className="pill action" onClick={() => setMode("remove")}>Remove from the whole Garden…</button>
           </p>
           {mode === "rename" && (
@@ -194,6 +206,16 @@ export function TagsPage({ tag, types, version, onOpen, go, onChanged }: { onCha
               and drop #{current.name}.{" "}
               <button className="pill action" disabled={!into} onClick={doMerge}>Merge</button>{" "}
               <button className="pill toggle" onClick={() => setMode(null)}>Cancel</button>
+              {problem && <span role="alert" className="problem"> {problem}</span>}
+            </p>
+          )}
+          {mode === "concept" && (
+            <p className="confirm" role="group" aria-label="Turn into Concept">
+              Make a Concept called “{current.name}” and connect the {current.count} {current.count === 1 ? "Object" : "Objects"} tagged #{current.name} to it.{" "}
+              <label><input type="checkbox" checked={!keepTag} onChange={(e) => setKeepTag(!e.target.checked)} /> Remove the Tag afterwards</label>{" "}
+              <button className="pill action" onClick={doConcept}>Turn into Concept</button>{" "}
+              <button className="pill toggle" onClick={() => setMode(null)}>Cancel</button>
+              <span className="quiet small"> The Concept and its Connections count as yours. You can undo this right after.</span>
               {problem && <span role="alert" className="problem"> {problem}</span>}
             </p>
           )}

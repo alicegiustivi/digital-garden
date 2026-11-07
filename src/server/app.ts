@@ -10,6 +10,7 @@ import * as bin from "./bin.ts";
 import { search, briefs } from "./search.ts";
 import { timeline } from "./timeline.ts";
 import * as tg from "./tags.ts";
+import * as ov from "./overview.ts";
 import { createAi, type Ai } from "./ai-queue.ts";
 import * as sg from "./suggestions.ts";
 import { createGate, forgetKey, GateError, looksLikeKey, saveKey } from "./ai-gate.ts";
@@ -127,6 +128,14 @@ export function createApp(sqlite: Database.Database, opts: Options = {}) {
     const r = tg.mergeTags(sqlite, Number(c.req.param("id")), Number((await c.req.json().catch(() => ({}))).into));
     return r ? c.json(r) : c.json({ error: "Not found" }, 404);
   });
+  // The Overview and Turn into Concept (issue #34)
+  app.get("/api/overview", (c) => c.json(ov.overview(sqlite)));
+  app.get("/api/objects/:id/light-up", (c) => found(c, ov.lightUp(sqlite, c.req.param("id"))));
+  app.post("/api/tags/:id/concept", async (c) => {
+    const r = ov.turnIntoConcept(sqlite, Number(c.req.param("id")), await c.req.json().catch(() => ({})));
+    return r ? c.json(r, 201) : c.json({ error: "Not found" }, 404);
+  });
+  app.post("/api/concepts/undo", async (c) => c.json(ov.undoTurnIntoConcept(sqlite, await c.req.json().catch(() => ({})), bin.restoreTag)));
   app.post("/api/tags/unmerge", async (c) => c.json(tg.undoMerge(sqlite, await c.req.json().catch(() => ({})))));
   app.patch("/api/tags/:id", async (c) => {
     const body = await c.req.json().catch(() => ({}));
