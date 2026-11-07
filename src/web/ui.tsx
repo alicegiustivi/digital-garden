@@ -14,6 +14,7 @@ const ICON: Record<string, string> = {
   left: '<path d="M10 3L5 8l5 5"/>',
   right: '<path d="M6 3l5 5-5 5"/>',
   chevron: '<path d="M4 6l4 4 4-4"/>',
+  dots: '<circle cx="3.5" cy="8" r=".9"/><circle cx="8" cy="8" r=".9"/><circle cx="12.5" cy="8" r=".9"/>',
   expand: '<path d="M9.5 2.5h4v4M6.5 13.5h-4v-4M13.5 2.5L9 7M2.5 13.5L7 9"/>',
   link: '<path d="M7 9a2.5 2.5 0 0 0 3.5 0l2-2a2.5 2.5 0 0 0-3.5-3.5L8.5 4M9 7a2.5 2.5 0 0 0-3.5 0l-2 2A2.5 2.5 0 0 0 7 12.5L7.5 12"/>',
 };

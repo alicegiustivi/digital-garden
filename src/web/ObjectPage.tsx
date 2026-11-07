@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api, fieldOf, type FieldDef, type Obj, type TagRow, type TypeDef, type Types } from "./api";
 import { BodyEditor } from "./BodyEditor";
 import { Editable } from "./Editable";
@@ -9,6 +9,43 @@ import { showToast } from "./toast";
 import { Icon, Marked, TagPill, TypeChip, formatDay, subOf, typeVar } from "./ui";
 
 type Props = { id: string; types: Types; fresh?: boolean; onChanged: () => void; beside: (id: string) => void; onDeleted?: () => void };
+
+// The "⋯" menu at the top right of the cover: things you do TO this Object (not its properties).
+function ActionsMenu({ isPrivate, onMerge, onBeside, onPrivate, onDelete }: { isPrivate: boolean; onMerge: () => void; onBeside: () => void; onPrivate: () => void; onDelete: () => void }) {
+  const [open, setOpen] = useState(false);
+  const box = useRef<HTMLDivElement>(null);
+  const btn = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    box.current?.querySelector<HTMLButtonElement>("[role^=menuitem]")?.focus();
+    const out = (e: MouseEvent) => !box.current?.contains(e.target as Node) && setOpen(false);
+    document.addEventListener("mousedown", out);
+    return () => document.removeEventListener("mousedown", out);
+  }, [open]);
+  const onKey = (e: React.KeyboardEvent) => {
+    const items = [...(box.current?.querySelectorAll<HTMLButtonElement>("[role^=menuitem]") ?? [])];
+    const i = items.indexOf(document.activeElement as HTMLButtonElement);
+    if (e.key === "Escape") { e.stopPropagation(); setOpen(false); btn.current?.focus(); }
+    else if (e.key === "ArrowDown" && items.length) { e.preventDefault(); items[(i + 1) % items.length].focus(); }
+    else if (e.key === "ArrowUp" && items.length) { e.preventDefault(); items[(i - 1 + items.length) % items.length].focus(); }
+    else if (e.key === "Tab" && open) setOpen(false);
+  };
+  const pick = (fn: () => void) => () => { setOpen(false); btn.current?.focus(); fn(); };
+  return (
+    <div className="more actions-more" ref={box} onKeyDown={onKey}>
+      <button ref={btn} className="dots" aria-haspopup="menu" aria-expanded={open} aria-label="Actions for this Object" title="Actions" onClick={() => setOpen(!open)}><Icon name="dots" /></button>
+      {open && (
+        <div className="menu" role="menu">
+          <button role="menuitem" onClick={pick(onMerge)} title="Merge a duplicate of this into one Object"><span className="tick" />Merge…</button>
+          <button role="menuitem" onClick={pick(onBeside)} title="Open a second pane beside this one (⌥-click any Object to put it there)"><span className="tick" />Open beside</button>
+          <button role="menuitemcheckbox" aria-checked={isPrivate} onClick={pick(onPrivate)} title="Private: no AI reads this."><span className="tick">{isPrivate ? "✓" : ""}</span>{isPrivate ? "Private" : "Make Private"}</button>
+          <hr className="menu-sep" />
+          <button role="menuitem" onClick={pick(onDelete)} title="Move to the Bin. You can undo, and restore it for 30 days."><span className="tick" />Delete</button>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function ObjectPage({ id, types, fresh, onChanged, beside, onDeleted }: Props) {
   const tick = useRefresh();
@@ -82,6 +119,14 @@ export function ObjectPage({ id, types, fresh, onChanged, beside, onDeleted }: P
                 {types.types.map((t) => <option key={t.key} value={t.key}>{t.label}</option>)}
               </select>
             </label>
+            {obj.private && <span className="kicker-lock" title="Private: no AI reads this."><Icon name="lock" /><span className="sr">Private</span></span>}
+            <ActionsMenu
+              isPrivate={obj.private}
+              onMerge={() => setMerging(true)}
+              onBeside={() => beside(obj.id)}
+              onPrivate={() => api.patch(obj.id, { private: !obj.private }).then(update)}
+              onDelete={remove}
+            />
           </div>
 
           <h1 className="title">
@@ -103,12 +148,6 @@ export function ObjectPage({ id, types, fresh, onChanged, beside, onDeleted }: P
 
           <div className="byline">
             {pills.map((f) => <FieldPill key={f.key} def={f} obj={obj} onSave={(v) => saveFields({ [f.key]: v })} />)}
-            <button className="pill toggle" onClick={() => setMerging(true)} title="Merge a duplicate of this into one Object">Merge…</button>
-            <button className="pill toggle" onClick={() => beside(obj.id)} title="Open a second pane beside this one (⌥-click any Object to put it there)">Beside</button>
-            <button className="pill toggle" onClick={remove} title="Move to the Bin. You can undo, and restore it for 30 days.">Delete</button>
-            <button className={`pill toggle ${obj.private ? "on" : ""}`} aria-pressed={obj.private} onClick={() => api.patch(obj.id, { private: !obj.private }).then(update)}>
-              <Icon name="lock" /> Private
-            </button>
           </div>
 
           <div className="tags">
