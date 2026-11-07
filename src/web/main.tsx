@@ -32,9 +32,9 @@ const useHash = () => {
 const go = (h: string) => { location.hash = h; };
 
 const NAV = [
+  { label: "Overview", hash: "#/overview", type: null },
   { label: "This week", hash: "#/", type: null },
   { label: "Sources", hash: "#/sources", type: "source" },
-  { label: "Overview", hash: "#/overview", type: null },
   { label: "Concepts", hash: "#/concepts", type: "concept" },
   { label: "Thoughts", hash: "#/thoughts", type: "thought" },
   { label: "People", hash: "#/people", type: "person" },

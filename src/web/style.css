@@ -425,9 +425,9 @@ mark { background: color-mix(in srgb, var(--t-thought) 28%, transparent); color:
 .dots i { width: 8px; height: 8px; border-radius: 50%; background: var(--t-concept); opacity: .15; }
 .dots i.on { opacity: calc(.35 + var(--a) * .2); }
 .island ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; font-size: 13px; }
-.island li { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.island li { overflow-wrap: anywhere; }
 .shelf { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
-.shelf-item { display: inline-flex; gap: 6px; align-items: center; padding: 6px 12px; border-radius: 999px; background: var(--card); box-shadow: var(--shadow); font: inherit; color: var(--ink); border: 2px solid transparent; cursor: pointer; max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.shelf-item { display: inline-flex; gap: 6px; align-items: flex-start; padding: 6px 12px; border-radius: 20px; background: var(--card); box-shadow: var(--shadow); font: inherit; color: var(--ink); border: 2px solid transparent; cursor: pointer; max-width: 100%; text-align: left; overflow-wrap: anywhere; }
 .shelf-item.on { border-color: var(--t-concept); }
 .connect-here { justify-self: start; }
 .several li { display: flex; gap: 6px; flex-wrap: wrap; align-items: baseline; }
