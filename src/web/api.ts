@@ -24,6 +24,13 @@ export type CaptureResult = { created: Obj[]; existing: Obj[]; thoughtId: string
 export type BinRow = Summary & { title: string; deletedAt: string; daysLeft: number };
 export type RemovedConnection = { fromId: string; toId: string; kind: string; note: string | null } & OriginInfo;
 export type RemovedTag = { tag: TagRow; objects: number; on: ({ objectId: string } & OriginInfo)[] };
+export type AiSummary = {
+  keySet: boolean; keyProblem: boolean; left: number; waiting: number;
+  budgets: { archivist: { used: number; limit: number }; researcher: { used: number; limit: number } };
+  reset: { at: string; source: string }; models: string[];
+};
+export type AiRun = { id: number; model: string; at: string; facts: string[]; tags: string[] };
+export type AiStatus = { state: "none" | "private" | "waiting" | "working" | "busy" | "tomorrow" | "failed" | "done"; run: AiRun | null; canRun: boolean; nextTryAt?: string; needsKey?: boolean };
 export type TagRow = { id: number; name: string; color: string; count: number };
 
 async function call<T>(method: string, path: string, body?: unknown): Promise<T> {
@@ -33,6 +40,13 @@ async function call<T>(method: string, path: string, body?: unknown): Promise<T>
 }
 
 export const api = {
+  ai: () => call<AiSummary>("GET", "/api/ai"),
+  saveAiKey: (key: string) => call<AiSummary>("PUT", "/api/ai/key", { key }),
+  forgetAiKey: () => call<AiSummary>("DELETE", "/api/ai/key"),
+  aiFlush: () => call<unknown>("POST", "/api/ai/flush"),
+  aiStatus: (id: string) => call<AiStatus>("GET", `/api/objects/${id}/ai`),
+  aiRun: (id: string) => call<AiStatus>("POST", `/api/objects/${id}/ai/run`),
+  aiUndo: (id: string) => call<Obj>("POST", `/api/objects/${id}/ai/undo`),
   types: () => call<Types>("GET", "/api/types"),
   list: (q: { type?: string; tag?: string; since?: string; unreviewed?: string } = {}) =>
     call<Summary[]>("GET", "/api/objects?" + new URLSearchParams(q as Record<string, string>)),

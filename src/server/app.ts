@@ -7,11 +7,14 @@ import * as k from "./connections.ts";
 import { extractInto } from "./extract.ts";
 import { readImage } from "./images.ts";
 import * as bin from "./bin.ts";
+import { createAi, type Ai } from "./ai-queue.ts";
+import { createGate, forgetKey, GateError, looksLikeKey, saveKey } from "./ai-gate.ts";
 
-type Options = { /** Reads a saved link in the background. Tests replace it. */ readLink?: (id: string, url: string) => void };
+type Options = { /** Reads a saved link in the background. Tests replace it. */ readLink?: (id: string, url: string) => void; /** The AI queue. Tests give it a pretend OpenRouter. */ ai?: Ai };
 
 export function createApp(sqlite: Database.Database, opts: Options = {}) {
   const readLink = opts.readLink ?? ((id: string, url: string) => void extractInto(sqlite, id, url));
+  const ai = opts.ai ?? createAi(sqlite, { gate: createGate() });
   const app = new Hono();
 
   app.onError((err, c) => {
@@ -40,7 +43,10 @@ export function createApp(sqlite: Database.Database, opts: Options = {}) {
         form.getAll("images").filter((f): f is File => typeof f !== "string").map(async (f) => ({ name: f.name || "Pasted image", bytes: Buffer.from(await f.arrayBuffer()) })),
       );
     } else input = await c.req.json().catch(() => ({}));
-    return c.json(await capture(sqlite, input, readLink), 201);
+    const result = await capture(sqlite, input, readLink);
+    // The words are saved. Only now is the Archivist asked to look (in about 2 minutes). Private ones are never queued.
+    ai.enqueueCaptured(result.created.map((x) => x.id));
+    return c.json(result, 201);
   });
   app.get("/api/images/:id/:kind", async (c) => {
     const id = c.req.param("id");
@@ -108,6 +114,26 @@ export function createApp(sqlite: Database.Database, opts: Options = {}) {
     const body = await c.req.json().catch(() => ({}));
     return c.json(o.setTagColor(sqlite, Number(c.req.param("id")), body.color));
   });
+
+  // The AI (issue #31)
+  app.get("/api/ai", (c) => c.json(ai.summary()));
+  app.put("/api/ai/key", async (c) => {
+    const key = (await c.req.json().catch(() => ({}))).key;
+    if (!looksLikeKey(key)) throw new o.BadRequest("That doesn't look like an OpenRouter key. It starts with sk-or-");
+    try { await createGate().account(key.trim()); }
+    catch (e) {
+      if (e instanceof GateError && e.kind === "key") throw new o.BadRequest("OpenRouter did not accept that key. Check you copied all of it.");
+      throw new o.BadRequest("Couldn't reach OpenRouter to check the key. Nothing was saved; try again in a moment.");
+    }
+    saveKey(key);
+    await ai.refreshAccount();
+    return c.json(ai.summary());
+  });
+  app.delete("/api/ai/key", (c) => { forgetKey(); return c.json(ai.summary()); });
+  app.post("/api/ai/flush", (c) => c.json({ released: ai.flushCaptures() }));
+  app.get("/api/objects/:id/ai", (c) => found(c, ai.statusOf(c.req.param("id"))));
+  app.post("/api/objects/:id/ai/run", (c) => (ai.request(c.req.param("id")) ? c.json(ai.statusOf(c.req.param("id"))) : c.json({ error: "The Archivist can't read this one" }, 400)));
+  app.post("/api/objects/:id/ai/undo", (c) => (ai.undo(c.req.param("id")) ? c.json(o.getObject(sqlite, c.req.param("id"))) : c.json({ error: "Nothing to undo" }, 404)));
 
   app.use("/*", serveStatic({ root: "./dist/web" }));
   app.get("*", serveStatic({ path: "./dist/web/index.html" }));
