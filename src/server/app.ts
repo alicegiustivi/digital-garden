@@ -7,6 +7,9 @@ import * as k from "./connections.ts";
 import { extractInto } from "./extract.ts";
 import { readImage } from "./images.ts";
 import * as bin from "./bin.ts";
+import { search, briefs } from "./search.ts";
+import { timeline } from "./timeline.ts";
+import * as tg from "./tags.ts";
 import { createAi, type Ai } from "./ai-queue.ts";
 import * as sg from "./suggestions.ts";
 import { createGate, forgetKey, GateError, looksLikeKey, saveKey } from "./ai-gate.ts";
@@ -30,9 +33,13 @@ export function createApp(sqlite: Database.Database, opts: Options = {}) {
 
   app.get("/api/types", (c) => c.json(o.listTypes(sqlite)));
 
-  app.get("/api/objects", (c) =>
-    c.json(o.listObjects(sqlite, { type: c.req.query("type"), tag: c.req.query("tag"), since: c.req.query("since"), unreviewed: c.req.query("unreviewed") })),
-  );
+  // The filters and sort every list shares (issue #33).
+  const filtersOf = (c: any) => ({ type: c.req.query("type"), tag: c.req.query("tag"), since: c.req.query("since"), until: c.req.query("until"), unreviewed: c.req.query("unreviewed"), noConnections: c.req.query("noConnections"), sort: c.req.query("sort") });
+  app.get("/api/objects", (c) => c.json(o.listObjects(sqlite, filtersOf(c))));
+  // The owner's search over everything they can see, Private included, and the recent items for ⌘K.
+  app.get("/api/find", (c) => c.json(search(sqlite, { ...filtersOf(c), q: c.req.query("q"), limit: Number(c.req.query("limit")) || undefined })));
+  app.get("/api/recent", (c) => c.json(briefs(sqlite, (c.req.query("ids") ?? "").split(",").filter((x) => /^[0-9a-f-]{36}$/.test(x)))));
+  app.get("/api/timeline", (c) => c.json(timeline(sqlite, { before: c.req.query("before"), limit: Number(c.req.query("limit")) || undefined })));
   app.post("/api/objects", async (c) => c.json(o.createObject(sqlite, await c.req.json().catch(() => ({}))), 201));
   // Capture takes JSON (words and links) or a form with the same JSON in "payload" plus picture files in "images".
   app.post("/api/capture", async (c) => {
@@ -111,6 +118,16 @@ export function createApp(sqlite: Database.Database, opts: Options = {}) {
   app.delete("/api/tags/:id", (c) => found(c, bin.deleteTag(sqlite, Number(c.req.param("id")))));
   app.post("/api/tags/restore", async (c) => c.json(bin.restoreTag(sqlite, await c.req.json().catch(() => ({}))), 201));
   app.get("/api/tags", (c) => c.json(o.listTags(sqlite)));
+  app.post("/api/tags/:id/rename", async (c) => {
+    const r = tg.renameTag(sqlite, Number(c.req.param("id")), (await c.req.json().catch(() => ({}))).name);
+    return r ? c.json(r) : c.json({ error: "Not found" }, 404);
+  });
+  app.post("/api/tags/:id/rename/undo", async (c) => c.json(tg.undoRename(sqlite, Number(c.req.param("id")), await c.req.json().catch(() => ({})))));
+  app.post("/api/tags/:id/merge", async (c) => {
+    const r = tg.mergeTags(sqlite, Number(c.req.param("id")), Number((await c.req.json().catch(() => ({}))).into));
+    return r ? c.json(r) : c.json({ error: "Not found" }, 404);
+  });
+  app.post("/api/tags/unmerge", async (c) => c.json(tg.undoMerge(sqlite, await c.req.json().catch(() => ({})))));
   app.patch("/api/tags/:id", async (c) => {
     const body = await c.req.json().catch(() => ({}));
     return c.json(o.setTagColor(sqlite, Number(c.req.param("id")), body.color));

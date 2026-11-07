@@ -359,6 +359,48 @@ select.edit { font-size: 13.5px; }
 .ai-note .text { margin: 0 0 6px; }
 .ai-note .acts { display: inline-flex; gap: 10px; font-size: 13px; }
 
+/* Search, filters, Timeline, Tags (issue #33) */
+.filters { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin: 0 0 20px; font-size: 13.5px; }
+.filters label { display: inline-flex; align-items: center; gap: 6px; color: var(--mute); }
+.filters select { font: inherit; color: var(--ink); background: var(--card); border: 0; border-radius: 999px; padding: 4px 10px; box-shadow: var(--shadow); }
+.filters .grow { flex: 1; }
+.banners { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 18px; }
+.banners .banner { margin: 0; }
+.mast nav > button.search-btn kbd { font: inherit; font-size: 12px; color: var(--mute); font-weight: 400; }
+mark { background: color-mix(in srgb, var(--t-thought) 28%, transparent); color: inherit; border-radius: 3px; padding: 0 1px; }
+.bigsearch { width: 100%; font: inherit; font-size: 1.25rem; padding: 12px 18px; border-radius: 18px; border: 0; background: var(--card); color: var(--ink); box-shadow: var(--shadow); margin-bottom: 14px; outline-offset: 2px; }
+.results { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; }
+.results > li { display: grid; gap: 4px; background: var(--card); border-radius: 20px; padding: 14px 18px; box-shadow: var(--shadow); cursor: pointer; }
+.results > li:hover { box-shadow: 0 6px 18px rgba(60, 50, 30, .1); }
+.results h4 { font-size: 1.2rem; letter-spacing: -.02em; overflow-wrap: anywhere; }
+.results .match { margin: 0; color: color-mix(in srgb, var(--ink) 80%, var(--ground)); line-height: 1.5; }
+.results .where, .palette .where { font-size: 11.5px; text-transform: uppercase; letter-spacing: .04em; color: var(--mute); }
+.results .m { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; color: var(--mute); font-size: 13px; }
+.lock { display: inline-flex; align-items: center; gap: 4px; color: var(--mute); font-size: 12.5px; }
+.palette { width: min(640px, 100%); background: var(--sheet); border-radius: 22px; box-shadow: var(--shadow-up); overflow: hidden; display: grid; }
+.palette > input { font: inherit; font-size: 1.15rem; padding: 18px 22px; border: 0; border-bottom: 1px solid var(--line); background: transparent; color: var(--ink); outline: none; }
+.palette-list { max-height: 52vh; overflow-y: auto; padding: 6px 8px 10px; }
+.palette-list h5 { font-size: 11.5px; text-transform: uppercase; letter-spacing: .05em; color: var(--mute); margin: 10px 10px 4px; }
+.prow { display: flex; align-items: baseline; gap: 10px; width: 100%; text-align: left; padding: 8px 10px; border-radius: 12px; }
+.prow .ic { color: var(--c); align-self: center; }
+.prow.on { background: var(--wash); }
+.ptitle { font-weight: 500; }
+.psub { color: var(--mute); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0; }
+.pad-s { padding: 10px; }
+.palette-foot { display: flex; gap: 16px; padding: 8px 18px; border-top: 1px solid var(--line); color: var(--mute); font-size: 12px; }
+.palette-foot kbd { font: inherit; border-radius: 5px; background: var(--wash); padding: 0 5px; margin-right: 3px; }
+.timeline .tday { margin: 26px 0; }
+.timeline .tday h3 { font-size: 1.15rem; margin-bottom: 8px; }
+.timeline ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.timeline li { display: grid; grid-template-columns: 5.5em 6.5em minmax(0, 1fr); gap: 8px; align-items: baseline; padding: 6px 12px; border-radius: 12px; background: var(--card); }
+.timeline .when { color: var(--mute); font-size: 12.5px; }
+.timeline .what { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--mute); }
+.timeline .tref { color: var(--c); font-weight: 500; text-decoration: none; overflow-wrap: anywhere; }
+.timeline .tref:hover { text-decoration: underline; }
+.tag-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.confirm select, .confirm input { font: inherit; color: var(--ink); background: var(--card); border: 0; border-radius: 999px; padding: 3px 10px; box-shadow: var(--shadow); }
+.confirm .problem { color: #b3402e; }
+
 /* A Source's captured text: its own section under the page, closed until wanted (so properties and Tags stay near the top) */
 .transcript { margin: 28px 0 8px; padding-top: 14px; border-top: 1px solid var(--faint); font-size: 15px; line-height: 1.65; color: color-mix(in srgb, var(--ink) 78%, var(--ground)); }
 .transcript > summary { cursor: pointer; font-weight: 600; font-size: 13px; letter-spacing: .02em; color: var(--mute); list-style: none; margin-bottom: 10px; }

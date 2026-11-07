@@ -8,6 +8,7 @@ const ICON: Record<string, string> = {
   concept: '<circle cx="3.6" cy="4.4" r="1.4"/><circle cx="12.4" cy="5" r="1.4"/><circle cx="7.6" cy="12.2" r="1.4"/><path d="M5 4.5l6 .4M4.3 5.7l2.6 5.2M11.7 6.3l-3.2 4.8"/>',
   thought: '<path d="M8 2.2c3.3 2.2 4.4 5.4 2.4 8.6C9.3 12.6 8 13.8 8 13.8s-1.3-1.2-2.4-3C3.6 7.6 4.7 4.4 8 2.2z"/><path d="M8 13.8V7"/>',
   person: '<circle cx="8" cy="5.4" r="2.6"/><path d="M3 14c.8-3 2.7-4.6 5-4.6s4.2 1.6 5 4.6"/>',
+  search: '<circle cx="7" cy="7" r="4.2"/><path d="M10.2 10.2L14 14"/>',
   plus: '<path d="M8 3v10M3 8h10"/>',
   lock: '<rect x="3.5" y="7" width="9" height="6.5" rx="1.8"/><path d="M5.5 7V5.5a2.5 2.5 0 0 1 5 0V7"/>',
   close: '<path d="M4 4l8 8M12 4l-8 8"/>',

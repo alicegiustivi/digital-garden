@@ -86,19 +86,37 @@ export function summarise(db: Db, rows: any[]) {
   }));
 }
 
-export function listObjects(db: Db, q: { type?: string; tag?: string; since?: string; unreviewed?: string }) {
+/** The filters every list and the Search page share (issue #33): type, Tag, date, Unreviewed, No Connections yet. */
+export type Filters = { type?: string; tag?: string; since?: string; until?: string; unreviewed?: string; noConnections?: string };
+export const SORTS = ["relevance", "changed", "created", "title"] as const;
+export type Sort = (typeof SORTS)[number];
+const sqlTime = (iso: string) => iso.replace("T", " ").replace(/\.\d+Z$|Z$/, "");
+
+/** SQL for the Objects a set of filters lets through (the table is called `o`). Bin Objects are never let through. */
+export function filterSql(q: Filters) {
   const where = ["o.deleted_at IS NULL"];
   const args: unknown[] = [];
   if (q.type) { where.push("o.type = ?"); args.push(q.type); }
   if (q.tag) { where.push("EXISTS (SELECT 1 FROM object_tags ot JOIN tags t ON t.id = ot.tag_id WHERE ot.object_id = o.id AND t.name = ?)"); args.push(q.tag); }
-  if (q.since) { where.push("coalesce(o.updated_at, o.created_at) >= ?"); args.push(q.since.replace("T", " ").replace(/\.\d+Z$|Z$/, "")); }
-  // Unreviewed is newest captured first; every other list goes by when it last changed.
+  if (q.since) { where.push("coalesce(o.updated_at, o.created_at) >= ?"); args.push(sqlTime(q.since)); }
+  if (q.until) { where.push("coalesce(o.updated_at, o.created_at) < ?"); args.push(sqlTime(q.until)); }
   if (q.unreviewed) where.push("o.unreviewed = 1");
-  const order = q.unreviewed ? "o.created_at DESC, o.rowid DESC" : "coalesce(o.updated_at, o.created_at) DESC, o.rowid DESC";
-  const rows = db
-    .prepare(`SELECT o.* FROM objects o WHERE ${where.join(" AND ")} ORDER BY ${order}`)
-    .all(...args);
-  return summarise(db, rows);
+  // "No Connections yet" counts only Connections to Objects that are still in the Garden (the same count the cards show).
+  if (q.noConnections)
+    where.push(`NOT EXISTS (SELECT 1 FROM connections c JOIN objects x ON x.id = CASE WHEN c.from_id = o.id THEN c.to_id ELSE c.from_id END AND x.deleted_at IS NULL WHERE c.from_id = o.id OR c.to_id = o.id)`);
+  return { where: where.join(" AND "), args };
+}
+
+const nameOf = (s: { fields: { key: string; value: string }[]; firstLine: string }) => (s.fields.find((f) => f.key === "title")?.value || s.firstLine || "Untitled").toLowerCase();
+
+export function listObjects(db: Db, q: Filters & { sort?: string }) {
+  const f = filterSql(q);
+  // Unreviewed is newest captured first; every other list goes by when it last changed, unless the owner picked an order.
+  const created = q.sort === "created" || (q.unreviewed && !q.sort);
+  const order = created ? "o.created_at DESC, o.rowid DESC" : "coalesce(o.updated_at, o.created_at) DESC, o.rowid DESC";
+  const rows = db.prepare(`SELECT o.* FROM objects o WHERE ${f.where} ORDER BY ${order}`).all(...f.args);
+  const out = summarise(db, rows);
+  return q.sort === "title" ? out.sort((a, b) => nameOf(a).localeCompare(nameOf(b))) : out;
 }
 
 export function getObject(db: Db, id: string) {

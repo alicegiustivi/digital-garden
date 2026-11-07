@@ -12,6 +12,9 @@ import { BinPage } from "./Bin";
 import { AiLine, AiPage, aiChanged } from "./Ai";
 import type { Summary } from "./api";
 import { Icon, typeVar } from "./ui";
+import { Palette, SearchPage } from "./Search";
+import { TimelinePage } from "./Timeline";
+import { addRecent } from "./recent";
 import { Capture, captureKey, emptyDraft, isCaptureKey, type CaptureDraft } from "./Capture";
 
 startFollowingMac();
@@ -34,10 +37,11 @@ const NAV = [
   { label: "Thoughts", hash: "#/thoughts", type: "thought" },
   { label: "People", hash: "#/people", type: "person" },
   { label: "Tags", hash: "#/tags", type: null },
+  { label: "Timeline", hash: "#/timeline", type: null },
 ];
 const TYPE_OF_ROUTE: Record<string, string> = { sources: "source", concepts: "concept", thoughts: "thought", people: "person" };
 
-function TopBar({ hash, unreviewed, onCapture }: { hash: string; unreviewed: number; onCapture: () => void }) {
+function TopBar({ hash, unreviewed, onCapture, onSearch }: { hash: string; unreviewed: number; onCapture: () => void; onSearch: () => void }) {
   const [open, setOpen] = useState(false);
   const [appearance, setAppearanceState] = useState<Appearance>(getAppearance());
   const box = useRef<HTMLDivElement>(null);
@@ -49,7 +53,7 @@ function TopBar({ hash, unreviewed, onCapture }: { hash: string; unreviewed: num
     document.addEventListener("keydown", esc);
     return () => { document.removeEventListener("mousedown", out); document.removeEventListener("keydown", esc); };
   }, [open]);
-  const section = "#/" + hash.slice(2).split("/")[0];
+  const section = "#/" + hash.slice(2).split("?")[0].split("/")[0];
   const choose = (a: Appearance) => { setAppearance(a); setAppearanceState(a); };
   return (
     <header className="mast wrap">
@@ -62,6 +66,7 @@ function TopBar({ hash, unreviewed, onCapture }: { hash: string; unreviewed: num
           </a>
         ))}
         <a href="#/unreviewed" className={section === "#/unreviewed" ? "on" : ""}>Unreviewed ({unreviewed})</a>
+        <button className="cap search-btn" onClick={onSearch} title="Search everything"><Icon name="search" /> Search <kbd>⌘K</kbd></button>
         <button className="cap" onClick={onCapture} title="Capture a thought"><Icon name="plus" /> Capture <kbd>{captureKey()}</kbd></button>
         <AiLine />
         <div className="more" ref={box}>
@@ -161,6 +166,7 @@ function App() {
   const [peek, setPeek] = useState<{ id: string; ids: string[]; fromUnreviewed?: boolean } | null>(null);
   const [fresh, setFresh] = useState<string | null>(null);
   const [capture, setCapture] = useState(false);
+  const [searching, setSearching] = useState(false);
   const [draft, setDraft] = useState<CaptureDraft>(emptyDraft);
   const changed = useCallback(() => setVersion((v) => v + 1), []);
   const unreviewed = useList({ unreviewed: "1" }, version);
@@ -169,6 +175,9 @@ function App() {
   useEffect(() => { if (connectionsTick) changed(); }, [connectionsTick, changed]);
   useEffect(() => { api.types().then(setTypes); }, []);
   useEffect(() => setPeek(null), [hash]);
+  // Objects opened lately sit in ⌘K.
+  useEffect(() => { const m = hash.match(/^#\/o\/([0-9a-f-]{36})/); if (m) addRecent(m[1]); }, [hash]);
+  useEffect(() => { if (peek) addRecent(peek.id); }, [peek?.id]);
   // "Save to Garden" bookmark: #/capture?url=… opens the window with that page's link already in it.
   useEffect(() => {
     if (!hash.startsWith("#/capture")) return;
@@ -180,6 +189,17 @@ function App() {
       setCapture(true);
     }
   }, [hash]);
+  // ⌘K searches; ⌘[ and ⌘] go back and forward.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!e.metaKey || e.ctrlKey || e.altKey || e.shiftKey) return;
+      if (e.key === "k") { e.preventDefault(); setPeek(null); setCapture(false); setSearching((s) => !s); }
+      else if (e.key === "[") { e.preventDefault(); history.back(); }
+      else if (e.key === "]") { e.preventDefault(); history.forward(); }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (!isCaptureKey(e)) return;
@@ -212,7 +232,7 @@ function App() {
     go(`#/o/${o.id}`);
   };
 
-  const parts = hash.slice(2).split("/");
+  const parts = hash.slice(2).split("?")[0].split("/");
   let page;
   if (parts[0] === "o" && parts[1]) {
     const mainId = parts[1];
@@ -228,6 +248,10 @@ function App() {
     );
   } else if (TYPE_OF_ROUTE[parts[0]]) {
     page = <TypeList typeKey={TYPE_OF_ROUTE[parts[0]]} types={types} version={version} onNew={make} onOpen={open} />;
+  } else if (parts[0] === "search") {
+    page = <SearchPage key={hash} hash={hash} types={types} version={version} onOpen={open} />;
+  } else if (parts[0] === "timeline") {
+    page = <TimelinePage types={types} version={version} onOpen={open} />;
   } else if (parts[0] === "unreviewed") {
     page = <UnreviewedPage rows={unreviewed} types={types} onOpen={open} onReviewed={review} />;
   } else if (parts[0] === "bin") {
@@ -244,7 +268,7 @@ function App() {
 
   return (
     <>
-      <TopBar hash={hash} unreviewed={unreviewed?.length ?? 0} onCapture={() => { setPeek(null); setCapture(true); }} />
+      <TopBar hash={hash} unreviewed={unreviewed?.length ?? 0} onCapture={() => { setPeek(null); setCapture(true); }} onSearch={() => { setPeek(null); setSearching(true); }} />
       {page}
       <Toasts />
       {capture && (
@@ -256,6 +280,7 @@ function App() {
           onOpen={(id) => { setCapture(false); api.aiFlush().catch(() => {}); setDraft((d) => ({ ...d, saved: null })); open(id, [id]); }}
         />
       )}
+      {searching && <Palette types={types} onClose={() => setSearching(false)} go={go} />}
       {peek && <Peek id={peek.id} ids={peek.ids} types={types} pending={unreviewed?.find((u) => u.id === peek.id)} onReview={reviewPeeked} onChanged={changed} onMove={(id) => setPeek({ ...peek, id })} onClose={() => setPeek(null)} />}
     </>
   );

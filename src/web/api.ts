@@ -44,6 +44,13 @@ export type AiSummary = {
 };
 export type AiRun = { id: number; model: string; at: string; facts: string[]; tags: string[] };
 export type AiStatus = { pending?: number; state: "none" | "private" | "waiting" | "working" | "busy" | "tomorrow" | "failed" | "done"; run: AiRun | null; canRun: boolean; nextTryAt?: string; needsKey?: boolean };
+export type Filters = { type?: string; tag?: string; since?: string; until?: string; unreviewed?: string; noConnections?: string; sort?: string };
+export type Hit = Summary & { title: string; match: { where: "title" | "tag" | "body" | "field" | "note"; label: string; text: string; origin: OriginInfo } | null };
+export type FindResult = { hits: Hit[]; total: number; terms: string[]; corrected: { from: string; to: string[] }[]; sort: string };
+export type Brief2 = { id: string; type: string; title: string; private: boolean };
+export type TimelineEvent = { kind: "captured" | "written" | "connected"; detail: "started" | "edited" | null; at: string; object: Brief2; other: Brief2 | null; connectionKind: string | null };
+export type RenamedTag = { tags: TagRow[]; was: { name: string; on: unknown[] } };
+export type MergedTag = { tags: TagRow[]; merged: { from: TagRow; into: TagRow; on: unknown[]; added: string[] } };
 export type TagRow = { id: number; name: string; color: string; count: number };
 
 async function call<T>(method: string, path: string, body?: unknown): Promise<T> {
@@ -51,6 +58,9 @@ async function call<T>(method: string, path: string, body?: unknown): Promise<T>
   if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error ?? res.statusText);
   return res.json();
 }
+
+const params = (q: Record<string, unknown>) =>
+  new URLSearchParams(Object.entries(q).filter(([, v]) => v !== undefined && v !== "" && v !== null).map(([k, v]) => [k, String(v)])).toString();
 
 export const api = {
   ai: () => call<AiSummary>("GET", "/api/ai"),
@@ -69,8 +79,14 @@ export const api = {
   restoreAiNote: (n: RemovedNote) => call<unknown>("POST", "/api/ai-notes/restore", n),
   thoughtFromNote: (nid: number) => call<Obj>("POST", `/api/ai-notes/${nid}/thought`),
   types: () => call<Types>("GET", "/api/types"),
-  list: (q: { type?: string; tag?: string; since?: string; unreviewed?: string } = {}) =>
-    call<Summary[]>("GET", "/api/objects?" + new URLSearchParams(q as Record<string, string>)),
+  list: (q: Filters = {}) => call<Summary[]>("GET", "/api/objects?" + params(q)),
+  find: (q: Filters & { q?: string; limit?: number }) => call<FindResult>("GET", "/api/find?" + params(q)),
+  recent: (ids: string[]) => call<Hit[]>("GET", "/api/recent?ids=" + ids.join(",")),
+  timeline: (before?: string) => call<{ events: TimelineEvent[]; next: string | null }>("GET", "/api/timeline?" + params({ before, limit: 120 })),
+  renameTag: (id: number, name: string) => call<RenamedTag>("POST", `/api/tags/${id}/rename`, { name }),
+  undoRename: (id: number, was: RenamedTag["was"]) => call<TagRow[]>("POST", `/api/tags/${id}/rename/undo`, was),
+  mergeTag: (id: number, into: number) => call<MergedTag>("POST", `/api/tags/${id}/merge`, { into }),
+  undoMerge: (m: MergedTag["merged"]) => call<TagRow[]>("POST", "/api/tags/unmerge", m),
   capture: async (c: { text: string; links: string[]; images: File[]; private: boolean }): Promise<CaptureResult> => {
     const payload = JSON.stringify({ text: c.text, links: c.links, private: c.private });
     if (!c.images.length) return call("POST", "/api/capture", JSON.parse(payload));
