@@ -121,7 +121,17 @@ select.edit { font-size: 13.5px; }
 .page { padding-block: 12px 80px; }
 .cover { border-radius: 32px; background: color-mix(in srgb, var(--c) var(--cover-mix), var(--sheet)); }
 .cover .in { padding: 48px 48px 36px; display: grid; gap: 14px; justify-items: start; }
-.kicker { display: flex; align-items: center; gap: 10px; }
+.kicker { display: flex; align-items: center; gap: 10px; width: 100%; }
+.kicker-lock { display: inline-flex; color: var(--mute); }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.actions-more { margin-left: auto; }
+.actions-more .dots { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 999px; color: var(--mute); }
+.actions-more .dots:hover, .actions-more .dots[aria-expanded="true"] { color: var(--ink); background: color-mix(in srgb, var(--card) 70%, transparent); }
+.actions-more .dots .ic { fill: currentColor; stroke: none; width: 18px; height: 18px; }
+.actions-more .menu { min-width: 190px; }
+.menu button[role^="menuitem"] { text-align: left; }
+.menu button:focus-visible { background: var(--wash); }
+.menu-sep { border: 0; border-top: 1px solid var(--line); margin: 6px 4px; }
 .type-switch { position: relative; display: inline-flex; align-items: center; gap: 4px; color: var(--c); cursor: pointer; }
 .type-switch select { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; }
 .title { font-size: clamp(2rem, 5vw, 3.4rem); line-height: 1.06; letter-spacing: -.035em; width: 100%; max-width: 46rem; overflow-wrap: anywhere; }
