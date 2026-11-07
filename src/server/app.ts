@@ -14,6 +14,7 @@ import * as ov from "./overview.ts";
 import * as dk from "./desk.ts";
 import { createAi, type Ai } from "./ai-queue.ts";
 import * as sg from "./suggestions.ts";
+import * as rs from "./researcher.ts";
 import { createGate, forgetKey, GateError, looksLikeKey, saveKey } from "./ai-gate.ts";
 
 type Options = { /** Reads a saved link in the background. Tests replace it. */ readLink?: (id: string, url: string) => void; /** The AI queue. Tests give it a pretend OpenRouter. */ ai?: Ai };
@@ -191,6 +192,40 @@ export function createApp(sqlite: Database.Database, opts: Options = {}) {
   app.delete("/api/ai-notes/:id", (c) => { const n = sg.deleteNote(sqlite, Number(c.req.param("id"))); return n ? c.json({ removed: true, was: n }) : c.json({ error: "Not found" }, 404); });
   app.post("/api/ai-notes/restore", async (c) => c.json(sg.restoreNote(sqlite, await c.req.json().catch(() => ({}))), 201));
   app.post("/api/ai-notes/:id/thought", (c) => { const id = sg.startThoughtFromNote(sqlite, Number(c.req.param("id"))); return id ? c.json(withMentions(o.getObject(sqlite, id)), 201) : c.json({ error: "Not found" }, 404); });
+
+  // The Researcher and Inquiries (issue #36). A question is saved first; only then is it queued.
+  const hasKey = () => ai.summary().keySet;
+  const threadOf = (id: string) => rs.inquiryOf(sqlite, id, hasKey());
+  app.get("/api/inquiries", (c) => c.json(rs.listInquiries(sqlite)));
+  app.get("/api/objects/:id/inquiries", (c) => c.json(rs.listInquiries(sqlite, c.req.param("id"))));
+  app.post("/api/inquiries", async (c) => {
+    const { id, turnId } = rs.createInquiry(sqlite, await c.req.json().catch(() => ({})));
+    ai.askResearcher(turnId);
+    return c.json(threadOf(id), 201);
+  });
+  app.get("/api/inquiries/:id", (c) => found(c, threadOf(c.req.param("id"))));
+  app.post("/api/inquiries/:id/turns", async (c) => {
+    const turnId = rs.addTurn(sqlite, c.req.param("id"), (await c.req.json().catch(() => ({}))).question);
+    if (!turnId) return c.json({ error: "Not found" }, 404);
+    ai.askResearcher(turnId);
+    return c.json(threadOf(c.req.param("id")), 201);
+  });
+  app.delete("/api/inquiries/:id", (c) => (rs.deleteInquiry(sqlite, c.req.param("id")) ? c.json({ deleted: true }) : c.json({ error: "Not found" }, 404)));
+  app.post("/api/inquiries/:id/restore", (c) => (rs.restoreInquiry(sqlite, c.req.param("id")) ? c.json({ restored: true }) : c.json({ error: "Not found" }, 404)));
+  app.get("/api/bin/inquiries", (c) => c.json(rs.listBinInquiries(sqlite)));
+  app.delete("/api/bin/inquiries/:id", (c) => (rs.purgeInquiries(sqlite, [c.req.param("id")]) ? c.json({ purged: 1 }) : c.json({ error: "Not found" }, 404)));
+  app.post("/api/turns/:id/cancel", (c) => c.json({ cancelled: ai.cancelQuestion(Number(c.req.param("id"))) }));
+  app.post("/api/turns/:id/retry", (c) => {
+    const id = Number(c.req.param("id"));
+    if (!rs.resetTurn(sqlite, id)) return c.json({ error: "Not found" }, 404);
+    ai.askResearcher(id);
+    return c.json({ asked: true });
+  });
+  app.post("/api/turns/:id/keep", async (c) => {
+    const kept = rs.keepAnswer(sqlite, Number(c.req.param("id")), (await c.req.json().catch(() => ({}))).objectIds);
+    return kept ? c.json({ kept }) : c.json({ error: "Not found" }, 404);
+  });
+  app.post("/api/turns/:id/thought", (c) => { const id = rs.thoughtFromTurn(sqlite, Number(c.req.param("id"))); return id ? c.json({ id }, 201) : c.json({ error: "Not found" }, 404); });
 
   app.use("/*", serveStatic({ root: "./dist/web" }));
   app.get("*", serveStatic({ path: "./dist/web/index.html" }));

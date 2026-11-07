@@ -16,6 +16,7 @@ import { Palette, SearchPage } from "./Search";
 import { TimelinePage } from "./Timeline";
 import { OverviewPage } from "./Overview";
 import { QuestionsPageView } from "./Garden";
+import { InquiriesPage, InquiryPage } from "./Inquiries";
 import { wasMadeHere } from "./fresh";
 import { addRecent } from "./recent";
 import { Capture, captureKey, emptyDraft, isCaptureKey, type CaptureDraft } from "./Capture";
@@ -42,6 +43,7 @@ const NAV = [
   { label: "People", hash: "#/people", type: "person" },
   { label: "Tags", hash: "#/tags", type: null },
   { label: "Timeline", hash: "#/timeline", type: null },
+  { label: "Inquiries", hash: "#/inquiries", type: null },
 ];
 const TYPE_OF_ROUTE: Record<string, string> = { sources: "source", concepts: "concept", thoughts: "thought", people: "person" };
 
@@ -57,7 +59,8 @@ function TopBar({ hash, unreviewed, onCapture, onSearch }: { hash: string; unrev
     document.addEventListener("keydown", esc);
     return () => { document.removeEventListener("mousedown", out); document.removeEventListener("keydown", esc); };
   }, [open]);
-  const section = "#/" + hash.slice(2).split("?")[0].split("/")[0];
+  const section0 = "#/" + hash.slice(2).split("?")[0].split("/")[0];
+  const section = section0 === "#/inquiry" ? "#/inquiries" : section0;
   const choose = (a: Appearance) => { setAppearance(a); setAppearanceState(a); };
   return (
     <header className="mast wrap">
@@ -259,6 +262,10 @@ function App() {
     page = <OverviewPage types={types} version={version} onOpen={open} go={go} onChanged={changed} />;
   } else if (parts[0] === "timeline") {
     page = <TimelinePage types={types} version={version} onOpen={open} />;
+  } else if (parts[0] === "inquiries") {
+    page = <InquiriesPage version={version} />;
+  } else if (parts[0] === "inquiry" && parts[1]) {
+    page = <InquiryPage key={parts[1]} id={parts[1]} />;
   } else if (parts[0] === "unreviewed") {
     page = <UnreviewedPage rows={unreviewed} types={types} onOpen={open} onReviewed={review} />;
   } else if (parts[0] === "questions") {

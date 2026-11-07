@@ -22,8 +22,8 @@ export const aiChanged = () => window.dispatchEvent(new Event("garden-ai"));
 export function AiLine() {
   const ai = useAi();
   if (!ai) return null;
-  const text = !ai.keySet ? "AI · add your key" : ai.keyProblem ? "AI · key needs attention" : `AI · ${ai.left} calls left${ai.waiting ? ` · ${ai.waiting} waiting` : ""}`;
-  return <a className={`ai-line ${ai.keySet && !ai.keyProblem ? "" : "attn"}`} href="#/ai" title="The Archivist's allowance for today">{text}</a>;
+  const text = !ai.keySet ? "AI · add your key" : ai.keyProblem ? "AI · key needs attention" : `AI · ${ai.low ? `only ${ai.left} calls left today` : `${ai.left} calls left`}${ai.waiting ? ` · ${ai.waiting} waiting` : ""}`;
+  return <a className={`ai-line ${ai.keySet && !ai.keyProblem && !ai.low ? "" : "attn"}`} href="#/ai" title="Today's free AI allowance, shared by the Archivist and the Researcher">{text}</a>;
 }
 
 const statusText = (st: AiStatus): string =>
@@ -109,7 +109,7 @@ export function AiPage() {
   return (
     <main className="contents wrap ai-page">
       <header className="vol"><h2>AI</h2></header>
-      <p className="quiet">The Archivist reads each new capture and fills in what it can: the kind of thing it is, who wrote it, when, and a few Tags. Tags and facts it adds are marked ✦ and can be undone in one click. Connections, a change of type and new Objects wait on the Object as Suggestions until you approve them (then they show ✧). A short summary of a Source appears as an AI Note beside your words, never inside them. It never reads anything you marked Private, and it never writes in your words.</p>
+      <p className="quiet">The Researcher answers questions you ask it, about one Object or the whole Garden; its answers are AI Notes that stay in Inquiries until you keep one on an Object. The Archivist reads each new capture and fills in what it can: the kind of thing it is, who wrote it, when, and a few Tags. Tags and facts it adds are marked ✦ and can be undone in one click. Connections, a change of type and new Objects wait on the Object as Suggestions until you approve them (then they show ✧). A short summary of a Source appears as an AI Note beside your words, never inside them. It never reads anything you marked Private, and it never writes in your words.</p>
 
       <h3>Your OpenRouter key</h3>
       {ai?.keySet && !ai.keyProblem ? (

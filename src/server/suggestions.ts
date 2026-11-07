@@ -9,6 +9,7 @@ import { randomUUID } from "node:crypto";
 import type Database from "better-sqlite3";
 import { BadRequest, titleOf } from "./objects.ts";
 import { readable, type Candidate } from "./ai-prompt.ts";
+import { renderRefs, sourceOfNote } from "./researcher.ts";
 
 type Db = Database.Database;
 export const ROLE = "Archivist";
@@ -93,7 +94,7 @@ export function applyProposals(db: Db, id: string, p: Proposals, candidates: Can
   }
 
   db.transaction(() => {
-    db.prepare("DELETE FROM ai_suggestions WHERE object_id = ?").run(id);
+    db.prepare("DELETE FROM ai_suggestions WHERE object_id = ? AND ai_role = ?").run(id, ROLE); // (the Researcher's are not the Archivist's to replace)
     const ins = db.prepare("INSERT INTO ai_suggestions (object_id, kind, data, ai_role, ai_model, ai_date, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)");
     for (const s of list) ins.run(id, s.kind, JSON.stringify(s.data), ROLE, model, date, now.toISOString());
     // An AI Note: a short summary of a Source. A fresh one replaces the Archivist's earlier summary on this Object.
@@ -214,9 +215,10 @@ export function notesOf(db: Db, id: string) {
   const o = liveObj(db, id);
   if (!o) return null;
   if (o.private) return []; // a Private Object's AI Notes were deleted when it became Private
-  return (db.prepare("SELECT * FROM ai_notes WHERE object_id = ? ORDER BY id").all(id) as any[]).map((n) => ({
-    id: n.id as number, kind: n.kind as string, text: n.text as string, ...originOf(n),
-  }));
+  return (db.prepare("SELECT * FROM ai_notes WHERE object_id = ? ORDER BY id").all(id) as any[]).map((n) => {
+    const { text, links } = renderRefs(db, n.text); // links to Objects that are gone are dropped
+    return { id: n.id as number, kind: n.kind as string, text, links, from: sourceOfNote(db, n), ...originOf(n) };
+  });
 }
 
 /** Delete an AI Note. Returns it so the page can offer Undo. */
@@ -224,14 +226,14 @@ export function deleteNote(db: Db, noteId: number) {
   const n = db.prepare("SELECT * FROM ai_notes WHERE id = ?").get(noteId) as any;
   if (!n) return null;
   db.prepare("DELETE FROM ai_notes WHERE id = ?").run(noteId);
-  return { objectId: n.object_id as string, kind: n.kind as string, text: n.text as string, aiRole: n.ai_role as string, aiModel: n.ai_model as string, aiDate: n.ai_date as string };
+  return { objectId: n.object_id as string, kind: n.kind as string, text: n.text as string, aiRole: n.ai_role as string, aiModel: n.ai_model as string, aiDate: n.ai_date as string, inquiryId: (n.inquiry_id ?? null) as string | null, question: (n.question ?? null) as string | null };
 }
 export function restoreNote(db: Db, n: any) {
   if (!n || typeof n.objectId !== "string" || typeof n.text !== "string" || !n.aiRole || !n.aiModel || !n.aiDate) throw new BadRequest("a note to put back is needed");
   const o = liveObj(db, n.objectId);
   if (!o || o.private) throw new BadRequest("That Object could not be found");
-  db.prepare("INSERT INTO ai_notes (object_id, kind, text, ai_role, ai_model, ai_date, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)")
-    .run(n.objectId, n.kind === "prompt" ? "prompt" : "summary", n.text, n.aiRole, n.aiModel, n.aiDate, new Date().toISOString());
+  db.prepare("INSERT INTO ai_notes (object_id, kind, text, ai_role, ai_model, ai_date, created_at, inquiry_id, question) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")
+    .run(n.objectId, ["prompt", "answer"].includes(n.kind) ? n.kind : "summary", n.text, n.aiRole, n.aiModel, n.aiDate, new Date().toISOString(), n.inquiryId ?? null, n.question ?? null);
   return { restored: true };
 }
 
@@ -248,7 +250,7 @@ export function startThoughtFromNote(db: Db, noteId: number) {
   const id = randomUUID();
   db.transaction(() => {
     db.prepare("INSERT INTO objects (id, type, updated_at) VALUES (?, 'thought', datetime('now'))").run(id);
-    db.prepare("INSERT INTO ai_notes (object_id, kind, text, ai_role, ai_model, ai_date, created_at) VALUES (?, 'prompt', ?, ?, ?, ?, ?)").run(id, n.text, n.ai_role, n.ai_model, n.ai_date, new Date().toISOString());
+    db.prepare("INSERT INTO ai_notes (object_id, kind, text, ai_role, ai_model, ai_date, created_at, inquiry_id, question) VALUES (?, 'prompt', ?, ?, ?, ?, ?, ?, ?)").run(id, n.text, n.ai_role, n.ai_model, n.ai_date, new Date().toISOString(), n.inquiry_id ?? null, n.question ?? null);
     db.prepare("INSERT INTO connections (from_id, to_id, kind, origin) VALUES (?, ?, 'inspired by', 'owner')").run(id, n.object_id);
   })();
   return id;

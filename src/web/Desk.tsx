@@ -6,6 +6,7 @@ import { openLink } from "./Connections";
 import { markMade } from "./fresh";
 import { refresh, useRefresh } from "./refresh";
 import { showToast } from "./toast";
+import { AskPanel } from "./Inquiries";
 import { Icon, formatDay, typeVar } from "./ui";
 
 /** The desk's numbers, reloaded whenever something on screen changes. */
@@ -98,10 +99,8 @@ function Group({ g, filter, big, beside }: { g: Desk["groups"][number]; filter: 
   );
 }
 
-const ASKS = ["What here disagrees?", "What’s missing or one-sided?", "Suggest questions"];
-
 /** The three columns. `view` is the owner's editor, built by the page so it saves like every other body. */
-export function ConceptDesk({ desk, types, beside, view }: { desk: Desk | null; types: Types; beside: (id: string) => void; view: ReactNode }) {
+export function ConceptDesk({ desk, types, beside, view, id, isPrivate }: { desk: Desk | null; types: Types; beside: (id: string) => void; view: ReactNode; id: string; isPrivate: boolean }) {
   const [filter, setFilter] = useState("");
   const [versions, setVersions] = useState(false);
   useEffect(() => setFilter(""), [desk?.id]);
@@ -161,13 +160,9 @@ export function ConceptDesk({ desk, types, beside, view }: { desk: Desk | null; 
       <aside className="desk-right" aria-label="Ask and Connections">
         <section className="dcard ask">
           <h3>Ask</h3>
-          <div className="asks">
-            {ASKS.map((a) => (
-              <button key={a} className="pill action" aria-disabled="true" title="Waits for the Researcher, which is not built yet" onClick={() => showToast("Asking comes with the Researcher, which isn’t built yet.")}>{a}</button>
-            ))}
-          </div>
-          <p className="quiet small">Answers would stay in Inquiries and never stand in for your view.</p>
-          {!!desk?.privateCount && <p className="quiet small"><Icon name="lock" /> {desk.privateCount} Private {desk.privateCount === 1 ? "Object" : "Objects"} here would never be sent to the AI.</p>}
+          <AskPanel objectId={id} type="concept" isPrivate={isPrivate} compact />
+          <p className="quiet small">Answers stay in Inquiries and never stand in for your view.</p>
+          {!!desk?.privateCount && <p className="quiet small"><Icon name="lock" /> {desk.privateCount} Private {desk.privateCount === 1 ? "Object" : "Objects"} here {desk.privateCount === 1 ? "is" : "are"} never sent to the AI.</p>}
         </section>
         <section className="dcard">
           <div className="dhead">

@@ -3,6 +3,7 @@ import { api, type AiNote, type Obj, type Suggestion, type Suggestions, type Typ
 import { aiChanged } from "./Ai";
 import { refresh, useRefresh } from "./refresh";
 import { showToast } from "./toast";
+import { AnswerText } from "./Inquiries";
 import { Icon, Marked, formatDay, typeVar } from "./ui";
 
 /** Reloads when something says the AI or the Connections changed, and now and then while the page is open. */
@@ -58,8 +59,8 @@ export function ArchivistSuggestions({ obj, types, onChanged }: { obj: Obj; type
   const allowAgain = async () => { await api.forgetRejected(obj.id); load(); showToast("Rejected ideas can be proposed again, the next time the Archivist looks."); };
 
   return (
-    <section className="archivist-block" aria-label="From the Archivist">
-      <h3><span className="o-ai-mark">✦</span> From the Archivist</h3>
+    <section className="archivist-block" aria-label="Suggestions from the AI">
+      <h3><span className="o-ai-mark">✦</span> {s.pending.some((x) => x.aiRole === "Researcher") ? (s.pending.every((x) => x.aiRole === "Researcher") ? "From the Researcher" : "From the Archivist and the Researcher") : "From the Archivist"}</h3>
       {s.pending.length > 0 && (
         <ul>
           {s.pending.map((x) => (
@@ -106,11 +107,18 @@ export function AiNotes({ obj }: { obj: Pick<Obj, "id" | "private"> }) {
       {notes.map((n) => (
         <aside key={n.id} className="ai-note">
           <p className="label">
-            <Marked o={n}>AI Note</Marked> · {n.kind === "prompt" ? "the note this Thought started from" : "summary"} · {n.aiRole}, {n.aiDate}
+            <Marked o={n}>AI Note</Marked> · {n.kind === "prompt" ? "the note this Thought started from" : n.kind === "answer" ? "Researcher answer" : "summary"} · {n.aiRole}, {n.aiDate}
           </p>
-          <p className="text" title={`Written by the ${n.aiRole}, using ${n.aiModel}, on ${n.aiDate}`}>{n.text}</p>
+          <div className="text" title={`Written by the ${n.aiRole}, using ${n.aiModel}, on ${n.aiDate}`}><AnswerText text={n.text} links={n.links ?? {}} /></div>
+          {n.from && (
+            <p className="small quiet">
+              From the question “{n.from.question}” ·{" "}
+              {n.from.state === "here" ? <a href={`#/inquiry/${n.from.id}`}>See the question</a>
+                : n.from.state === "bin" ? <a href="#/bin">The question is in the Bin</a> : "The question was deleted"}
+            </p>
+          )}
           <span className="acts">
-            {n.kind === "summary" && <button className="link-btn" onClick={() => startThought(n)}><Icon name="thought" /> Start a Thought from this</button>}
+            {n.kind !== "prompt" && <button className="link-btn" onClick={() => startThought(n)}><Icon name="thought" /> Start a Thought from this</button>}
             <button className="link-btn" onClick={() => remove(n)}>Delete</button>
           </span>
         </aside>
