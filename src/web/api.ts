@@ -20,8 +20,14 @@ export type Suggestion = SuggestionBase & (
   | { kind: "title"; title: string }
 );
 export type Suggestions = { pending: Suggestion[]; rejected: number };
-export type AiNote = { id: number; kind: "summary" | "prompt"; text: string } & OriginInfo;
-export type RemovedNote = { objectId: string; kind: string; text: string; aiRole: string; aiModel: string; aiDate: string };
+export type AiNote = {
+  id: number; kind: "summary" | "prompt" | "answer"; text: string;
+  /** Objects named by links in the text (links to Objects that are gone were already dropped). */
+  links?: Record<string, { type: string; title: string; private: boolean }>;
+  /** Where a kept answer came from: the question, and whether its Inquiry is still here, in the Bin, or gone. */
+  from?: { id: string; question: string; state: "here" | "bin" | "gone" } | null;
+} & OriginInfo;
+export type RemovedNote = { objectId: string; kind: string; text: string; aiRole: string; aiModel: string; aiDate: string; inquiryId?: string | null; question?: string | null };
 export type Found = Summary & { title: string; connected: boolean };
 export type Brief = { id: string; type: string; title: string; private: boolean; tags: Tag[]; connectionCount: number };
 export type Connection = {
@@ -38,7 +44,7 @@ export type BinRow = Summary & { title: string; deletedAt: string; daysLeft: num
 export type RemovedConnection = { fromId: string; toId: string; kind: string; note: string | null } & OriginInfo;
 export type RemovedTag = { tag: TagRow; objects: number; on: ({ objectId: string } & OriginInfo)[] };
 export type AiSummary = {
-  keySet: boolean; keyProblem: boolean; left: number; waiting: number;
+  keySet: boolean; keyProblem: boolean; left: number; low: boolean; researcherLeft: number; waiting: number;
   budgets: { archivist: { used: number; limit: number }; researcher: { used: number; limit: number } };
   reset: { at: string; source: string }; models: string[];
 };
@@ -71,6 +77,18 @@ export type Desk = {
 };
 export type QuestionsPage = { open: (Question & { concepts: { id: string; title: string }[] })[]; settled: (Question & { concepts: { id: string; title: string }[] })[] };
 export type GardenItem = Brief3 & { reason: string };
+// The Researcher and Inquiries (issue #36)
+export type Turn = {
+  id: number; question: string; state: "waiting" | "working" | "busy" | "tomorrow" | "failed" | "cancelled" | "done";
+  steps: { label: string; done: boolean }[]; error: string | null; nextTryAt?: string; tries?: number; maxTries: number; needsKey: boolean;
+  answer: null | {
+    text: string; links: Record<string, { type: string; title: string; private: boolean }>; reads: Brief3[]; kept: Brief3[];
+    model: string; role: string; date: string; privateNote: string | null;
+  };
+};
+export type Thread = { id: string; object: Brief3 | null; scopeGone: boolean; createdAt: string; turns: Turn[] };
+export type InquiryRow = { id: string; question: string; turns: number; state: Turn["state"]; createdAt: string; object: Brief3 | null; scopeGone: boolean };
+export type BinInquiry = { id: string; question: string; deletedAt: string; daysLeft: number };
 export type TagRow = { id: number; name: string; color: string; count: number };
 
 async function call<T>(method: string, path: string, body?: unknown): Promise<T> {
@@ -94,6 +112,19 @@ export const api = {
   approve: (sid: number) => call<Obj>("POST", `/api/suggestions/${sid}/approve`),
   reject: (sid: number) => call<unknown>("POST", `/api/suggestions/${sid}/reject`),
   forgetRejected: (id: string) => call<unknown>("POST", `/api/objects/${id}/ai/forget-rejected`),
+  inquiries: () => call<InquiryRow[]>("GET", "/api/inquiries"),
+  inquiriesAbout: (id: string) => call<InquiryRow[]>("GET", `/api/objects/${id}/inquiries`),
+  inquiry: (id: string) => call<Thread>("GET", `/api/inquiries/${id}`),
+  ask: (question: string, objectId?: string) => call<Thread>("POST", "/api/inquiries", { question, objectId }),
+  askAgain: (inquiryId: string, question: string) => call<Thread>("POST", `/api/inquiries/${inquiryId}/turns`, { question }),
+  deleteInquiry: (id: string) => call<unknown>("DELETE", `/api/inquiries/${id}`),
+  restoreInquiry: (id: string) => call<unknown>("POST", `/api/inquiries/${id}/restore`),
+  binInquiries: () => call<BinInquiry[]>("GET", "/api/bin/inquiries"),
+  purgeInquiry: (id: string) => call<unknown>("DELETE", `/api/bin/inquiries/${id}`),
+  cancelTurn: (id: number) => call<unknown>("POST", `/api/turns/${id}/cancel`),
+  retryTurn: (id: number) => call<unknown>("POST", `/api/turns/${id}/retry`),
+  keepTurn: (id: number, objectIds: string[]) => call<{ kept: Brief3[] }>("POST", `/api/turns/${id}/keep`, { objectIds }),
+  thoughtFromTurn: (id: number) => call<{ id: string }>("POST", `/api/turns/${id}/thought`),
   aiNotes: (id: string) => call<AiNote[]>("GET", `/api/objects/${id}/ai-notes`),
   deleteAiNote: (nid: number) => call<{ was: RemovedNote }>("DELETE", `/api/ai-notes/${nid}`),
   restoreAiNote: (n: RemovedNote) => call<unknown>("POST", "/api/ai-notes/restore", n),

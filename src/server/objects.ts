@@ -178,7 +178,7 @@ export function setPrivate(db: Db, id: string, on: boolean) {
   if (!o) return;
   if (on && !o.private) {
     const read =
-      db.prepare("SELECT 1 FROM ai_runs WHERE object_id = ? UNION ALL SELECT 1 FROM ai_notes WHERE object_id = ? UNION ALL SELECT 1 FROM ai_suggestions WHERE object_id = ? UNION ALL SELECT 1 FROM ai_jobs WHERE object_id = ? AND status = 'done' LIMIT 1").get(id, id, id, id);
+      db.prepare("SELECT 1 FROM ai_runs WHERE object_id = ? UNION ALL SELECT 1 FROM ai_notes WHERE object_id = ? UNION ALL SELECT 1 FROM ai_suggestions WHERE object_id = ? UNION ALL SELECT 1 FROM ai_jobs WHERE object_id = ? AND status = 'done' UNION ALL SELECT 1 FROM inquiry_turns WHERE instr(coalesce(read_ids, ''), ?) > 0 LIMIT 1").get(id, id, id, id, `"${id}"`);
     db.prepare("DELETE FROM ai_suggestions WHERE object_id = ? OR (kind IN ('connection', 'object') AND json_extract(data, '$.otherId') = ?)").run(id, id);
     db.prepare("DELETE FROM ai_notes WHERE object_id = ?").run(id);
     db.prepare("UPDATE ai_jobs SET status = 'cancelled' WHERE object_id = ? AND status IN ('waiting', 'busy', 'tomorrow')").run(id);

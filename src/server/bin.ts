@@ -7,6 +7,7 @@ import type Database from "better-sqlite3";
 import { BadRequest, summarise, titleOf } from "./objects.ts";
 import { imagesDir } from "./paths.ts";
 import { mentionToken, syncMentions } from "./mentions.ts";
+import { emptyInquiryBin, purgeExpiredInquiries } from "./researcher.ts";
 
 type Db = Database.Database;
 export const BIN_DAYS = 30;
@@ -52,12 +53,12 @@ export function purgeObjects(db: Db, ids: string[]) {
   return gone.length;
 }
 
-export const emptyBin = (db: Db) => purgeObjects(db, (db.prepare("SELECT id FROM objects WHERE deleted_at IS NOT NULL").all() as any[]).map((r) => r.id));
+export const emptyBin = (db: Db) => purgeObjects(db, (db.prepare("SELECT id FROM objects WHERE deleted_at IS NOT NULL").all() as any[]).map((r) => r.id)) + emptyInquiryBin(db);
 
 /** Anything that has been in the Bin for 30 days goes for good. */
 export function purgeExpired(db: Db) {
   const old = db.prepare(`SELECT id FROM objects WHERE deleted_at IS NOT NULL AND deleted_at <= datetime('now', '-${BIN_DAYS} days')`).all() as any[];
-  return purgeObjects(db, old.map((r) => r.id));
+  return purgeObjects(db, old.map((r) => r.id)) + purgeExpiredInquiries(db);
 }
 
 // Undo for the small removals (a Connection, a Tag): the page keeps what was removed and hands it back to be put in again.

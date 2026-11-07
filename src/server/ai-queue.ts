@@ -11,10 +11,11 @@ import { archivistPrompt, readable } from "./ai-prompt.ts";
 import { applyFindings, jsonOf, lastRun, parseFindings, undoRun } from "./archivist.ts";
 import { applyProposals, parseProposals, pendingCount } from "./suggestions.ts";
 import { imagesDir } from "./paths.ts";
+import { cancelJobs, researcherHandler } from "./researcher.ts";
 
 type Db = Database.Database;
 export type Lane = 0 | 1 | 2;
-type JobRow = { id: number; role: AiRole; object_id: string | null; lane: Lane; status: string; run_after: string; attempts: number; fails: number; created_at: string };
+type JobRow = { id: number; role: AiRole; object_id: string | null; turn_id?: number | null; lane: Lane; status: string; run_after: string; attempts: number; fails: number; created_at: string };
 export type Outcome = "done" | "skip" | { busy: true } | { unusable: true } | { daily: true; resetAt?: number } | { key: true };
 export type Handler = (job: JobRow, ctx: { gate: Gate; now: Date; countCall: () => void }) => Promise<Outcome>;
 
@@ -70,8 +71,19 @@ export function createAi(db: Db, opts: { gate: Gate; now?: () => Date; hasKey?: 
       insert("archivist", id, 1, now());
       return true;
     },
-    /** A job for any role (the Researcher will use this in a later build). */
+    /** A job for any role. */
     enqueue: insert,
+    /**
+     * A Researcher question the owner is waiting on (lane 0: it goes ahead of everything the Archivist has waiting). It is
+     * saved before this is called, so a busy AI or a closed Garden never loses it. The job belongs to one question ("turn").
+     */
+    askResearcher(turnId: number) {
+      const jobId = insert("researcher", null, 0, now());
+      db.prepare("UPDATE ai_jobs SET turn_id = ? WHERE id = ?").run(turnId, jobId);
+      return jobId;
+    },
+    /** The Cancel button: the question stays saved, but nothing more is asked of the AI for it. */
+    cancelQuestion: (turnId: number) => cancelJobs(db, turnId) > 0,
     /** The Capture window closed: stop waiting out the 2 minutes. */
     flushCaptures() {
       return db.prepare("UPDATE ai_jobs SET run_after = ? WHERE status = 'waiting' AND lane = 2 AND run_after > ?").run(iso(now()), iso(now())).changes;
@@ -103,6 +115,9 @@ export function createAi(db: Db, opts: { gate: Gate; now?: () => Date; hasKey?: 
         keySet: hasKey(),
         keyProblem: !!meta.get("key_problem"),
         left: account && account.day === dayOf(t) ? Math.min(mine, account.remaining) : mine,
+        /** True when the day's calls are nearly gone (see AI_CONFIG.lowCallsWarning). */
+        low: (account && account.day === dayOf(t) ? Math.min(mine, account.remaining) : mine) <= AI_CONFIG.lowCallsWarning,
+        researcherLeft: Math.max(0, Math.min(left("researcher"), account && account.day === dayOf(t) ? account.remaining : Infinity)),
         waiting,
         budgets: { archivist: { used: used("archivist", t), limit: AI_CONFIG.dailyCalls.archivist }, researcher: { used: used("researcher", t), limit: AI_CONFIG.dailyCalls.researcher } },
         reset: { at: iso(reset.at), source: reset.source },
@@ -129,7 +144,7 @@ export function createAi(db: Db, opts: { gate: Gate; now?: () => Date; hasKey?: 
       if (lastCall && t.getTime() - lastCall < AI_CONFIG.secondsBetweenCalls * 1000) return false;
       const due = db.prepare("SELECT * FROM ai_jobs WHERE status IN ('waiting', 'busy', 'tomorrow') AND run_after <= ? ORDER BY lane, created_at, id").all(iso(t)) as JobRow[];
       for (const job of due) {
-        const handler = opts.handlers?.[job.role] ?? (job.role === "archivist" ? archivistHandler : undefined);
+        const handler = opts.handlers?.[job.role] ?? (job.role === "archivist" ? archivistHandler : researcherHandlerFor);
         if (!handler) continue;
         const blocked = meta.get("blocked_day") === dayOf(t);
         if (blocked || used(job.role, t) >= AI_CONFIG.dailyCalls[job.role]) {
@@ -166,13 +181,20 @@ export function createAi(db: Db, opts: { gate: Gate; now?: () => Date; hasKey?: 
 
   const isReading = (id: string) => !!db.prepare("SELECT 1 FROM field_values WHERE object_id = ? AND field = 'extraction' AND value = 'reading'").get(id);
 
+  const researcherHandlerFor: Handler = (job, ctx) => researcherHandler(db, job, ctx);
+
   function settle(job: JobRow, out: Outcome, t: Date) {
     const set = (status: string, runAfter: Date, extra: Record<string, number | string | null> = {}) =>
-      db.prepare("UPDATE ai_jobs SET status = ?, run_after = ?, attempts = coalesce(?, attempts), fails = coalesce(?, fails), last_error = ?, updated_at = ? WHERE id = ?")
+      db.prepare("UPDATE ai_jobs SET status = ?, run_after = ?, attempts = coalesce(?, attempts), fails = coalesce(?, fails), last_error = ?, updated_at = ? WHERE id = ? AND status <> 'cancelled'")
         .run(status, iso(runAfter), extra.attempts ?? null, extra.fails ?? null, (extra.error as string) ?? null, iso(t), job.id);
     if (out === "done") { set("done", t); meta.del("key_problem"); }
     else if (out === "skip") set("cancelled", t);
-    else if ("busy" in out) { const n = job.attempts + 1; set("busy", addMin(t, retryDelayMinutes(n)), { attempts: n }); } // never a failure
+    else if ("busy" in out) {
+      const n = job.attempts + 1;
+      // A Researcher question is retried for about an hour (1, 5, 15, 30 minutes); then it stops and says so. The Archivist keeps trying hourly.
+      if (job.role === "researcher" && n >= AI_CONFIG.researcherBusyTries) set("failed", t, { attempts: n, error: "busy for about an hour" });
+      else set("busy", addMin(t, retryDelayMinutes(n)), { attempts: n }); // never a failure
+    }
     else if ("daily" in out) { learnReset(out.resetAt); meta.set("blocked_day", dayOf(t)); set("tomorrow", nextReset().at); }
     else if ("key" in out) { meta.set("key_problem", "1"); set("waiting", addMin(t, 10)); }
     else { // answered, but nothing usable

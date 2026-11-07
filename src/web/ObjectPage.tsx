@@ -5,6 +5,7 @@ import { Editable } from "./Editable";
 import { AiStatusLine } from "./Ai";
 import { AiNotes, ArchivistSuggestions } from "./Suggestions";
 import { ConnectionsPanel, MergeDialog } from "./Connections";
+import { AskPanel } from "./Inquiries";
 import { ConceptDesk, DeskSummary, OpenQuestionControl, useDesk } from "./Desk";
 import { wasMadeHere } from "./fresh";
 import { refresh, useRefresh } from "./refresh";
@@ -53,6 +54,7 @@ function ActionsMenu({ isPrivate, onMerge, onBeside, onPrivate, onDelete }: { is
 export function ObjectPage({ id, types, fresh, onChanged, beside, onDeleted }: Props) {
   const tick = useRefresh();
   const [merging, setMerging] = useState(false);
+  const [tab, setTab] = useState<"page" | "ask">("page");
   const [obj, setObj] = useState<Obj | null>(null);
   const [error, setError] = useState<string>();
   const [allTags, setAllTags] = useState<TagRow[]>([]);
@@ -194,7 +196,7 @@ export function ObjectPage({ id, types, fresh, onChanged, beside, onDeleted }: P
 
       {obj.type === "concept" ? (
         <>
-          <ConceptDesk desk={desk} types={types} beside={beside} view={<>{quotes.map((b) => <blockquote key={b.id} className="b-src"><Marked o={b}>{b.text}</Marked></blockquote>)}{editor}</>} />
+          <ConceptDesk desk={desk} types={types} beside={beside} id={obj.id} isPrivate={obj.private} view={<>{quotes.map((b) => <blockquote key={b.id} className="b-src"><Marked o={b}>{b.text}</Marked></blockquote>)}{editor}</>} />
           <div className="art">
             <div className="body">
               <AiNotes obj={obj} />
@@ -208,6 +210,11 @@ export function ObjectPage({ id, types, fresh, onChanged, beside, onDeleted }: P
       ) : (
       <div className="art">
         <div className="body">
+          <div className="obj-tabs" role="tablist" aria-label="This Object">
+            <button role="tab" aria-selected={tab === "page"} className={tab === "page" ? "on" : ""} onClick={() => setTab("page")}>Page</button>
+            <button role="tab" aria-selected={tab === "ask"} className={tab === "ask" ? "on" : ""} onClick={() => setTab("ask")}>Ask</button>
+          </div>
+          {tab === "ask" ? <AskPanel objectId={obj.id} type={obj.type} isPrivate={obj.private} /> : <>
           {obj.hasImage && <figure className="cover-img"><img src={`/api/images/${obj.id}/full`} alt={title?.value ?? "Captured image"} /></figure>}
           {quotes.map((b) => (
             <blockquote key={b.id} className="b-src"><Marked o={b}>{b.text}</Marked></blockquote>
@@ -224,6 +231,7 @@ export function ObjectPage({ id, types, fresh, onChanged, beside, onDeleted }: P
               <Editable multiline value={fieldOf(obj, transcript.key)?.value ?? ""} origin={fieldOf(obj, transcript.key)} placeholder={`Add ${transcript.label.toLowerCase()}`} onSave={(v) => saveFields({ [transcript.key]: v })} />
             </details>
           )}
+          </>}
         </div>
       </div>
       )}

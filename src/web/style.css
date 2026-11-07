@@ -465,7 +465,7 @@ mark { background: color-mix(in srgb, var(--t-thought) 28%, transparent); color:
 .versions h4 { margin: 0 0 4px; font-size: .95rem; color: var(--mute); }
 .versions p { margin: 0 0 .6em; }
 .asks { display: grid; gap: 8px; justify-items: start; }
-.asks .pill { opacity: .6; cursor: not-allowed; }
+
 .dfilter { display: flex; flex-wrap: wrap; gap: 6px; }
 .dgroup { border-top: 1px solid var(--line); padding-top: 8px; }
 .dgroup summary { cursor: pointer; display: flex; gap: 8px; align-items: baseline; font-weight: 600; list-style: none; }
@@ -514,3 +514,38 @@ mark { background: color-mix(in srgb, var(--t-thought) 28%, transparent); color:
 .desk-mid .body-editor .ProseMirror > p:first-child:not(.is-empty)::first-letter { font-weight: inherit; font-size: inherit; padding: 0; float: none; line-height: inherit; color: inherit; }
 .gs-head { flex-wrap: wrap; }
 .gs-head h3 { white-space: nowrap; }
+
+/* The Researcher and Inquiries (issue #36) */
+.obj-tabs { display: flex; gap: 4px; margin: 0 0 18px; border-bottom: 1px solid color-mix(in srgb, var(--ink) 12%, transparent); }
+.obj-tabs button { background: none; border: 0; padding: 6px 14px; font: inherit; font-size: 14px; color: var(--mute); border-bottom: 2px solid transparent; margin-bottom: -1px; cursor: pointer; }
+.obj-tabs button.on { color: var(--ink); border-bottom-color: var(--ink); }
+.askbox { display: grid; gap: 10px; }
+.askbox .asks { display: flex; flex-wrap: wrap; gap: 8px; }
+.follow { display: flex; gap: 8px; }
+.follow input { flex: 1; min-width: 0; font: inherit; font-size: 14.5px; padding: 7px 12px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--ink) 20%, transparent); background: var(--ground); color: var(--ink); }
+.warn { color: var(--ink); background: color-mix(in srgb, #d99a2b 22%, var(--ground)); padding: 6px 10px; border-radius: 10px; margin: 0; }
+.ask-panel { display: grid; gap: 14px; max-width: 42rem; }
+.inq-list, .inq-rows { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+.inq-list summary { cursor: pointer; font-size: 14.5px; }
+.inq-rows li { display: grid; gap: 2px; padding: 8px 0; border-bottom: 1px solid color-mix(in srgb, var(--ink) 8%, transparent); }
+.inquiry { display: grid; gap: 14px; padding: 10px 0 4px; }
+.inquiries-page .dcard { max-width: 42rem; margin: 14px 0 22px; }
+.turn { display: grid; gap: 8px; }
+.turn-q { margin: 0; font-size: 16px; }
+.turn-status { margin: 0; font-size: 14px; }
+.steps-live { list-style: none; margin: 0; padding: 0; display: grid; gap: 3px; font-size: 14px; color: var(--mute); }
+.steps-live li::before { content: "○ "; }
+.steps-live li.done { color: var(--ink); }
+.steps-live li.done::before { content: "✓ "; }
+.steps-live li.now { color: var(--ink); }
+.steps-live li.now::before { content: "● "; animation: pulse 1.2s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: .3; } }
+@media (prefers-reduced-motion: reduce) { .steps-live li.now::before { animation: none; } }
+.ai-note.answer .text p { margin: 0 0 .7em; }
+.ai-note .ref { color: inherit; text-decoration: underline dotted; text-underline-offset: 3px; }
+.read-links { margin: 0 0 4px; }
+.keep-picker { display: grid; gap: 6px; padding: 8px 0; }
+.keep-row { display: flex; gap: 8px; align-items: center; font-size: 14px; }
+.keep-find { font: inherit; font-size: 14px; padding: 5px 10px; border-radius: 10px; border: 1px solid color-mix(in srgb, var(--ink) 20%, transparent); background: var(--ground); color: var(--ink); }
+.bin-h { margin: 22px 0 6px; font-size: 1rem; }
+.ask-panel.compact .inquiry { padding-top: 4px; }

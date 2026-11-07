@@ -13,6 +13,13 @@ export const AI_CONFIG = {
   captureWaitMinutes: 2,
   /** OpenRouter's free models allow 20 calls a minute; stay well under. */
   secondsBetweenCalls: 6,
+  /** A Researcher question that meets a busy AI is retried after 1, 5, 15 and 30 minutes (about an hour), then it stops and says so. */
+  researcherBusyTries: 5,
+  /**
+   * Warn when this few calls are left in a day. The limit is 1,000 (not 50), so the warning waits until 10% is left:
+   * with 100 left that is still about 50 questions (each takes two calls), enough to see it coming and not nag before.
+   */
+  lowCallsWarning: 100,
   /** A model that answers but gives nothing usable is tried this many times before "Couldn't read this". */
   maxUnusable: 3,
 };
