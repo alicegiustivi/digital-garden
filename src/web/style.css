@@ -400,3 +400,11 @@ mark { background: color-mix(in srgb, var(--t-thought) 28%, transparent); color:
 .tag-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .confirm select, .confirm input { font: inherit; color: var(--ink); background: var(--card); border: 0; border-radius: 999px; padding: 3px 10px; box-shadow: var(--shadow); }
 .confirm .problem { color: #b3402e; }
+
+/* A Source's captured text: its own section under the page, closed until wanted (so properties and Tags stay near the top) */
+.transcript { margin: 28px 0 8px; padding-top: 14px; border-top: 1px solid var(--faint); font-size: 15px; line-height: 1.65; color: color-mix(in srgb, var(--ink) 78%, var(--ground)); }
+.transcript > summary { cursor: pointer; font-weight: 600; font-size: 13px; letter-spacing: .02em; color: var(--mute); list-style: none; margin-bottom: 10px; }
+.transcript > summary::-webkit-details-marker { display: none; }
+.transcript > summary::before { content: "▸ "; }
+.transcript[open] > summary::before { content: "▾ "; }
+.transcript .view { display: block; font-style: italic; }

@@ -82,6 +82,9 @@ export function ObjectPage({ id, types, fresh, onChanged, beside, onDeleted }: P
 
   const lead = typeDef.fields.find((f) => f.lead);
   const pills = typeDef.fields.filter((f) => !f.lead);
+  // A Source's captured text can be a whole article: it goes in its own section below, so the coloured box stays slim
+  // and the properties and Tags are always within reach. (A Concept's definition or a Person's description stay under the title.)
+  const transcript = lead?.key === "captured" ? lead : undefined;
   const fitKeys = new Set(["title", ...typeDef.fields.map((f) => f.key)]);
   const kept = obj.fields.filter((f) => !fitKeys.has(f.key));
   const title = fieldOf(obj, "title");
@@ -141,7 +144,7 @@ export function ObjectPage({ id, types, fresh, onChanged, beside, onDeleted }: P
             />
           </h1>
 
-          {lead && (
+          {lead && !transcript && (
             <p className="standfirst">
               <Editable multiline value={fieldOf(obj, lead.key)?.value ?? ""} origin={fieldOf(obj, lead.key)} placeholder={`Add ${lead.label.toLowerCase()}`} onSave={(v) => saveFields({ [lead.key]: v })} />
             </p>
@@ -188,6 +191,15 @@ export function ObjectPage({ id, types, fresh, onChanged, beside, onDeleted }: P
           />
           <AiNotes obj={obj} />
           <ConnectionsPanel obj={obj} types={types} beside={beside} />
+          {transcript && (
+            <details className="transcript">
+              <summary>
+                {transcript.label}
+                <span className="quiet small"> · {(fieldOf(obj, transcript.key)?.value.length ?? 0).toLocaleString()} characters</span>
+              </summary>
+              <Editable multiline value={fieldOf(obj, transcript.key)?.value ?? ""} origin={fieldOf(obj, transcript.key)} placeholder={`Add ${transcript.label.toLowerCase()}`} onSave={(v) => saveFields({ [transcript.key]: v })} />
+            </details>
+          )}
         </div>
       </div>
       {merging && (
