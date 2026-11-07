@@ -36,6 +36,13 @@ export function saveKey(key: string) {
 export const forgetKey = () => { if (existsSync(keyPath())) rmSync(keyPath()); };
 export const looksLikeKey = (k: unknown): k is string => typeof k === "string" && /^sk-or-[A-Za-z0-9_\-]{16,}$/.test(k.trim());
 
+/**
+ * The free Nvidia models "think" before they answer, and the thinking counts against this limit. With a small limit they
+ * ran out while still thinking and sent back no answer at all (the Archivist then looked stuck on "waiting"). A long article
+ * took about 1,800 thinking tokens plus the answer, so this leaves plenty of room. It costs nothing: the models are free.
+ */
+export const MAX_TOKENS = 6000;
+
 export type Account = { used: number; limit: number; remaining: number };
 type Deps = { fetch?: typeof fetch; key?: () => string | null; baseUrl?: string };
 
@@ -73,7 +80,7 @@ export function createGate(deps: Deps = {}) {
       try {
         res = await doFetch(`${base}/chat/completions`, {
           method: "POST", headers: headers(k), signal: AbortSignal.timeout(90_000),
-          body: JSON.stringify({ model, messages, temperature: 0.2, max_tokens: 700 }),
+          body: JSON.stringify({ model, messages, temperature: 0.2, max_tokens: MAX_TOKENS }),
         });
       } catch { throw new GateError("busy", "Could not reach OpenRouter."); }
       const body: any = await res.json().catch(() => ({}));
