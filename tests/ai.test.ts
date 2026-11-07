@@ -57,6 +57,12 @@ describe("the AI gate", () => {
     replies.push({ content: "ok" });
     await expect(gate.chat("nvidia/nemotron-3.5-super-vl:free", [{ role: "user", content: "hi" }])).resolves.toBe("ok");
   });
+  it("leaves the free models room to think before they answer", async () => {
+    const gate = createGate({ fetch: fakeFetch, key: () => "sk-or-test", baseUrl: "http://pretend" });
+    replies.push({ content: "ok" });
+    await gate.chat("nvidia/nemotron-3.5-super-vl:free", [{ role: "user", content: "hi" }]);
+    expect(sent[0].body.max_tokens).toBeGreaterThanOrEqual(4000); // 700 was too few: the models' thinking used it all and no answer came back
+  });
   it("only has free models in its one config setting: the vision model first, then the text one", () => {
     expect(AI_CONFIG.models).toEqual(["nvidia/nemotron-3.5-super-vl:free", "nvidia/nemotron-3-ultra-550b-a55b:free"]);
     for (const m of AI_CONFIG.models) expect(m.endsWith(":free")).toBe(true);
