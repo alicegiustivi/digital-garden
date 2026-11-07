@@ -318,3 +318,18 @@ select.edit { font-size: 13.5px; }
 .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 60; display: flex; align-items: center; gap: 14px; background: var(--btn-bg); color: var(--btn-fg); padding: 10px 14px 10px 18px; border-radius: 999px; box-shadow: var(--shadow-up); max-width: calc(100vw - 32px); }
 .toast .undo { font-weight: 600; text-decoration: underline; color: inherit; }
 .toast .x { color: inherit; opacity: .7; }
+
+/* AI (issue #31): a quiet line in the top bar, the status on an Object, and the AI page */
+.ai-line { font-size: 12.5px; color: var(--mute); padding: 6px 10px; border-radius: 999px; }
+.ai-line:hover { color: var(--ink); }
+.ai-line.attn { color: var(--ink); text-decoration: underline dotted; text-underline-offset: 4px; }
+.ai-status { margin: 4px 0 0; }
+.ai-status p { margin: 2px 0; }
+.ai-mark, .o-ai-mark { font-size: .8em; }
+.link-btn { background: none; border: 0; padding: 0; font: inherit; color: inherit; text-decoration: underline; cursor: pointer; }
+.ai-page { max-width: 640px; }
+.ai-page h3 { margin: 28px 0 8px; font-size: 15px; }
+.ai-page .steps { padding-left: 20px; line-height: 1.6; }
+.ai-page .key-form { display: flex; gap: 8px; align-items: center; margin: 12px 0; }
+.ai-page .key-form input { flex: 1; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--line, #8883); background: var(--card); color: var(--ink); font: inherit; }
+.ai-page ul.plain { list-style: none; padding: 0; line-height: 1.8; }

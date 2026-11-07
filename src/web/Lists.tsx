@@ -1,3 +1,4 @@
+import { CardStatus } from "./Ai";
 import { useEffect, useState } from "react";
 import { api, displayTitle, TAG_COLORS, type Summary, type TagRow, type Types } from "./api";
 import { showToast } from "./toast";
@@ -159,8 +160,6 @@ function groupByAge(rows: Summary[]) {
   return groups.filter((g) => g.rows.length);
 }
 
-/** The status line on a capture (issue #16). The AI tickets fill in the other states; for now: Waiting, or Private, not read. */
-export const statusLine = (o: Summary) => (o.private ? "Private, not read" : "Waiting");
 
 export function UnreviewedPage({ rows, types, onOpen, onReviewed }: {
   rows: Summary[] | null; types: Types; onOpen: (id: string, ids: string[]) => void; onReviewed: (ids: string[]) => void;
@@ -181,7 +180,7 @@ export function UnreviewedPage({ rows, types, onOpen, onReviewed }: {
             {g.rows.map((o) => (
               <div key={o.id} className="ucard">
                 <Card o={o} types={types} onOpen={() => onOpen(o.id, ids)} />
-                <div className="ustatus quiet small">Archivist: {statusLine(o).toLowerCase()}</div>
+                <div className="ustatus quiet small"><CardStatus id={o.id} private={o.private} /></div>
               </div>
             ))}
           </div>

@@ -3,12 +3,13 @@ import { createRoot } from "react-dom/client";
 import "./style.css";
 import { api, type Types } from "./api";
 import { Appearance, getAppearance, setAppearance, startFollowingMac } from "./theme";
-import { TagsPage, ThisWeek, TypeList, UnreviewedPage, statusLine, useList } from "./Lists";
+import { TagsPage, ThisWeek, TypeList, UnreviewedPage, useList } from "./Lists";
 import { ObjectPage } from "./ObjectPage";
 import { SidePane } from "./Connections";
 import { useRefresh } from "./refresh";
 import { Toasts } from "./toast";
 import { BinPage } from "./Bin";
+import { AiLine, AiPage, aiChanged } from "./Ai";
 import type { Summary } from "./api";
 import { Icon, typeVar } from "./ui";
 import { Capture, captureKey, emptyDraft, isCaptureKey, type CaptureDraft } from "./Capture";
@@ -62,11 +63,13 @@ function TopBar({ hash, unreviewed, onCapture }: { hash: string; unreviewed: num
         ))}
         <a href="#/unreviewed" className={section === "#/unreviewed" ? "on" : ""}>Unreviewed ({unreviewed})</a>
         <button className="cap" onClick={onCapture} title="Capture a thought"><Icon name="plus" /> Capture <kbd>{captureKey()}</kbd></button>
+        <AiLine />
         <div className="more" ref={box}>
           <button aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen(!open)}>More <Icon name="chevron" /></button>
           {open && (
             <div className="menu" role="menu">
               <a className="menu-link" href="#/bin" onClick={() => setOpen(false)}><span className="tick" />Bin</a>
+              <a className="menu-link" href="#/ai" onClick={() => setOpen(false)}><span className="tick" />AI</a>
               <a className="menu-link" href="#/bookmark" onClick={() => setOpen(false)}><span className="tick" />Save to Garden bookmark</a>
               <div className="menu-h">Appearance</div>
               {([["light", "Light"], ["dark", "Dark (Espresso)"], ["system", "Same as Mac"]] as [Appearance, string][]).map(([v, label]) => (
@@ -103,14 +106,13 @@ function BookmarkPage() {
   );
 }
 
-/** What an Unreviewed capture shows above its page: the Archivist's status line and the "From the Archivist" block. Both are empty shells until the AI builds fill them in. */
+/** What an Unreviewed capture shows above its page: the Archivist's status line and the "From the Archivist" block. The Archivist's status line is shown on the page below. */
 function ReviewShell({ o }: { o: Summary }) {
   return (
     <div className="review-shell">
-      <p className="status-line"><span className="dot" /> Archivist: {statusLine(o).toLowerCase()}</p>
       <section className="from-archivist" aria-label="From the Archivist">
         <h4>From the Archivist</h4>
-        <p className="quiet small">{o.private ? "Private: no AI reads this, so there is nothing to show." : "Nothing yet. Its proposals for a type, a title and Connections will appear here."}</p>
+        <p className="quiet small">{o.private ? "Private: no AI reads this, so there is nothing to show." : "What the Archivist adds (facts and Tags) is marked ✦ on the page below, with Undo. Its proposals for Connections will appear here in a later build."}</p>
       </section>
     </div>
   );
@@ -230,6 +232,8 @@ function App() {
     page = <UnreviewedPage rows={unreviewed} types={types} onOpen={open} onReviewed={review} />;
   } else if (parts[0] === "bin") {
     page = <BinPage types={types} onChanged={changed} />;
+  } else if (parts[0] === "ai") {
+    page = <AiPage />;
   } else if (parts[0] === "bookmark") {
     page = <BookmarkPage />;
   } else if (parts[0] === "tags") {
@@ -247,9 +251,9 @@ function App() {
         <Capture
           draft={draft}
           setDraft={setDraft}
-          onClose={() => setCapture(false)}
+          onClose={() => { setCapture(false); api.aiFlush().then(aiChanged).catch(() => {}); }}
           onSaved={changed}
-          onOpen={(id) => { setCapture(false); setDraft((d) => ({ ...d, saved: null })); open(id, [id]); }}
+          onOpen={(id) => { setCapture(false); api.aiFlush().catch(() => {}); setDraft((d) => ({ ...d, saved: null })); open(id, [id]); }}
         />
       )}
       {peek && <Peek id={peek.id} ids={peek.ids} types={types} pending={unreviewed?.find((u) => u.id === peek.id)} onReview={reviewPeeked} onChanged={changed} onMove={(id) => setPeek({ ...peek, id })} onClose={() => setPeek(null)} />}

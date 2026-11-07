@@ -199,25 +199,32 @@ export function listTags(db: Db) {
 export const cleanTagName = (name: unknown) =>
   typeof name === "string" ? name.trim().replace(/^#+/, "").trim().toLowerCase().replace(/\s+/g, "-") : "";
 
+/** The Tag with this (already cleaned) name, made if it doesn't exist yet. Each new Tag gets the next colour in turn, so neighbours differ. */
+export function tagIdFor(db: Db, clean: string): number {
+  const tag = db.prepare("SELECT id FROM tags WHERE name = ?").get(clean) as any;
+  if (tag) return tag.id;
+  const n = (db.prepare("SELECT count(*) AS n FROM tags").get() as any).n;
+  return Number(db.prepare("INSERT INTO tags (name, color) VALUES (?, ?)").run(clean, TAG_COLORS[n % TAG_COLORS.length]).lastInsertRowid);
+}
+
 export function addTag(db: Db, objectId: string, name: unknown) {
   const clean = cleanTagName(name);
   if (!clean) throw new BadRequest("a Tag needs a name");
   if (!db.prepare("SELECT 1 FROM objects WHERE id = ? AND deleted_at IS NULL").get(objectId)) return null;
   db.transaction(() => {
-    let tag = db.prepare("SELECT id FROM tags WHERE name = ?").get(clean) as any;
-    if (!tag) {
-      // Each new Tag gets the next colour in turn, so neighbours differ.
-      const n = (db.prepare("SELECT count(*) AS n FROM tags").get() as any).n;
-      const color = TAG_COLORS[n % TAG_COLORS.length];
-      tag = { id: db.prepare("INSERT INTO tags (name, color) VALUES (?, ?)").run(clean, color).lastInsertRowid };
-    }
-    db.prepare("INSERT OR IGNORE INTO object_tags (object_id, tag_id, origin) VALUES (?, ?, 'owner')").run(objectId, tag.id);
+    const tagId = tagIdFor(db, clean);
+    db.prepare("INSERT OR IGNORE INTO object_tags (object_id, tag_id, origin) VALUES (?, ?, 'owner')").run(objectId, tagId);
+    // The owner putting back a Tag the AI once suggested here: it is no longer "turned down".
+    db.prepare("DELETE FROM ai_rejected WHERE object_id = ? AND kind = 'tag' AND value = ?").run(objectId, clean);
     touch(db, objectId);
   })();
   return getObject(db, objectId);
 }
 
 export function removeTag(db: Db, objectId: string, tagId: number) {
+  // Removing a Tag the AI added is remembered, so the Archivist does not suggest it again (CONTEXT.md: Suggestion).
+  const was = db.prepare("SELECT t.name, ot.origin FROM object_tags ot JOIN tags t ON t.id = ot.tag_id WHERE ot.object_id = ? AND ot.tag_id = ?").get(objectId, tagId) as any;
+  if (was?.origin === "ai") db.prepare("INSERT OR IGNORE INTO ai_rejected (object_id, kind, value) VALUES (?, 'tag', ?)").run(objectId, was.name);
   db.prepare("DELETE FROM object_tags WHERE object_id = ? AND tag_id = ?").run(objectId, tagId);
   touch(db, objectId);
   return getObject(db, objectId);

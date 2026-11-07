@@ -40,7 +40,7 @@ export function purgeObjects(db: Db, ids: string[]) {
     for (const id of ids) {
       if (!db.prepare("SELECT 1 FROM objects WHERE id = ? AND deleted_at IS NOT NULL").get(id)) continue; // only the Bin can be purged
       for (const table of ["connections"]) db.prepare(`DELETE FROM ${table} WHERE from_id = ? OR to_id = ?`).run(id, id);
-      for (const table of ["object_tags", "field_values", "blocks", "source_images"]) db.prepare(`DELETE FROM ${table} WHERE object_id = ?`).run(id);
+      for (const table of ["object_tags", "field_values", "blocks", "source_images", "ai_jobs", "ai_runs", "ai_rejected"]) db.prepare(`DELETE FROM ${table} WHERE object_id = ?`).run(id);
       db.prepare("DELETE FROM objects WHERE id = ?").run(id);
       gone.push(id);
     }
@@ -79,6 +79,8 @@ export function restoreTagOn(db: Db, objectId: string, tagId: number, origin: un
   if (!db.prepare("SELECT 1 FROM objects WHERE id = ? AND deleted_at IS NULL").get(objectId)) return false;
   if (!db.prepare("SELECT 1 FROM tags WHERE id = ?").get(tagId)) throw new BadRequest("That Tag no longer exists");
   db.prepare("INSERT OR IGNORE INTO object_tags (object_id, tag_id, origin, ai_role, ai_model, ai_date) VALUES (?, ?, ?, ?, ?, ?)").run(objectId, tagId, ...originCols(origin));
+  // Undoing the removal of an AI Tag means it is no longer "turned down".
+  db.prepare("DELETE FROM ai_rejected WHERE object_id = ? AND kind = 'tag' AND value = (SELECT name FROM tags WHERE id = ?)").run(objectId, tagId);
   return true;
 }
 

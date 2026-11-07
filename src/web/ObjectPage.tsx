@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { api, fieldOf, type FieldDef, type Obj, type TagRow, type TypeDef, type Types } from "./api";
 import { BodyEditor } from "./BodyEditor";
 import { Editable } from "./Editable";
+import { AiStatusLine } from "./Ai";
 import { ConnectionsPanel, MergeDialog } from "./Connections";
 import { refresh, useRefresh } from "./refresh";
 import { showToast } from "./toast";
@@ -116,6 +117,7 @@ export function ObjectPage({ id, types, fresh, onChanged, beside, onDeleted }: P
           </div>
 
           {obj.private && <p className="quiet small">Private: no AI reads this.</p>}
+          <AiStatusLine id={obj.id} onChanged={update} />
           {kept.length > 0 && (
             <p className="quiet small kept">
               Kept from an earlier type:{" "}
