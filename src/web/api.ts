@@ -59,6 +59,18 @@ export type OverviewData = {
 };
 export type LightUp = { tags: string[]; islands: { id: string; shared: string[]; connected: boolean }[] };
 export type TurnedIntoConcept = { concept: { id: string; title: string }; connected: number; removed: RemovedTag | null };
+export type Brief3 = { id: string; type: string; title: string; private: boolean };
+export type Question = { id: string; title: string; private: boolean; state: "open" | "settled"; openedAt: string; settledAt: string | null; settledBy: { id: string; title: string } | null; touchedAt: string };
+export type DeskRow = Brief3 & { connectionId: number; kind: string; label: string; approved: boolean; changedAt: string };
+export type Desk = {
+  id: string; createdAt: string; total: number; mix: Record<string, number>;
+  groups: { key: string; label: string; items: DeskRow[] }[];
+  tensions: { a: Brief3; b: Brief3; connectionId: number }[];
+  questions: Question[]; suggested: number; privateCount: number;
+  versions: { day: string; paragraphs: string[] }[];
+};
+export type QuestionsPage = { open: (Question & { concepts: { id: string; title: string }[] })[]; settled: (Question & { concepts: { id: string; title: string }[] })[] };
+export type GardenItem = Brief3 & { reason: string };
 export type TagRow = { id: number; name: string; color: string; count: number };
 
 async function call<T>(method: string, path: string, body?: unknown): Promise<T> {
@@ -141,6 +153,13 @@ export const api = {
   lightUp: (id: string) => call<LightUp>("GET", `/api/objects/${id}/light-up`),
   turnIntoConcept: (tagId: number, removeTag: boolean) => call<TurnedIntoConcept>("POST", `/api/tags/${tagId}/concept`, { removeTag }),
   undoConcept: (r: TurnedIntoConcept) => call<unknown>("POST", "/api/concepts/undo", { conceptId: r.concept.id, removed: r.removed }),
+  desk: (id: string) => call<Desk>("GET", `/api/concepts/${id}/desk`),
+  question: (id: string) => call<Question | null>("GET", `/api/objects/${id}/question`),
+  setQuestion: (id: string, state: "open" | "settled" | "none", settledBy?: string) => call<Question | null>("PUT", `/api/objects/${id}/question`, { state, settledBy }),
+  questions: () => call<QuestionsPage>("GET", "/api/questions"),
+  thoughtAbout: (a: string, b: string) => call<{ id: string }>("POST", "/api/thoughts/about", { a, b }),
+  garden: () => call<{ items: GardenItem[] }>("GET", "/api/garden"),
+  dismissGarden: (id: string) => call<unknown>("POST", "/api/garden/dismiss", { id }),
   tags: () => call<TagRow[]>("GET", "/api/tags"),
   recolour: (id: number, color: string) => call<TagRow[]>("PATCH", `/api/tags/${id}`, { color }),
 };

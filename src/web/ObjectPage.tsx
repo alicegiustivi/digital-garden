@@ -5,6 +5,8 @@ import { Editable } from "./Editable";
 import { AiStatusLine } from "./Ai";
 import { AiNotes, ArchivistSuggestions } from "./Suggestions";
 import { ConnectionsPanel, MergeDialog } from "./Connections";
+import { ConceptDesk, DeskSummary, OpenQuestionControl, useDesk } from "./Desk";
+import { wasMadeHere } from "./fresh";
 import { refresh, useRefresh } from "./refresh";
 import { showToast } from "./toast";
 import { Icon, Marked, TagPill, TypeChip, formatDay, subOf, typeVar } from "./ui";
@@ -54,6 +56,7 @@ export function ObjectPage({ id, types, fresh, onChanged, beside, onDeleted }: P
   const [obj, setObj] = useState<Obj | null>(null);
   const [error, setError] = useState<string>();
   const [allTags, setAllTags] = useState<TagRow[]>([]);
+  const desk = useDesk(obj?.type === "concept" ? id : null);
 
   useEffect(() => {
     api.get(id).then(setObj).catch((e) => setError(e.message));
@@ -110,6 +113,19 @@ export function ObjectPage({ id, types, fresh, onChanged, beside, onDeleted }: P
     showToast(`Tag #${t.name} removed from this one.`, async () => { update(await api.restoreTagOn(obj.id, t.id, t)); });
   };
 
+  const editor = (
+    <BodyEditor
+            selfId={obj.id}
+            types={types}
+            info={obj.mentions ?? {}}
+            open={(mid, alt) => (alt ? beside(mid) : (location.hash = `#/o/${mid}`))}
+            autofocus={(!!fresh || wasMadeHere(obj.id)) && obj.type === "thought"}
+            paragraphs={ownerBlocks.map((b) => b.text)}
+            placeholder={obj.type === "thought" ? "Write the thought…" : obj.type === "concept" ? "Where do you stand on this, for now?" : "Write in your own words…"}
+            onSave={(p) => api.setBody(obj.id, p).then((o) => { setObj((cur) => (cur ? { ...cur, mentions: o.mentions, connectionCount: o.connectionCount } : cur)); onChanged(); refresh(); })}
+    />
+  );
+
   return (
     <article className="object" style={typeVar(obj.type)}>
       <section className="cover">
@@ -154,6 +170,9 @@ export function ObjectPage({ id, types, fresh, onChanged, beside, onDeleted }: P
             {pills.map((f) => <FieldPill key={f.key} def={f} obj={obj} onSave={(v) => saveFields({ [f.key]: v })} />)}
           </div>
 
+          {obj.type === "thought" && <div className="byline"><OpenQuestionControl id={obj.id} beside={beside} /></div>}
+          {obj.type === "concept" && <DeskSummary desk={desk} types={types} />}
+
           <div className="tags">
             {obj.tags.map((t) => <TagPill key={t.id} tag={t} linked onRemove={() => removeTagHere(t)} />)}
             <TagInput known={allTags} onAdd={addTag} />
@@ -173,22 +192,27 @@ export function ObjectPage({ id, types, fresh, onChanged, beside, onDeleted }: P
         </div>
       </section>
 
+      {obj.type === "concept" ? (
+        <>
+          <ConceptDesk desk={desk} types={types} beside={beside} view={<>{quotes.map((b) => <blockquote key={b.id} className="b-src"><Marked o={b}>{b.text}</Marked></blockquote>)}{editor}</>} />
+          <div className="art">
+            <div className="body">
+              <AiNotes obj={obj} />
+              <details className="manage-conns">
+                <summary>Add or change Connections</summary>
+                <ConnectionsPanel obj={obj} types={types} beside={beside} />
+              </details>
+            </div>
+          </div>
+        </>
+      ) : (
       <div className="art">
         <div className="body">
           {obj.hasImage && <figure className="cover-img"><img src={`/api/images/${obj.id}/full`} alt={title?.value ?? "Captured image"} /></figure>}
           {quotes.map((b) => (
             <blockquote key={b.id} className="b-src"><Marked o={b}>{b.text}</Marked></blockquote>
           ))}
-          <BodyEditor
-            selfId={obj.id}
-            types={types}
-            info={obj.mentions ?? {}}
-            open={(mid, alt) => (alt ? beside(mid) : (location.hash = `#/o/${mid}`))}
-            autofocus={!!fresh && obj.type === "thought"}
-            paragraphs={ownerBlocks.map((b) => b.text)}
-            placeholder={obj.type === "thought" ? "Write the thought…" : "Write in your own words…"}
-            onSave={(p) => api.setBody(obj.id, p).then((o) => { setObj((cur) => (cur ? { ...cur, mentions: o.mentions, connectionCount: o.connectionCount } : cur)); onChanged(); refresh(); })}
-          />
+          {editor}
           <AiNotes obj={obj} />
           <ConnectionsPanel obj={obj} types={types} beside={beside} />
           {transcript && (
@@ -202,6 +226,7 @@ export function ObjectPage({ id, types, fresh, onChanged, beside, onDeleted }: P
           )}
         </div>
       </div>
+      )}
       {merging && (
         <MergeDialog
           obj={obj}

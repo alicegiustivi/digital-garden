@@ -15,6 +15,8 @@ import { Icon, typeVar } from "./ui";
 import { Palette, SearchPage } from "./Search";
 import { TimelinePage } from "./Timeline";
 import { OverviewPage } from "./Overview";
+import { QuestionsPageView } from "./Garden";
+import { wasMadeHere } from "./fresh";
 import { addRecent } from "./recent";
 import { Capture, captureKey, emptyDraft, isCaptureKey, type CaptureDraft } from "./Capture";
 
@@ -75,6 +77,7 @@ function TopBar({ hash, unreviewed, onCapture, onSearch }: { hash: string; unrev
           <button aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen(!open)}>More <Icon name="chevron" /></button>
           {open && (
             <div className="menu" role="menu">
+              <a className="menu-link" href="#/questions" onClick={() => setOpen(false)}><span className="tick" />Questions</a>
               <a className="menu-link" href="#/bin" onClick={() => setOpen(false)}><span className="tick" />Bin</a>
               <a className="menu-link" href="#/ai" onClick={() => setOpen(false)}><span className="tick" />AI</a>
               <a className="menu-link" href="#/bookmark" onClick={() => setOpen(false)}><span className="tick" />Save to Garden bookmark</a>
@@ -243,7 +246,7 @@ function App() {
     page = (
       <main className={`wrap page ${paneId ? "split" : ""}`}>
         <div className="split-main">
-          <ObjectPage key={mainId} id={mainId} types={types} fresh={fresh === mainId} onChanged={changed} beside={beside} onDeleted={() => go("#/")} />
+          <ObjectPage key={mainId} id={mainId} types={types} fresh={fresh === mainId || wasMadeHere(mainId)} onChanged={changed} beside={beside} onDeleted={() => go("#/")} />
         </div>
         {paneId && <SidePane paneId={paneId} mainId={mainId} types={types} onNavigate={beside} onClose={() => go(`#/o/${mainId}`)} onChanged={changed} />}
       </main>
@@ -258,6 +261,8 @@ function App() {
     page = <TimelinePage types={types} version={version} onOpen={open} />;
   } else if (parts[0] === "unreviewed") {
     page = <UnreviewedPage rows={unreviewed} types={types} onOpen={open} onReviewed={review} />;
+  } else if (parts[0] === "questions") {
+    page = <QuestionsPageView version={version} />;
   } else if (parts[0] === "bin") {
     page = <BinPage types={types} onChanged={changed} />;
   } else if (parts[0] === "ai") {
