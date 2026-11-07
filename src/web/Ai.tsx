@@ -45,7 +45,8 @@ export function CardStatus({ id, private: priv }: { id: string; private: boolean
     return () => { clearInterval(t); window.removeEventListener("garden-ai", load); };
   }, [id]);
   const text = st ? statusText(st) : priv ? "Private, not read" : "Waiting";
-  return <>Archivist: {st?.state === "none" ? "not asked yet" : text}{st?.state === "failed" && <> · <button className="link-btn" onClick={() => api.aiRun(id).then(setSt).then(aiChanged)}>Retry</button></>}</>;
+  const n = st?.pending ?? 0;
+  return <>Archivist: {st?.state === "none" ? "not asked yet" : text}{n > 0 && <> · {n} {n === 1 ? "Suggestion" : "Suggestions"}</>}{st?.state === "failed" && <> · <button className="link-btn" onClick={() => api.aiRun(id).then(setSt).then(aiChanged)}>Retry</button></>}</>;
 }
 
 /** What the Archivist is doing with this Object, and its marked work with one-click Undo. */
@@ -73,9 +74,11 @@ export function AiStatusLine({ id, onChanged }: { id: string; onChanged: (o: Obj
   if (st.state === "waiting" && st.needsKey) line = <>Waiting · <a href="#/ai">add your OpenRouter key</a> to start</>;
   else if (st.state === "failed") line = <>Couldn’t read this · <button className="link-btn" onClick={retry}>Retry</button></>;
   else if (st.state !== "done") line = statusText(st);
+  const again = st.state === "done" && st.canRun;
   return (
     <div className="ai-status small quiet" role="status">
       {line && st.state !== "none" && <p><span className="o-ai-mark">✦</span> Archivist: {line}</p>}
+      {again && <p><button className="link-btn" onClick={retry} title="Uses one or two of today’s calls. Anything you rejected stays rejected.">Ask the Archivist again</button></p>}
       {st.run && (
         <p>
           <span className="o-ai-mark">✦</span> The Archivist added {[st.run.facts.length ? `${st.run.facts.join(", ")}` : "", st.run.tags.length ? `${st.run.tags.length === 1 ? "a Tag" : st.run.tags.length + " Tags"}` : ""].filter(Boolean).join(" and ")}.{" "}
@@ -88,7 +91,7 @@ export function AiStatusLine({ id, onChanged }: { id: string; onChanged: (o: Obj
 function NoJob({ id, reload }: { id: string; reload: () => void }) {
   return (
     <div className="ai-status small quiet">
-      <button className="link-btn" onClick={() => api.aiRun(id).then(reload).then(aiChanged)}>Ask the Archivist to look at this</button>
+      <button className="link-btn" onClick={() => api.aiRun(id).then(reload).then(aiChanged)}>Let the Archivist look now</button> <span title="Uses one or two of today’s calls">(one or two calls)</span>
     </div>
   );
 }
@@ -106,7 +109,7 @@ export function AiPage() {
   return (
     <main className="contents wrap ai-page">
       <header className="vol"><h2>AI</h2></header>
-      <p className="quiet">The Archivist reads each new capture and fills in what it can: the kind of thing it is, who wrote it, when, and a few Tags. Everything it adds is marked ✦ and can be undone in one click. It never reads anything you marked Private, and it never writes in your words.</p>
+      <p className="quiet">The Archivist reads each new capture and fills in what it can: the kind of thing it is, who wrote it, when, and a few Tags. Tags and facts it adds are marked ✦ and can be undone in one click. Connections, a change of type and new Objects wait on the Object as Suggestions until you approve them (then they show ✧). A short summary of a Source appears as an AI Note beside your words, never inside them. It never reads anything you marked Private, and it never writes in your words.</p>
 
       <h3>Your OpenRouter key</h3>
       {ai?.keySet && !ai.keyProblem ? (

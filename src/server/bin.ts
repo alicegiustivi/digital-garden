@@ -40,7 +40,8 @@ export function purgeObjects(db: Db, ids: string[]) {
     for (const id of ids) {
       if (!db.prepare("SELECT 1 FROM objects WHERE id = ? AND deleted_at IS NOT NULL").get(id)) continue; // only the Bin can be purged
       for (const table of ["connections"]) db.prepare(`DELETE FROM ${table} WHERE from_id = ? OR to_id = ?`).run(id, id);
-      for (const table of ["object_tags", "field_values", "blocks", "source_images", "ai_jobs", "ai_runs", "ai_rejected"]) db.prepare(`DELETE FROM ${table} WHERE object_id = ?`).run(id);
+      db.prepare("DELETE FROM ai_suggestions WHERE json_extract(data, '$.otherId') = ?").run(id);
+      for (const table of ["object_tags", "field_values", "blocks", "source_images", "ai_jobs", "ai_runs", "ai_rejected", "ai_notes", "ai_suggestions"]) db.prepare(`DELETE FROM ${table} WHERE object_id = ?`).run(id);
       db.prepare("DELETE FROM objects WHERE id = ?").run(id);
       gone.push(id);
     }
@@ -70,8 +71,8 @@ export function restoreConnection(db: Db, c: any) {
   if (!live(c?.fromId) || !live(c?.toId)) throw new BadRequest("That Object could not be found");
   if (db.prepare("SELECT 1 FROM connections WHERE (from_id = ? AND to_id = ?) OR (from_id = ? AND to_id = ?)").get(c.fromId, c.toId, c.toId, c.fromId))
     throw new BadRequest("These two are already connected");
-  db.prepare("INSERT INTO connections (from_id, to_id, kind, origin, ai_role, ai_model, ai_date, note) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
-    .run(c.fromId, c.toId, String(c.kind), ...originCols(c), c.note ?? null);
+  db.prepare("INSERT INTO connections (from_id, to_id, kind, origin, ai_role, ai_model, ai_date, note, approved) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")
+    .run(c.fromId, c.toId, String(c.kind), ...originCols(c), c.note ?? null, c.origin === "ai" && c.approved ? 1 : 0);
   return { restored: true };
 }
 

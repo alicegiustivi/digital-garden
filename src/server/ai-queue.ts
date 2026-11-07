@@ -8,7 +8,8 @@ import { join } from "node:path";
 import { AI_CONFIG, type AiRole } from "./ai-config.ts";
 import { GateError, readKey, type Gate } from "./ai-gate.ts";
 import { archivistPrompt, readable } from "./ai-prompt.ts";
-import { applyFindings, lastRun, parseFindings, undoRun } from "./archivist.ts";
+import { applyFindings, jsonOf, lastRun, parseFindings, undoRun } from "./archivist.ts";
+import { applyProposals, parseProposals, pendingCount } from "./suggestions.ts";
 import { imagesDir } from "./paths.ts";
 
 type Db = Database.Database;
@@ -82,11 +83,12 @@ export function createAi(db: Db, opts: { gate: Gate; now?: () => Date; hasKey?: 
       const o = db.prepare("SELECT private FROM objects WHERE id = ? AND deleted_at IS NULL").get(id) as any;
       if (!o) return null;
       const run = lastRun(db, id);
-      if (o.private) return { state: "private" as const, run, canRun: false };
+      if (o.private) return { state: "private" as const, run, canRun: false, pending: 0 };
+      const pending = pendingCount(db, id);
       const j = db.prepare("SELECT * FROM ai_jobs WHERE object_id = ? AND role = 'archivist' AND status <> 'cancelled' ORDER BY id DESC LIMIT 1").get(id) as JobRow | undefined;
-      if (!j) return { state: "none" as const, run, canRun: true };
+      if (!j) return { state: "none" as const, run, canRun: true, pending };
       const state = (j.status === "done" ? "done" : j.status) as "waiting" | "working" | "busy" | "tomorrow" | "failed" | "done";
-      return { state, run, canRun: state === "done" || state === "failed", nextTryAt: state === "busy" || state === "tomorrow" ? j.run_after : undefined, needsKey: state !== "done" && state !== "failed" && !hasKey() };
+      return { state, run, pending, canRun: state === "done" || state === "failed", nextTryAt: state === "busy" || state === "tomorrow" ? j.run_after : undefined, needsKey: state !== "done" && state !== "failed" && !hasKey() };
     },
 
     /** The quiet line in the top bar. */
@@ -204,6 +206,7 @@ export function createAi(db: Db, opts: { gate: Gate; now?: () => Date; hasKey?: 
       const findings = parseFindings(text);
       if (!findings) continue;
       applyFindings(db, id, findings, model, ctx.now);
+      applyProposals(db, id, parseProposals(jsonOf(text)), prompt.candidates, model, ctx.now); // Suggestions and the AI Note, from the same call
       return "done";
     }
     return sawBusy ? { busy: true } : { unusable: true };

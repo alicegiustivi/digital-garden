@@ -37,17 +37,18 @@ export function TypeChip({ type, label, sub }: { type: string; label: string; su
 
 /** What hovering an Origin mark says. */
 export function originTip(o: OriginInfo): string | undefined {
+  if (o.origin === "ai" && o.approved) return `Suggested by the ${o.aiRole}, using ${o.aiModel}, on ${o.aiDate}. You approved it; it stays the AI's`;
   if (o.origin === "ai") return `Added by the ${o.aiRole}, using ${o.aiModel}, on ${o.aiDate}`;
   if (o.origin === "source") return "From the Source: it came from outside the Garden";
   return undefined;
 }
 
 /**
- * Origin marks (ADR 0001, issue #8). Owner: plain. AI: ✦ and a dotted underline.
+ * Origin marks (ADR 0001, issue #8). Owner: plain. AI: ✦ and a dotted underline (✧ once the owner approved it).
  * Source: italics and ❝. Drawn with glyphs and lines only, never colour (see .o-ai / .o-src in style.css).
  */
 export function Marked({ o, children, className = "" }: { o: OriginInfo; children: ReactNode; className?: string }) {
-  const cls = o.origin === "ai" ? "o-ai" : o.origin === "source" ? "o-src" : "";
+  const cls = o.origin === "ai" ? (o.approved ? "o-ai approved" : "o-ai") : o.origin === "source" ? "o-src" : "";
   return (
     <span className={`${cls} ${className}`.trim()} title={originTip(o)}>
       {children}

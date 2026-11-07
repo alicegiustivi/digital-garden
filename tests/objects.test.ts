@@ -35,7 +35,7 @@ describe("making and editing Objects", () => {
   it("makes an Object whose title is the owner's", async () => {
     const o = await make("source", "Gödel, Escher, Bach");
     expect(o.type).toBe("source");
-    expect(o.fields).toEqual([{ key: "title", value: "Gödel, Escher, Bach", origin: "owner", aiRole: null, aiModel: null, aiDate: null }]);
+    expect(o.fields).toEqual([{ key: "title", value: "Gödel, Escher, Bach", origin: "owner", aiRole: null, aiModel: null, aiDate: null, approved: false }]);
   });
   it("edits fields and clears one when emptied", async () => {
     const o = await make("source", "A book");

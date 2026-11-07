@@ -9,8 +9,9 @@ export const TAG_COLORS = ["blue", "rose", "olive", "amber", "sky", "lilac", "gr
 
 export class BadRequest extends Error {}
 
-type OriginInfo = { origin: "source" | "ai" | "owner"; aiRole: string | null; aiModel: string | null; aiDate: string | null };
-const originOf = (r: any): OriginInfo => ({ origin: r.origin, aiRole: r.ai_role, aiModel: r.ai_model, aiDate: r.ai_date });
+type OriginInfo = { origin: "source" | "ai" | "owner"; aiRole: string | null; aiModel: string | null; aiDate: string | null; approved: boolean };
+// `approved` is only ever true for an AI piece the owner accepted as a Suggestion (it keeps AI Origin, shown ✧).
+const originOf = (r: any): OriginInfo => ({ origin: r.origin, aiRole: r.ai_role, aiModel: r.ai_model, aiDate: r.ai_date, approved: r.origin === "ai" && !!r.approved });
 const iso = (s: string | null) => (s ? s.replace(" ", "T") + "Z" : null);
 
 export function listTypes(db: Db) {
@@ -107,7 +108,15 @@ export function getObject(db: Db, id: string) {
   const blocks = (db.prepare("SELECT * FROM blocks WHERE object_id = ? ORDER BY position").all(id) as any[]).map((b) => ({
     id: b.id, text: b.text, ...originOf(b),
   }));
-  return { ...summary, blocks };
+  const r = row as any;
+  return {
+    ...summary,
+    blocks,
+    /** Set when the owner approved the Archivist's suggested change of Object Type. */
+    typeAi: r.type_ai ? (JSON.parse(r.type_ai) as { aiRole: string; aiModel: string; aiDate: string }) : null,
+    /** The day this became Private, when the AI had read it before that. */
+    aiReadBeforePrivate: r.private ? ((r.ai_read_before_private as string | null) ?? null) : null,
+  };
 }
 
 /** What an Object is called in a list or a sentence: its title, or for an untitled Thought its first line. */
@@ -135,10 +144,30 @@ function setField(db: Db, id: string, key: string, value: string | null) {
     // Editing a value makes it the owner's (ADR 0001).
     db.prepare(
       `INSERT INTO field_values (object_id, field, value, origin) VALUES (?, ?, ?, 'owner')
-       ON CONFLICT (object_id, field) DO UPDATE SET value = excluded.value, origin = 'owner', ai_role = NULL, ai_model = NULL, ai_date = NULL`,
+       ON CONFLICT (object_id, field) DO UPDATE SET value = excluded.value, origin = 'owner', ai_role = NULL, ai_model = NULL, ai_date = NULL, approved = 0`,
     ).run(id, key, v);
   }
   if (key === "title") db.prepare("UPDATE objects SET title = ? WHERE id = ?").run(v || null, id);
+}
+
+/**
+ * Mark an Object Private, or not. Making it Private (CONTEXT.md: Private; issue #32): pending Suggestions about it, and
+ * pending Suggestions to connect something to it, are dropped; its AI Notes are deleted; approved items stay; and if the
+ * AI had read it before, the day is kept so the page can say so. Turning Private off starts nothing by itself.
+ */
+export function setPrivate(db: Db, id: string, on: boolean) {
+  const o = db.prepare("SELECT private FROM objects WHERE id = ?").get(id) as any;
+  if (!o) return;
+  if (on && !o.private) {
+    const read =
+      db.prepare("SELECT 1 FROM ai_runs WHERE object_id = ? UNION ALL SELECT 1 FROM ai_notes WHERE object_id = ? UNION ALL SELECT 1 FROM ai_suggestions WHERE object_id = ? UNION ALL SELECT 1 FROM ai_jobs WHERE object_id = ? AND status = 'done' LIMIT 1").get(id, id, id, id);
+    db.prepare("DELETE FROM ai_suggestions WHERE object_id = ? OR (kind IN ('connection', 'object') AND json_extract(data, '$.otherId') = ?)").run(id, id);
+    db.prepare("DELETE FROM ai_notes WHERE object_id = ?").run(id);
+    db.prepare("UPDATE ai_jobs SET status = 'cancelled' WHERE object_id = ? AND status IN ('waiting', 'busy', 'tomorrow')").run(id);
+    db.prepare("UPDATE objects SET private = 1, ai_read_before_private = ? WHERE id = ?").run(read ? new Date().toISOString().slice(0, 10) : null, id);
+  } else if (!on) {
+    db.prepare("UPDATE objects SET private = 0 WHERE id = ?").run(id);
+  }
 }
 
 export function createObject(db: Db, input: { type?: unknown; title?: unknown; private?: unknown }) {
@@ -157,9 +186,10 @@ export function updateObject(db: Db, id: string, patch: { type?: unknown; privat
     if (patch.type !== undefined) {
       if (!typeExists(db, patch.type)) throw new BadRequest("unknown Object Type");
       // Only the type changes. Field values that don't fit the new type stay stored.
-      db.prepare("UPDATE objects SET type = ? WHERE id = ?").run(patch.type, id);
+      // Choosing a type is the owner's decision, so it stops being the Archivist's.
+      db.prepare("UPDATE objects SET type = ?, type_ai = CASE WHEN type = ? THEN type_ai ELSE NULL END WHERE id = ?").run(patch.type, patch.type, id);
     }
-    if (patch.private !== undefined) db.prepare("UPDATE objects SET private = ? WHERE id = ?").run(patch.private ? 1 : 0, id);
+    if (patch.private !== undefined) setPrivate(db, id, !!patch.private);
     if (patch.fields !== undefined) {
       if (typeof patch.fields !== "object" || patch.fields === null) throw new BadRequest("fields must be an object");
       for (const [k, v] of Object.entries(patch.fields)) setField(db, id, k, v === null ? null : String(v));

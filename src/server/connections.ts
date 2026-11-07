@@ -1,7 +1,7 @@
 // Connections between Objects (issue #7): one per pair, seven fixed kinds, readable from both ends.
 // Also: name search for @ and [[, "Shares words with", and merging two Objects of the same type.
 import type Database from "better-sqlite3";
-import { BadRequest, summarise, titleOf } from "./objects.ts";
+import { BadRequest, setPrivate, summarise, titleOf } from "./objects.ts";
 import { MENTION, mentionIds, mentionToken, mentionsInBody, syncMentions } from "./mentions.ts";
 
 type Db = Database.Database;
@@ -21,7 +21,7 @@ const LABELS: Record<Kind, [string, string]> = {
 const SYMMETRIC = new Set<string>(["related", "contradicts"]);
 const labelFor = (kind: string, subject: boolean) => LABELS[kind as Kind][subject ? 0 : 1];
 const live = (db: Db, id: string) => !!db.prepare("SELECT 1 FROM objects WHERE id = ? AND deleted_at IS NULL").get(id);
-const originOf = (r: any) => ({ origin: r.origin, aiRole: r.ai_role, aiModel: r.ai_model, aiDate: r.ai_date });
+const originOf = (r: any) => ({ origin: r.origin, aiRole: r.ai_role, aiModel: r.ai_model, aiDate: r.ai_date, approved: r.origin === "ai" && !!r.approved });
 
 /** The paragraph's sentence that holds the reference, with other Mentions shown by name. */
 function sentenceAround(db: Db, text: string, id: string): string | null {
@@ -118,7 +118,7 @@ export function updateConnection(db: Db, id: number, patch: { kind?: unknown; su
         if (patch.subject === to) [from, to] = [to, from];
       }
       // Choosing a kind is the owner's decision, so the Connection becomes theirs (ADR 0001).
-      db.prepare("UPDATE connections SET kind = ?, from_id = ?, to_id = ?, origin = 'owner', ai_role = NULL, ai_model = NULL, ai_date = NULL WHERE id = ?").run(kind, from, to, id);
+      db.prepare("UPDATE connections SET kind = ?, from_id = ?, to_id = ?, origin = 'owner', ai_role = NULL, ai_model = NULL, ai_date = NULL, approved = 0 WHERE id = ?").run(kind, from, to, id);
     }
     if (patch.note !== undefined) db.prepare("UPDATE connections SET note = ? WHERE id = ?").run(cleanNote(patch.note) || null, id);
   })();
@@ -225,7 +225,7 @@ export function sharesWords(db: Db, id: string) {
 }
 
 // ---------- Merge ----------
-type Conn = { id: number; from_id: string; to_id: string; kind: string; origin: string; ai_role: any; ai_model: any; ai_date: any; note: string | null };
+type Conn = { id: number; from_id: string; to_id: string; kind: string; origin: string; ai_role: any; ai_model: any; ai_date: any; approved: number; note: string | null };
 const rel = (c: Conn, me: string) => (SYMMETRIC.has(c.kind) ? c.kind : `${c.kind}:${c.from_id === me ? "out" : "in"}`);
 const specific = (k: string) => k !== "related" && k !== "mentions";
 const joinNotes = (a: string | null, b: string | null) => [a, b].filter((x, i, all) => x && all.indexOf(x) === i).join(" · ") || null;
@@ -276,8 +276,8 @@ export function mergeObjects(db: Db, keepId: string, dropId: string, picks: Reco
       const note = joinNotes(p.keep.note, p.drop.note); // both notes are kept
       if (p.win === "drop") {
         const d = p.drop;
-        db.prepare("UPDATE connections SET kind = ?, from_id = ?, to_id = ?, origin = ?, ai_role = ?, ai_model = ?, ai_date = ?, note = ? WHERE id = ?")
-          .run(d.kind, d.from_id === dropId ? keepId : d.from_id, d.to_id === dropId ? keepId : d.to_id, d.origin, d.ai_role, d.ai_model, d.ai_date, note, p.keep.id);
+        db.prepare("UPDATE connections SET kind = ?, from_id = ?, to_id = ?, origin = ?, ai_role = ?, ai_model = ?, ai_date = ?, approved = ?, note = ? WHERE id = ?")
+          .run(d.kind, d.from_id === dropId ? keepId : d.from_id, d.to_id === dropId ? keepId : d.to_id, d.origin, d.ai_role, d.ai_model, d.ai_date, d.approved, note, p.keep.id);
       } else db.prepare("UPDATE connections SET note = ? WHERE id = ?").run(note, p.keep.id);
       db.prepare("DELETE FROM connections WHERE id = ?").run(p.drop.id);
     }
@@ -295,7 +295,7 @@ export function mergeObjects(db: Db, keepId: string, dropId: string, picks: Reco
     // Mentions of the merged Object, anywhere, now point at the kept one.
     for (const b of db.prepare("SELECT id, text FROM blocks WHERE instr(text, ?) > 0").all(mentionToken(dropId)) as any[])
       db.prepare("UPDATE blocks SET text = ? WHERE id = ?").run(b.text.split(mentionToken(dropId)).join(mentionToken(keepId)), b.id);
-    if (drop.private) db.prepare("UPDATE objects SET private = 1 WHERE id = ?").run(keepId);
+    if (drop.private && !keep.private) setPrivate(db, keepId, true);
     db.prepare("UPDATE objects SET updated_at = datetime('now') WHERE id = ?").run(keepId);
     // The merged Object goes to the Bin; everything of value has moved to the kept one.
     db.prepare("UPDATE objects SET deleted_at = datetime('now') WHERE id = ?").run(dropId);
