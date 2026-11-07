@@ -55,10 +55,12 @@ export function Marked({ o, children, className = "" }: { o: OriginInfo; childre
   );
 }
 
-export function TagPill({ tag, onRemove }: { tag: Tag; onRemove?: () => void }) {
+export function TagPill({ tag, onRemove, linked }: { tag: Tag; onRemove?: () => void; linked?: boolean }) {
   return (
     <span className="tag" style={tagVar(tag.color)}>
-      <Marked o={tag}>#{tag.name}</Marked>
+      {linked
+        ? <a className="tag-link" href={`#/tags/${encodeURIComponent(tag.name)}`} title={`See everything tagged #${tag.name}`}><Marked o={tag}>#{tag.name}</Marked></a>
+        : <Marked o={tag}>#{tag.name}</Marked>}
       {onRemove && (
         <button className="x" onClick={onRemove} aria-label={`Remove tag ${tag.name}`}>
           <Icon name="close" />

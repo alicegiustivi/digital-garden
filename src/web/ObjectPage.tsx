@@ -151,7 +151,7 @@ export function ObjectPage({ id, types, fresh, onChanged, beside, onDeleted }: P
           </div>
 
           <div className="tags">
-            {obj.tags.map((t) => <TagPill key={t.id} tag={t} onRemove={() => removeTagHere(t)} />)}
+            {obj.tags.map((t) => <TagPill key={t.id} tag={t} linked onRemove={() => removeTagHere(t)} />)}
             <TagInput known={allTags} onAdd={addTag} />
           </div>
 
