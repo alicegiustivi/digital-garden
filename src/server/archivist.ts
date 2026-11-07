@@ -1,7 +1,7 @@
 // The Archivist (CONTEXT.md: Archivist). For a newly captured Object it names the format, fills in facts about a Source
 // (title, authors, date) and adds Tags. All of it is an AI Contribution applied directly: marked ✦ with the role, model and
 // date (ADR 0001), and undone in one click. It never touches the owner's words, never overwrites anything the owner wrote,
-// and never creates structure (Connections, a new Object, a change of Object Type): those will be Suggestions, not this build.
+// and never creates structure (Connections, a new Object, a change of Object Type): those are Suggestions (suggestions.ts).
 import type Database from "better-sqlite3";
 import { cleanTagName, tagIdFor } from "./objects.ts";
 
@@ -12,12 +12,17 @@ const FORMATS = ["book", "article", "video", "podcast", "web page", "image", "do
 export type Findings = { format?: string; title?: string; authors?: string; published?: string; tags: string[] };
 
 /** Reads the model's answer. Anything that isn't a clear JSON object is "unusable" (null), never guessed at. */
-export function parseFindings(text: string): Findings | null {
+export function jsonOf(text: string): any | null {
   const start = text.indexOf("{"), end = text.lastIndexOf("}");
   if (start < 0 || end <= start) return null;
   let j: any;
   try { j = JSON.parse(text.slice(start, end + 1)); } catch { return null; }
-  if (!j || typeof j !== "object" || Array.isArray(j)) return null;
+  return j && typeof j === "object" && !Array.isArray(j) ? j : null;
+}
+
+export function parseFindings(text: string): Findings | null {
+  const j = jsonOf(text);
+  if (!j) return null;
   const str = (v: unknown, max: number) => (typeof v === "string" && v.trim() && v.trim().length <= max ? v.trim() : undefined);
   const format = typeof j.format === "string" && FORMATS.includes(j.format.trim().toLowerCase()) ? j.format.trim().toLowerCase() : undefined;
   const published = str(j.published, 10);

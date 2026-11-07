@@ -1,5 +1,5 @@
 export type Origin = "source" | "ai" | "owner";
-export type OriginInfo = { origin: Origin; aiRole: string | null; aiModel: string | null; aiDate: string | null };
+export type OriginInfo = { origin: Origin; aiRole: string | null; aiModel: string | null; aiDate: string | null; /** An AI Suggestion the owner approved: still AI Origin, marked ✧. */ approved?: boolean };
 export type Field = { key: string; value: string } & OriginInfo;
 export type Tag = { id: number; name: string; color: string } & OriginInfo;
 export type Block = { id: number; text: string } & OriginInfo;
@@ -8,7 +8,20 @@ export type Summary = {
   fields: Field[]; firstLine: string; tags: Tag[]; connectionCount: number;
 };
 export type MentionInfo = { id: string; missing: boolean; type?: string; title?: string; private?: boolean; tags?: Tag[]; connectionCount?: number; inBin?: boolean; kind?: string | null; label?: string | null };
-export type Obj = Summary & { blocks: Block[]; mentions?: Record<string, MentionInfo> };
+export type Obj = Summary & {
+  blocks: Block[]; mentions?: Record<string, MentionInfo>;
+  typeAi?: { aiRole: string; aiModel: string; aiDate: string } | null; aiReadBeforePrivate?: string | null;
+};
+type SuggestionBase = { id: number; origin: "ai"; aiRole: string; aiModel: string; aiDate: string; approved: false };
+export type Suggestion = SuggestionBase & (
+  | { kind: "connection"; other: { id: string; type: string; title: string }; connectionKind: string }
+  | { kind: "type"; type: string; typeLabel: string }
+  | { kind: "object"; type: string; typeLabel: string; name: string }
+  | { kind: "title"; title: string }
+);
+export type Suggestions = { pending: Suggestion[]; rejected: number };
+export type AiNote = { id: number; kind: "summary" | "prompt"; text: string } & OriginInfo;
+export type RemovedNote = { objectId: string; kind: string; text: string; aiRole: string; aiModel: string; aiDate: string };
 export type Found = Summary & { title: string; connected: boolean };
 export type Brief = { id: string; type: string; title: string; private: boolean; tags: Tag[]; connectionCount: number };
 export type Connection = {
@@ -30,7 +43,7 @@ export type AiSummary = {
   reset: { at: string; source: string }; models: string[];
 };
 export type AiRun = { id: number; model: string; at: string; facts: string[]; tags: string[] };
-export type AiStatus = { state: "none" | "private" | "waiting" | "working" | "busy" | "tomorrow" | "failed" | "done"; run: AiRun | null; canRun: boolean; nextTryAt?: string; needsKey?: boolean };
+export type AiStatus = { pending?: number; state: "none" | "private" | "waiting" | "working" | "busy" | "tomorrow" | "failed" | "done"; run: AiRun | null; canRun: boolean; nextTryAt?: string; needsKey?: boolean };
 export type TagRow = { id: number; name: string; color: string; count: number };
 
 async function call<T>(method: string, path: string, body?: unknown): Promise<T> {
@@ -47,6 +60,14 @@ export const api = {
   aiStatus: (id: string) => call<AiStatus>("GET", `/api/objects/${id}/ai`),
   aiRun: (id: string) => call<AiStatus>("POST", `/api/objects/${id}/ai/run`),
   aiUndo: (id: string) => call<Obj>("POST", `/api/objects/${id}/ai/undo`),
+  suggestions: (id: string) => call<Suggestions>("GET", `/api/objects/${id}/suggestions`),
+  approve: (sid: number) => call<Obj>("POST", `/api/suggestions/${sid}/approve`),
+  reject: (sid: number) => call<unknown>("POST", `/api/suggestions/${sid}/reject`),
+  forgetRejected: (id: string) => call<unknown>("POST", `/api/objects/${id}/ai/forget-rejected`),
+  aiNotes: (id: string) => call<AiNote[]>("GET", `/api/objects/${id}/ai-notes`),
+  deleteAiNote: (nid: number) => call<{ was: RemovedNote }>("DELETE", `/api/ai-notes/${nid}`),
+  restoreAiNote: (n: RemovedNote) => call<unknown>("POST", "/api/ai-notes/restore", n),
+  thoughtFromNote: (nid: number) => call<Obj>("POST", `/api/ai-notes/${nid}/thought`),
   types: () => call<Types>("GET", "/api/types"),
   list: (q: { type?: string; tag?: string; since?: string; unreviewed?: string } = {}) =>
     call<Summary[]>("GET", "/api/objects?" + new URLSearchParams(q as Record<string, string>)),

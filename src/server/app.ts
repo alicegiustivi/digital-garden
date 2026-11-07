@@ -8,6 +8,7 @@ import { extractInto } from "./extract.ts";
 import { readImage } from "./images.ts";
 import * as bin from "./bin.ts";
 import { createAi, type Ai } from "./ai-queue.ts";
+import * as sg from "./suggestions.ts";
 import { createGate, forgetKey, GateError, looksLikeKey, saveKey } from "./ai-gate.ts";
 
 type Options = { /** Reads a saved link in the background. Tests replace it. */ readLink?: (id: string, url: string) => void; /** The AI queue. Tests give it a pretend OpenRouter. */ ai?: Ai };
@@ -89,7 +90,7 @@ export function createApp(sqlite: Database.Database, opts: Options = {}) {
     const id = Number(c.req.param("id"));
     const was = sqlite.prepare("SELECT * FROM connections WHERE id = ?").get(id) as any;
     if (!k.disconnect(sqlite, id)) return c.json({ error: "Not found" }, 404);
-    return c.json({ removed: true, was: { fromId: was.from_id, toId: was.to_id, kind: was.kind, note: was.note, origin: was.origin, aiRole: was.ai_role, aiModel: was.ai_model, aiDate: was.ai_date } });
+    return c.json({ removed: true, was: { fromId: was.from_id, toId: was.to_id, kind: was.kind, note: was.note, origin: was.origin, aiRole: was.ai_role, aiModel: was.ai_model, aiDate: was.ai_date, approved: !!was.approved } });
   });
   app.post("/api/connections/restore", async (c) => c.json(bin.restoreConnection(sqlite, await c.req.json().catch(() => ({}))), 201));
   // Merge two Objects of the same type into the kept one. If two Connections disagree it answers 409 with what to ask.
@@ -134,6 +135,22 @@ export function createApp(sqlite: Database.Database, opts: Options = {}) {
   app.get("/api/objects/:id/ai", (c) => found(c, ai.statusOf(c.req.param("id"))));
   app.post("/api/objects/:id/ai/run", (c) => (ai.request(c.req.param("id")) ? c.json(ai.statusOf(c.req.param("id"))) : c.json({ error: "The Archivist can't read this one" }, 400)));
   app.post("/api/objects/:id/ai/undo", (c) => (ai.undo(c.req.param("id")) ? c.json(o.getObject(sqlite, c.req.param("id"))) : c.json({ error: "Nothing to undo" }, 404)));
+
+  // Suggestions and AI Notes (issue #32)
+  app.get("/api/objects/:id/suggestions", (c) => found(c, sg.suggestionsOf(sqlite, c.req.param("id"))));
+  app.post("/api/suggestions/:id/approve", (c) => {
+    const objectId = sg.approve(sqlite, Number(c.req.param("id")));
+    return objectId ? c.json(withMentions(o.getObject(sqlite, objectId))) : c.json({ error: "Not found" }, 404);
+  });
+  app.post("/api/suggestions/:id/reject", (c) => {
+    const objectId = sg.reject(sqlite, Number(c.req.param("id")));
+    return objectId ? c.json({ rejected: true }) : c.json({ error: "Not found" }, 404);
+  });
+  app.post("/api/objects/:id/ai/forget-rejected", (c) => c.json({ forgotten: sg.forgetRejected(sqlite, c.req.param("id")) }));
+  app.get("/api/objects/:id/ai-notes", (c) => found(c, sg.notesOf(sqlite, c.req.param("id"))));
+  app.delete("/api/ai-notes/:id", (c) => { const n = sg.deleteNote(sqlite, Number(c.req.param("id"))); return n ? c.json({ removed: true, was: n }) : c.json({ error: "Not found" }, 404); });
+  app.post("/api/ai-notes/restore", async (c) => c.json(sg.restoreNote(sqlite, await c.req.json().catch(() => ({}))), 201));
+  app.post("/api/ai-notes/:id/thought", (c) => { const id = sg.startThoughtFromNote(sqlite, Number(c.req.param("id"))); return id ? c.json(withMentions(o.getObject(sqlite, id)), 201) : c.json({ error: "Not found" }, 404); });
 
   app.use("/*", serveStatic({ root: "./dist/web" }));
   app.get("*", serveStatic({ path: "./dist/web/index.html" }));

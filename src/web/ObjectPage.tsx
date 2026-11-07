@@ -3,6 +3,7 @@ import { api, fieldOf, type FieldDef, type Obj, type TagRow, type TypeDef, type 
 import { BodyEditor } from "./BodyEditor";
 import { Editable } from "./Editable";
 import { AiStatusLine } from "./Ai";
+import { AiNotes, ArchivistSuggestions } from "./Suggestions";
 import { ConnectionsPanel, MergeDialog } from "./Connections";
 import { refresh, useRefresh } from "./refresh";
 import { showToast } from "./toast";
@@ -116,7 +117,7 @@ export function ObjectPage({ id, types, fresh, onChanged, beside, onDeleted }: P
             <TagInput known={allTags} onAdd={addTag} />
           </div>
 
-          {obj.private && <p className="quiet small">Private: no AI reads this.</p>}
+          <ArchivistSuggestions obj={obj} types={types} onChanged={update} />
           <AiStatusLine id={obj.id} onChanged={update} />
           {kept.length > 0 && (
             <p className="quiet small kept">
@@ -146,6 +147,7 @@ export function ObjectPage({ id, types, fresh, onChanged, beside, onDeleted }: P
             placeholder={obj.type === "thought" ? "Write the thought…" : "Write in your own words…"}
             onSave={(p) => api.setBody(obj.id, p).then((o) => { setObj((cur) => (cur ? { ...cur, mentions: o.mentions, connectionCount: o.connectionCount } : cur)); onChanged(); refresh(); })}
           />
+          <AiNotes obj={obj} />
           <ConnectionsPanel obj={obj} types={types} beside={beside} />
         </div>
       </div>

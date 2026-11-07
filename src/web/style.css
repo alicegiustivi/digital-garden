@@ -47,6 +47,7 @@ h1, h2, h3, h4 { font-weight: 600; letter-spacing: -.02em; text-wrap: balance; m
 /* ---------- Origin marks: no hue, ever (ADR 0001, issue #8) ---------- */
 .o-ai { text-decoration: underline dotted 1.5px color-mix(in srgb, currentColor 55%, transparent); text-underline-offset: 4px; }
 .o-ai::after { content: "✦"; font-size: .62em; vertical-align: .45em; margin-left: .18em; font-style: normal; display: inline-block; text-decoration: none; }
+.approved::after { content: "✧"; } /* an approved AI Suggestion: still AI, a quieter mark */
 .o-src { font-style: italic; }
 .o-src::before { content: "❝"; font-style: normal; font-size: .7em; vertical-align: .3em; margin-right: .2em; opacity: .7; }
 
@@ -333,3 +334,15 @@ select.edit { font-size: 13.5px; }
 .ai-page .key-form { display: flex; gap: 8px; align-items: center; margin: 12px 0; }
 .ai-page .key-form input { flex: 1; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--line, #8883); background: var(--card); color: var(--ink); font: inherit; }
 .ai-page ul.plain { list-style: none; padding: 0; line-height: 1.8; }
+
+/* Suggestions and AI Notes (issue #32) */
+.archivist-block { margin: 6px 0 0; padding: 12px 14px; border-radius: 16px; background: color-mix(in srgb, var(--ink) 4%, var(--ground)); max-width: 40rem; justify-self: stretch; }
+.archivist-block h3 { margin: 0 0 6px; font-size: 13px; font-weight: 600; }
+.archivist-block ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+.archivist-block li { display: flex; gap: 10px; align-items: baseline; justify-content: space-between; flex-wrap: wrap; font-size: 14.5px; }
+.archivist-block .acts { display: inline-flex; gap: 6px; }
+.ai-notes { display: grid; gap: 14px; margin: 28px 0 8px; }
+.ai-note { border-left: 2px dotted color-mix(in srgb, var(--ink) 40%, transparent); padding: 4px 0 4px 16px; font-size: 15.5px; line-height: 1.6; color: color-mix(in srgb, var(--ink) 85%, var(--ground)); }
+.ai-note .label { font-size: 12px; color: var(--mute); margin: 0 0 4px; }
+.ai-note .text { margin: 0 0 6px; }
+.ai-note .acts { display: inline-flex; gap: 10px; font-size: 13px; }
