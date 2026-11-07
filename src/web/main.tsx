@@ -14,6 +14,7 @@ import type { Summary } from "./api";
 import { Icon, typeVar } from "./ui";
 import { Palette, SearchPage } from "./Search";
 import { TimelinePage } from "./Timeline";
+import { OverviewPage } from "./Overview";
 import { addRecent } from "./recent";
 import { Capture, captureKey, emptyDraft, isCaptureKey, type CaptureDraft } from "./Capture";
 
@@ -33,6 +34,7 @@ const go = (h: string) => { location.hash = h; };
 const NAV = [
   { label: "This week", hash: "#/", type: null },
   { label: "Sources", hash: "#/sources", type: "source" },
+  { label: "Overview", hash: "#/overview", type: null },
   { label: "Concepts", hash: "#/concepts", type: "concept" },
   { label: "Thoughts", hash: "#/thoughts", type: "thought" },
   { label: "People", hash: "#/people", type: "person" },
@@ -250,6 +252,8 @@ function App() {
     page = <TypeList typeKey={TYPE_OF_ROUTE[parts[0]]} types={types} version={version} onNew={make} onOpen={open} />;
   } else if (parts[0] === "search") {
     page = <SearchPage key={hash} hash={hash} types={types} version={version} onOpen={open} />;
+  } else if (parts[0] === "overview") {
+    page = <OverviewPage types={types} version={version} onOpen={open} go={go} onChanged={changed} />;
   } else if (parts[0] === "timeline") {
     page = <TimelinePage types={types} version={version} onOpen={open} />;
   } else if (parts[0] === "unreviewed") {

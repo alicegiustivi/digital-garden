@@ -408,3 +408,26 @@ mark { background: color-mix(in srgb, var(--t-thought) 28%, transparent); color:
 .transcript > summary::before { content: "▸ "; }
 .transcript[open] > summary::before { content: "▾ "; }
 .transcript .view { display: block; font-style: italic; }
+
+/* Overview (issue #34): Concepts as islands */
+.islands { display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-start; margin-bottom: 28px; }
+.island { --d: 150px; position: relative; width: max(var(--d), 220px); display: grid; gap: 8px; align-content: start; background: var(--card); border-radius: 28px; padding: 16px 18px; box-shadow: var(--shadow); cursor: pointer; border: 2px solid transparent; }
+.island:hover { box-shadow: 0 6px 18px rgba(60, 50, 30, .1); }
+.island .blob { width: var(--d); height: calc(var(--d) * .62); border-radius: 58% 42% 55% 45% / 52% 58% 42% 48%; background: color-mix(in srgb, var(--t-concept) 22%, transparent); display: grid; place-items: center; font-size: 1.6rem; font-weight: 600; color: var(--t-concept); }
+.island h4 { font-size: 1.2rem; overflow-wrap: anywhere; }
+.island.dashed { background: transparent; border: 2px dashed var(--t-concept); box-shadow: none; }
+.island.dashed .blob { background: transparent; border: 2px dashed var(--t-concept); }
+.island.lit { border-color: var(--t-concept); box-shadow: 0 0 0 4px color-mix(in srgb, var(--t-concept) 25%, transparent); }
+.island.dim { opacity: .5; }
+.mixbar { display: flex; height: 8px; border-radius: 999px; overflow: hidden; background: var(--line, rgba(0,0,0,.08)); }
+.mixbar span { background: var(--c); }
+.dots { display: flex; gap: 4px; align-items: center; }
+.dots i { width: 8px; height: 8px; border-radius: 50%; background: var(--t-concept); opacity: .15; }
+.dots i.on { opacity: calc(.35 + var(--a) * .2); }
+.island ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; font-size: 13px; }
+.island li { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.shelf { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+.shelf-item { display: inline-flex; gap: 6px; align-items: center; padding: 6px 12px; border-radius: 999px; background: var(--card); box-shadow: var(--shadow); font: inherit; color: var(--ink); border: 2px solid transparent; cursor: pointer; max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.shelf-item.on { border-color: var(--t-concept); }
+.connect-here { justify-self: start; }
+.several li { display: flex; gap: 6px; flex-wrap: wrap; align-items: baseline; }
