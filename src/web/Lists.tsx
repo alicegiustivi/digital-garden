@@ -1,17 +1,18 @@
 import { CardStatus } from "./Ai";
 import { useEffect, useState } from "react";
-import { api, displayTitle, TAG_COLORS, type Summary, type TagRow, type Types } from "./api";
+import { api, displayTitle, TAG_COLORS, type Filters, type Summary, type TagRow, type Types } from "./api";
+import { FilterBar, noFilters, useFilterQuery, useSort, type FilterState } from "./Filters";
 import { showToast } from "./toast";
 import { Icon, TagPill, TypeChip, formatDay, subOf, typeVar, tagVar } from "./ui";
 
-export function useList(q: { type?: string; tag?: string; since?: string; unreviewed?: string }, version: number) {
+export function useList(q: Filters, version: number) {
   const [rows, setRows] = useState<Summary[] | null>(null);
   const key = JSON.stringify(q);
   useEffect(() => { api.list(q).then(setRows); }, [key, version]);
   return rows;
 }
 
-function Card({ o, types, onOpen }: { o: Summary; types: Types; onOpen: () => void }) {
+export function Card({ o, types, onOpen }: { o: Summary; types: Types; onOpen: () => void }) {
   const label = types.types.find((t) => t.key === o.type)!.label;
   return (
     <article className="story" style={typeVar(o.type)} tabIndex={0} role="button" onClick={onOpen} onKeyDown={(e) => e.key === "Enter" && onOpen()}>
@@ -43,19 +44,25 @@ export function TypeList({ typeKey, types, version, onNew, onOpen }: {
   typeKey: string; types: Types; version: number; onNew: (t: string) => void; onOpen: (id: string, ids: string[]) => void;
 }) {
   const def = types.types.find((t) => t.key === typeKey)!;
-  const rows = useList({ type: typeKey }, version);
+  const [filters, setFilters] = useState<FilterState>({ ...noFilters, type: typeKey });
+  useEffect(() => setFilters({ ...noFilters, type: typeKey }), [typeKey]);
+  const [sort, setSort] = useSort(typeKey, "changed", false);
+  const query = useFilterQuery({ ...filters, type: typeKey }, sort);
+  const rows = useList(query, version);
+  const filtered = filters.tag || filters.date || filters.unreviewed || filters.noConnections;
   return (
     <main className="contents wrap">
       <header className="vol">
         <h2>{def.plural}{rows ? <em> {rows.length}</em> : null}</h2>
         <NewButtons types={types} only={typeKey} onNew={onNew} />
       </header>
-      <Grid rows={rows} types={types} onOpen={onOpen} empty={`No ${def.plural.toLowerCase()} yet. Make the first one with the button above.`} />
+      <FilterBar value={filters} onChange={setFilters} types={types} sort={sort} onSort={setSort} lock={["type"]} />
+      <Grid rows={rows} types={types} onOpen={onOpen} empty={filtered ? "Nothing matches these filters." : `No ${def.plural.toLowerCase()} yet. Make the first one with the button above.`} />
     </main>
   );
 }
 
-function Grid({ rows, types, onOpen, empty }: { rows: Summary[] | null; types: Types; onOpen: (id: string, ids: string[]) => void; empty: string }) {
+export function Grid({ rows, types, onOpen, empty }: { rows: Summary[] | null; types: Types; onOpen: (id: string, ids: string[]) => void; empty: string }) {
   if (!rows) return <p className="quiet">Opening…</p>;
   if (!rows.length) return <p className="quiet">{empty}</p>;
   const ids = rows.map((r) => r.id);
@@ -74,7 +81,10 @@ export function ThisWeek({ types, version, unreviewed, onNew, onOpen }: { types:
         <h2>This week <em>in your Garden</em></h2>
         <NewButtons types={types} onNew={onNew} />
       </header>
-      {unreviewed > 0 && <a className="banner" href="#/unreviewed">{unreviewed} Unreviewed <span aria-hidden="true">→</span></a>}
+      <div className="banners">
+        {unreviewed > 0 && <a className="banner" href="#/unreviewed">{unreviewed} Unreviewed <span aria-hidden="true">→</span></a>}
+        <a className="banner" href="#/timeline">Timeline, day by day <span aria-hidden="true">→</span></a>
+      </div>
       {rows && lead && (
         <article className="lead" style={typeVar("source")} tabIndex={0} role="button" onClick={() => onOpen(lead.id, ids)} onKeyDown={(e) => e.key === "Enter" && onOpen(lead.id, ids)}>
           <div className="washbox">
@@ -97,21 +107,50 @@ export function ThisWeek({ types, version, unreviewed, onNew, onOpen }: { types:
 export function TagsPage({ tag, types, version, onOpen, go, onChanged }: { onChanged?: () => void; tag?: string; types: Types; version: number; onOpen: (id: string, ids: string[]) => void; go: (hash: string) => void }) {
   const [tags, setTags] = useState<TagRow[] | null>(null);
   useEffect(() => { api.tags().then(setTags); }, [version]);
-  const rows = useList(tag ? { tag } : { tag: "\u0000none" }, version);
+  const [filters, setFilters] = useState<FilterState>(noFilters);
+  useEffect(() => setFilters(noFilters), [tag]);
+  const [sort, setSort] = useSort("tag", "changed", false);
+  const query = useFilterQuery({ ...filters, tag: tag ?? "\u0000none" }, sort);
+  const rows = useList(query, version);
   const current = tags?.find((t) => t.name === tag);
-  const [confirming, setConfirming] = useState(false);
-  useEffect(() => setConfirming(false), [tag]);
-  const removeEverywhere = () => setConfirming(true);
-  // Asked first, then done at once with a few seconds of Undo.
+  const [mode, setMode] = useState<"remove" | "rename" | "merge" | null>(null);
+  const [name, setName] = useState("");
+  const [into, setInto] = useState("");
+  const [problem, setProblem] = useState("");
+  useEffect(() => { setMode(null); setProblem(""); }, [tag]);
+  const reload = () => { api.tags().then(setTags); onChanged?.(); };
+  // Remove is asked first, then done at once with a few seconds of Undo.
   const doRemove = async () => {
     if (!current) return;
     const gone = await api.deleteTag(current.id);
-    setConfirming(false);
+    setMode(null);
     go("#/tags");
-    api.tags().then(setTags);
-    onChanged?.();
-    showToast(`Tag #${gone.tag.name} removed from ${gone.objects} ${gone.objects === 1 ? "Object" : "Objects"}.`, async () => { await api.restoreTag(gone); api.tags().then(setTags); onChanged?.(); });
+    reload();
+    showToast(`Tag #${gone.tag.name} removed from ${gone.objects} ${gone.objects === 1 ? "Object" : "Objects"}.`, async () => { await api.restoreTag(gone); reload(); });
   };
+  const doRename = async () => {
+    if (!current) return;
+    try {
+      const r = await api.renameTag(current.id, name);
+      const now = r.tags.find((t) => t.id === current.id)!;
+      setMode(null);
+      go(`#/tags/${encodeURIComponent(now.name)}`);
+      reload();
+      showToast(`Renamed #${current.name} to #${now.name}.`, async () => { await api.undoRename(current.id, r.was); go(`#/tags/${encodeURIComponent(current.name)}`); reload(); });
+    } catch (e) { setProblem((e as Error).message); }
+  };
+  const doMerge = async () => {
+    if (!current || !into) return;
+    try {
+      const r = await api.mergeTag(current.id, Number(into));
+      const target = r.merged.into;
+      setMode(null);
+      go(`#/tags/${encodeURIComponent(target.name)}`);
+      reload();
+      showToast(`Merged #${current.name} into #${target.name}.`, async () => { await api.undoMerge(r.merged); go(`#/tags/${encodeURIComponent(current.name)}`); reload(); });
+    } catch (e) { setProblem((e as Error).message); }
+  };
+  const filtered = filters.type || filters.date || filters.unreviewed || filters.noConnections;
   return (
     <main className="contents wrap">
       <header className="vol"><h2>Tags{tags ? <em> {tags.length}</em> : null}</h2></header>
@@ -131,15 +170,42 @@ export function TagsPage({ tag, types, version, onOpen, go, onChanged }: { onCha
               <button key={c} className={`swatch ${current.color === c ? "on" : ""}`} style={tagVar(c)} aria-label={c} onClick={() => api.recolour(current.id, c).then(setTags)} />
             ))}
           </div>
-          <p><button className="pill action" onClick={removeEverywhere}>Remove #{current.name} from the whole Garden…</button></p>
-          {confirming && (
+          <p className="tag-actions">
+            <button className="pill action" onClick={() => { setMode("rename"); setName(current.name); setProblem(""); }}>Rename…</button>
+            <button className="pill action" disabled={(tags?.length ?? 0) < 2} onClick={() => { setMode("merge"); setInto(""); setProblem(""); }}>Merge into another…</button>
+            <button className="pill action" onClick={() => setMode("remove")}>Remove from the whole Garden…</button>
+          </p>
+          {mode === "rename" && (
+            <form className="confirm" onSubmit={(e) => { e.preventDefault(); doRename(); }}>
+              New name for #{current.name}: <input autoFocus value={name} onChange={(e) => setName(e.target.value)} aria-label="New name" />{" "}
+              <button className="pill action" type="submit">Rename</button>{" "}
+              <button className="pill toggle" type="button" onClick={() => setMode(null)}>Cancel</button>
+              <span className="quiet small"> Because you typed it, the new name counts as yours everywhere.</span>
+              {problem && <span role="alert" className="problem"> {problem}</span>}
+            </form>
+          )}
+          {mode === "merge" && (
+            <p className="confirm" role="group" aria-label="Merge">
+              Move everything tagged #{current.name} onto{" "}
+              <select autoFocus value={into} onChange={(e) => setInto(e.target.value)} aria-label="Merge into">
+                <option value="">Choose a Tag…</option>
+                {tags?.filter((t) => t.id !== current.id).map((t) => <option key={t.id} value={t.id}>#{t.name} ({t.count})</option>)}
+              </select>{" "}
+              and drop #{current.name}.{" "}
+              <button className="pill action" disabled={!into} onClick={doMerge}>Merge</button>{" "}
+              <button className="pill toggle" onClick={() => setMode(null)}>Cancel</button>
+              {problem && <span role="alert" className="problem"> {problem}</span>}
+            </p>
+          )}
+          {mode === "remove" && (
             <p className="confirm" role="alertdialog">
               Remove “{current.name}” from {current.count} {current.count === 1 ? "Object" : "Objects"}?{" "}
               <button className="pill action danger" onClick={doRemove}>Remove</button>{" "}
-              <button className="pill toggle" onClick={() => setConfirming(false)}>Keep it</button>
+              <button className="pill toggle" onClick={() => setMode(null)}>Keep it</button>
             </p>
           )}
-          <Grid rows={rows} types={types} onOpen={onOpen} empty="Nothing carries this Tag any more." />
+          <FilterBar value={filters} onChange={setFilters} types={types} sort={sort} onSort={setSort} lock={["tag"]} />
+          <Grid rows={rows} types={types} onOpen={onOpen} empty={filtered ? "Nothing matches these filters." : "Nothing carries this Tag any more."} />
         </>
       )}
     </main>

@@ -30,7 +30,7 @@ function addBody(db: Db, id: string, text: string) {
 }
 function newObject(db: Db, type: string, priv: boolean) {
   const id = randomUUID();
-  db.prepare("INSERT INTO objects (id, type, private, unreviewed, updated_at) VALUES (?, ?, ?, 1, datetime('now'))").run(id, type, priv ? 1 : 0);
+  db.prepare("INSERT INTO objects (id, type, private, unreviewed, captured, updated_at) VALUES (?, ?, ?, 1, 1, datetime('now'))").run(id, type, priv ? 1 : 0);
   return id;
 }
 
@@ -83,7 +83,7 @@ export async function capture(db: Db, input: CaptureInput, readLater: (id: strin
     }
     for (const s of shrunk) {
       const id = s.id;
-      db.prepare("INSERT INTO objects (id, type, private, unreviewed, updated_at) VALUES (?, 'source', ?, 1, datetime('now'))").run(id, priv ? 1 : 0);
+      db.prepare("INSERT INTO objects (id, type, private, unreviewed, captured, updated_at) VALUES (?, 'source', ?, 1, 1, datetime('now'))").run(id, priv ? 1 : 0);
       const title = s.name.replace(/\.[a-z0-9]{1,5}$/i, "") || "Image";
       field(db, id, "title", title);
       db.prepare("UPDATE objects SET title = ? WHERE id = ?").run(title, id);
