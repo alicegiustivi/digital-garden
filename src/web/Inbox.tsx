@@ -42,6 +42,26 @@ function Warning({ s, onChanged }: { s: InboxStatus; onChanged: (s: InboxStatus)
   );
 }
 
+/** The one-time code and web-address secret for the phone bot; the owner pastes them into the Apps Script's settings. */
+function PhoneSetup({ connected }: { connected: boolean }) {
+  const [s, setS] = useState<{ code: string; secret: string } | null>(null);
+  useEffect(() => { inboxApi.phoneSetup().then(setS).catch(() => {}); }, []);
+  const copy = (t: string) => navigator.clipboard?.writeText(t).then(() => showToast("Copied.", undefined)).catch(() => {});
+  if (!s) return null;
+  return (
+    <details className="phone-setup" open={!connected}>
+      <summary>Set up the phone bot</summary>
+      <p className="quiet small">Follow <code>docs/phone-bot-setup.md</code> in the Garden folder (or ask the agent to walk you through it). Paste these two into the script’s settings. They stay on this Mac and in your own script.</p>
+      <dl>
+        <dt>One-time code <span className="quiet">(<code>SETUP_CODE</code>, then send <code>/start</code> and this code to your bot)</span></dt>
+        <dd><code>{s.code}</code> <button className="linkish" onClick={() => copy(s.code)}>Copy</button> · <button className="linkish" onClick={async () => setS(await inboxApi.phoneNewCode())}>Make a new code</button></dd>
+        <dt>Web-address secret <span className="quiet">(<code>WEBHOOK_SECRET</code>)</span></dt>
+        <dd><code>{s.secret}</code> <button className="linkish" onClick={() => copy(s.secret)}>Copy</button></dd>
+      </dl>
+    </details>
+  );
+}
+
 function Entry({ e, types, onOpen, onChanged }: { e: InboxEntry; types: Types; onOpen: (id: string, ids: string[]) => void; onChanged: () => void }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(e.comment ?? "");
@@ -110,6 +130,7 @@ export function InboxPage({ day, types, version, onOpen, onChanged }: { day?: st
       </header>
       <p className="quiet small">Everything you sent from your phone that day, in the order you sent it. Things typed on the Mac aren’t here. Your comments stay here, in your words, until you turn one into a Thought.</p>
       {status && <Warning s={status} onChanged={setStatus} />}
+      {status && !day && <PhoneSetup connected={!!status.lastSync} />}
       {!day && status && (
         status.days.length === 0
           ? <p className="quiet">Nothing has come from your phone yet.</p>
