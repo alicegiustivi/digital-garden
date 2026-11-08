@@ -1,7 +1,7 @@
 import { CardStatus } from "./Ai";
 import { GardenStrip } from "./Garden";
 import { useEffect, useState } from "react";
-import { api, displayTitle, TAG_COLORS, type Filters, type Summary, type TagRow, type Types } from "./api";
+import { api, inboxApi, displayTitle, TAG_COLORS, type Filters, type Summary, type TagRow, type Types } from "./api";
 import { FilterBar, noFilters, useFilterQuery, useSort, type FilterState } from "./Filters";
 import { showToast } from "./toast";
 import { Icon, TagPill, TypeChip, formatDay, subOf, typeVar, tagVar } from "./ui";
@@ -259,6 +259,10 @@ export function UnreviewedPage({ rows, types, onOpen, onReviewed }: {
   rows: Summary[] | null; types: Types; onOpen: (id: string, ids: string[]) => void; onReviewed: (ids: string[]) => void;
 }) {
   const ids = rows?.map((r) => r.id) ?? []; // the order they appear on the page, top group first
+  // Which of these came from the phone: their cards link to that day's Daily Inbox.
+  const [fromPhone, setFromPhone] = useState<Record<string, string>>({});
+  const key = ids.join(",");
+  useEffect(() => { if (ids.length) inboxApi.inboxOf(ids).then(setFromPhone).catch(() => {}); else setFromPhone({}); }, [key]);
   return (
     <main className="contents wrap">
       <header className="vol"><h2>Unreviewed{rows ? <em> {rows.length}</em> : null}</h2></header>
@@ -274,7 +278,7 @@ export function UnreviewedPage({ rows, types, onOpen, onReviewed }: {
             {g.rows.map((o) => (
               <div key={o.id} className="ucard">
                 <Card o={o} types={types} onOpen={() => onOpen(o.id, ids)} />
-                <div className="ustatus quiet small"><CardStatus id={o.id} private={o.private} /></div>
+                <div className="ustatus quiet small"><CardStatus id={o.id} private={o.private} />{fromPhone[o.id] && <> · <a href={`#/inbox/${fromPhone[o.id]}`}>From your phone · Daily Inbox →</a></>}</div>
               </div>
             ))}
           </div>

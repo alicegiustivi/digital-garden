@@ -19,6 +19,6 @@ setInterval(() => purgeExpired(sqlite), 36e5).unref();
 // The Archivist works through its queue whenever the Garden is open. If the Mac is off, the work simply waits.
 const ai = createAi(sqlite, { gate: createGate() });
 ai.start();
-serve({ fetch: createApp(sqlite, { ai }).fetch, port: PORT, hostname: HOST }, () => {
+serve({ fetch: createApp(sqlite, { ai, inboxEvery: 30_000 }).fetch, port: PORT, hostname: HOST }, () => {
   console.log(`Garden is open at http://${HOST}:${PORT}  (data: ${gardenDir()})`);
 });

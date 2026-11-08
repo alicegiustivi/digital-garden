@@ -199,3 +199,27 @@ export const fieldOf = (o: { fields: Field[] }, key: string) => o.fields.find((f
 /** A Thought without a title shows its first line. */
 export const displayTitle = (o: Summary) => fieldOf(o, "title")?.value || o.firstLine || "Untitled";
 export const TAG_COLORS = ["blue", "rose", "olive", "amber", "sky", "lilac", "green", "peach", "indigo"];
+
+// The Daily Inbox (issue #37)
+export type InboxStatus = {
+  folder: string | null; lastSync: string | null; waiting: number;
+  warning: { kind: "unset" | "missing" | "stale"; text: string } | null;
+  days: { day: string; count: number; failed: number }[];
+};
+export type InboxEntry = {
+  id: number; at: string; status: "done" | "failed"; reason: string | null; refused: boolean; private: boolean;
+  comment: string | null; thought: { id: string; title: string } | null; objects: Summary[];
+};
+export type InboxComment = { captureId: number; day: string; at: string; comment: string } | null;
+export const inboxApi = {
+  inbox: () => call<InboxStatus>("GET", "/api/inbox"),
+  inboxScan: () => call<InboxStatus & { taken: number; failed: number }>("POST", "/api/inbox/scan"),
+  inboxFolder: (path: string) => call<InboxStatus>("PUT", "/api/inbox/folder", { path }),
+  inboxDay: (day: string) => call<{ day: string; entries: InboxEntry[] }>("GET", `/api/inbox/days/${day}`),
+  inboxOf: (ids: string[]) => call<Record<string, string>>("GET", `/api/inbox/of?ids=${ids.join(",")}`),
+  inboxComment: (id: string) => call<InboxComment>("GET", `/api/objects/${id}/inbox`),
+  inboxEdit: (captureId: number, comment: string) => call<{ comment: string | null }>("PATCH", `/api/inbox/captures/${captureId}`, { comment }),
+  inboxThought: (captureId: number) => call<{ id: string }>("POST", `/api/inbox/captures/${captureId}/thought`),
+  inboxRetry: (captureId: number) => call<{ outcome: string; reason?: string }>("POST", `/api/inbox/captures/${captureId}/retry`),
+  inboxReveal: (captureId: number) => call<unknown>("POST", `/api/inbox/captures/${captureId}/reveal`),
+};
