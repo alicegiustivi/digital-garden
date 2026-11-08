@@ -7,3 +7,5 @@ export function gardenDir(): string {
 }
 export const dbPath = () => join(gardenDir(), "garden.db");
 export const imagesDir = () => join(gardenDir(), "images");
+/** Where the owner says Google Drive puts phone captures (a folder on the Mac). Set in the Garden, or with GARDEN_INBOX_DIR. */
+export const inboxSettingPath = () => join(gardenDir(), "inbox-folder.txt");

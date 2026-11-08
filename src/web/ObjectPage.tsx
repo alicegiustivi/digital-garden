@@ -1,3 +1,4 @@
+import { InboxCommentLine } from "./Inbox";
 import { useEffect, useRef, useState } from "react";
 import { api, fieldOf, type FieldDef, type Obj, type TagRow, type TypeDef, type Types } from "./api";
 import { BodyEditor } from "./BodyEditor";
@@ -182,6 +183,7 @@ export function ObjectPage({ id, types, fresh, onChanged, beside, onDeleted }: P
 
           <ArchivistSuggestions obj={obj} types={types} onChanged={update} />
           <AiStatusLine id={obj.id} onChanged={update} />
+          {obj.type === "source" && <InboxCommentLine id={obj.id} />}
           {kept.length > 0 && (
             <p className="quiet small kept">
               Kept from an earlier type:{" "}

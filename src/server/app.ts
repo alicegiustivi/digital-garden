@@ -15,9 +15,10 @@ import * as dk from "./desk.ts";
 import { createAi, type Ai } from "./ai-queue.ts";
 import * as sg from "./suggestions.ts";
 import * as rs from "./researcher.ts";
+import * as ib from "./inbox.ts";
 import { createGate, forgetKey, GateError, looksLikeKey, saveKey } from "./ai-gate.ts";
 
-type Options = { /** Reads a saved link in the background. Tests replace it. */ readLink?: (id: string, url: string) => void; /** The AI queue. Tests give it a pretend OpenRouter. */ ai?: Ai };
+type Options = { /** Reads a saved link in the background. Tests replace it. */ readLink?: (id: string, url: string) => void; /** The AI queue. Tests give it a pretend OpenRouter. */ ai?: Ai; /** How often (ms) to look in the Drive inbox for phone captures. 0 = only when asked. */ inboxEvery?: number; /** Shows a folder in Finder. Tests replace it. */ reveal?: (path: string) => void };
 
 export function createApp(sqlite: Database.Database, opts: Options = {}) {
   const readLink = opts.readLink ?? ((id: string, url: string) => void extractInto(sqlite, id, url));
@@ -226,6 +227,31 @@ export function createApp(sqlite: Database.Database, opts: Options = {}) {
     return kept ? c.json({ kept }) : c.json({ error: "Not found" }, 404);
   });
   app.post("/api/turns/:id/thought", (c) => { const id = rs.thoughtFromTurn(sqlite, Number(c.req.param("id"))); return id ? c.json({ id }, 201) : c.json({ error: "Not found" }, 404); });
+
+  // The Daily Inbox (issue #37): phone captures that arrived in the Drive folder, by day.
+  const inboxDeps: ib.InboxDeps = { readLink, enqueue: (ids) => ai.enqueueCaptured(ids) };
+  const scan = () => ib.scanInbox(sqlite, inboxDeps).catch((e) => { console.error(e); return { taken: 0, failed: 0 }; });
+  if (opts.inboxEvery) { setInterval(scan, opts.inboxEvery).unref(); setTimeout(scan, 1500).unref(); }
+  app.get("/api/inbox", async (c) => c.json(await ib.inboxStatus(sqlite)));
+  app.put("/api/inbox/folder", async (c) => { ib.setInboxDir((await c.req.json().catch(() => ({}))).path); void scan(); return c.json(await ib.inboxStatus(sqlite)); });
+  app.post("/api/inbox/scan", async (c) => { const r = await scan(); return c.json({ ...r, ...(await ib.inboxStatus(sqlite)) }); });
+  app.get("/api/inbox/of", (c) => c.json(ib.daysOf(sqlite, (c.req.query("ids") ?? "").split(",").filter((x) => /^[0-9a-f-]{36}$/.test(x)))));
+  app.get("/api/inbox/days/:day", (c) => c.json(ib.dayPage(sqlite, c.req.param("day"))));
+  app.get("/api/objects/:id/inbox", (c) => c.json(ib.commentOn(sqlite, c.req.param("id"))));
+  app.patch("/api/inbox/captures/:id", async (c) => { const r = ib.editComment(sqlite, Number(c.req.param("id")), (await c.req.json().catch(() => ({}))).comment); return r ? c.json(r) : c.json({ error: "Not found" }, 404); });
+  app.post("/api/inbox/captures/:id/thought", (c) => { const id = ib.commentToThought(sqlite, Number(c.req.param("id"))); return id ? c.json({ id }, 201) : c.json({ error: "Not found" }, 404); });
+  app.post("/api/inbox/captures/:id/retry", async (c) => {
+    const f = ib.folderOf(sqlite, Number(c.req.param("id")));
+    if (!f) return c.json({ error: "Not found" }, 404);
+    const r = await ib.takeFolder(sqlite, f.dir, f.name, inboxDeps, true);
+    return c.json(r);
+  });
+  app.post("/api/inbox/captures/:id/reveal", (c) => {
+    const f = ib.folderOf(sqlite, Number(c.req.param("id")));
+    if (!f) return c.json({ error: "Not found" }, 404);
+    (opts.reveal ?? ib.revealInFinder)(f.path);
+    return c.json({ shown: true });
+  });
 
   app.use("/*", serveStatic({ root: "./dist/web" }));
   app.get("*", serveStatic({ path: "./dist/web/index.html" }));

@@ -50,7 +50,7 @@ export function TimelinePage({ onOpen, version }: { types: Types; onOpen: (id: s
       {events && !events.length && <p className="quiet">Nothing yet. Capture or write something and it will appear here.</p>}
       {days.map((d) => (
         <section key={d.key} className="tday">
-          <h3>{dayName(d.at)}</h3>
+          <h3>{dayName(d.at)} <a className="tday-inbox quiet small" href={`#/inbox/${d.key}`} title="What you sent from your phone this day">Daily Inbox →</a></h3>
           <ul>
             {d.rows.map((e, i) => (
               <li key={i}>

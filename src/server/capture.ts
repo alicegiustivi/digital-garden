@@ -18,17 +18,17 @@ type Db = Database.Database;
 export type Upload = { name: string; bytes: Buffer };
 export type CaptureInput = { text?: unknown; links?: unknown; private?: unknown; images?: Upload[] };
 
-const field = (db: Db, id: string, key: string, value: string) =>
+export const field = (db: Db, id: string, key: string, value: string) =>
   db.prepare("INSERT INTO field_values (object_id, field, value, origin) VALUES (?, ?, ?, 'source')").run(id, key, value);
 
 function paragraphsOf(text: string) {
   return text.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
 }
-function addBody(db: Db, id: string, text: string) {
+export function addBody(db: Db, id: string, text: string) {
   const ins = db.prepare("INSERT INTO blocks (object_id, position, text, origin) VALUES (?, ?, ?, 'owner')");
   paragraphsOf(text).forEach((p, i) => ins.run(id, i, p));
 }
-function newObject(db: Db, type: string, priv: boolean) {
+export function newObject(db: Db, type: string, priv: boolean) {
   const id = randomUUID();
   db.prepare("INSERT INTO objects (id, type, private, unreviewed, captured, updated_at) VALUES (?, ?, ?, 1, 1, datetime('now'))").run(id, type, priv ? 1 : 0);
   return id;

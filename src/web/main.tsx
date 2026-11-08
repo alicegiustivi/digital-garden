@@ -14,6 +14,7 @@ import type { Summary } from "./api";
 import { Icon, typeVar } from "./ui";
 import { Palette, SearchPage } from "./Search";
 import { TimelinePage } from "./Timeline";
+import { InboxPage } from "./Inbox";
 import { OverviewPage } from "./Overview";
 import { QuestionsPageView } from "./Garden";
 import { InquiriesPage, InquiryPage } from "./Inquiries";
@@ -80,6 +81,7 @@ function TopBar({ hash, unreviewed, onCapture, onSearch }: { hash: string; unrev
           <button aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen(!open)}>More <Icon name="chevron" /></button>
           {open && (
             <div className="menu" role="menu">
+              <a className="menu-link" href="#/inbox" onClick={() => setOpen(false)}><span className="tick" />Daily Inbox</a>
               <a className="menu-link" href="#/questions" onClick={() => setOpen(false)}><span className="tick" />Questions</a>
               <a className="menu-link" href="#/bin" onClick={() => setOpen(false)}><span className="tick" />Bin</a>
               <a className="menu-link" href="#/ai" onClick={() => setOpen(false)}><span className="tick" />AI</a>
@@ -262,6 +264,8 @@ function App() {
     page = <OverviewPage types={types} version={version} onOpen={open} go={go} onChanged={changed} />;
   } else if (parts[0] === "timeline") {
     page = <TimelinePage types={types} version={version} onOpen={open} />;
+  } else if (parts[0] === "inbox") {
+    page = <InboxPage day={/^\d{4}-\d{2}-\d{2}$/.test(parts[1] ?? "") ? parts[1] : undefined} types={types} version={version} onOpen={open} onChanged={changed} />;
   } else if (parts[0] === "inquiries") {
     page = <InquiriesPage version={version} />;
   } else if (parts[0] === "inquiry" && parts[1]) {

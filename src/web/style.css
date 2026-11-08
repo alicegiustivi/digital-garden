@@ -549,3 +549,28 @@ mark { background: color-mix(in srgb, var(--t-thought) 28%, transparent); color:
 .keep-find { font: inherit; font-size: 14px; padding: 5px 10px; border-radius: 10px; border: 1px solid color-mix(in srgb, var(--ink) 20%, transparent); background: var(--ground); color: var(--ink); }
 .bin-h { margin: 22px 0 6px; font-size: 1rem; }
 .ask-panel.compact .inquiry { padding-top: 4px; }
+
+/* The Daily Inbox (issue #37) */
+.inbox-warn { color: #b3261e; font-weight: 500; }
+p.inbox-warn { margin: 10px 0; padding: 8px 14px; border-radius: 10px; background: color-mix(in srgb, #b3261e 10%, transparent); }
+.linkish { background: none; padding: 0; text-decoration: underline; color: inherit; }
+.inbox-folder { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 8px 0 16px; }
+.inbox-folder input { flex: 1 1 360px; padding: 8px 12px; border-radius: 10px; background: var(--card); box-shadow: var(--shadow); }
+.inbox-days { list-style: none; padding: 0; display: grid; gap: 8px; margin-top: 18px; }
+.inbox-days a { display: block; padding: 12px 16px; border-radius: 12px; background: var(--card); box-shadow: var(--shadow); }
+.inbox-list { list-style: none; padding: 0; margin: 22px 0; display: grid; gap: 22px; }
+.inbox-entry { display: grid; grid-template-columns: 76px 1fr; gap: 14px; align-items: start; }
+.inbox-entry .when { color: var(--mute); font-size: 13px; padding-top: 4px; }
+.inbox-body { display: grid; gap: 10px; min-width: 0; }
+.inbox-comment { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: flex-start; }
+.inbox-comment textarea { flex: 1 1 320px; }
+.inbox-comment .comment-text { flex: 0 1 auto; margin: 0; white-space: pre-wrap; align-self: center; }
+.inbox-comment textarea, .inbox-source-comment textarea { width: 100%; padding: 8px 12px; border-radius: 10px; background: var(--card); box-shadow: var(--shadow); font: inherit; }
+.comment-text { cursor: text; }
+.inbox-failed { padding: 12px 16px; border-radius: 12px; border: 1px dashed #b3261e; }
+.inbox-failed p { margin: 4px 0 10px; }
+.inbox-failed .row { display: flex; gap: 10px; }
+.inbox-thought { display: inline-flex; gap: 8px; align-items: center; padding: 6px 14px; border-radius: 999px; background: var(--card); box-shadow: var(--shadow); }
+.inbox-nav { display: flex; justify-content: space-between; margin-top: 26px; }
+.inbox-source-comment { margin: 8px 0 0; }
+.timeline .tday h3 .tday-inbox { font-weight: 400; margin-left: 10px; }
