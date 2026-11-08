@@ -42,21 +42,19 @@ function Warning({ s, onChanged }: { s: InboxStatus; onChanged: (s: InboxStatus)
   );
 }
 
-/** The one-time code and web-address secret for the phone bot; the owner pastes them into the Apps Script's settings. */
+/** The one-time code for the phone bot; the owner pastes it into the Apps Script's settings. */
 function PhoneSetup({ connected }: { connected: boolean }) {
-  const [s, setS] = useState<{ code: string; secret: string } | null>(null);
+  const [s, setS] = useState<{ code: string } | null>(null);
   useEffect(() => { inboxApi.phoneSetup().then(setS).catch(() => {}); }, []);
   const copy = (t: string) => navigator.clipboard?.writeText(t).then(() => showToast("Copied.", undefined)).catch(() => {});
   if (!s) return null;
   return (
     <details className="phone-setup" open={!connected}>
       <summary>Set up the phone bot</summary>
-      <p className="quiet small">Follow <code>docs/phone-bot-setup.md</code> in the Garden folder (or ask the agent to walk you through it). Paste these two into the script’s settings. They stay on this Mac and in your own script.</p>
+      <p className="quiet small">Follow <code>docs/phone-bot-setup.md</code> in the Garden folder (or ask the agent to walk you through it). Paste this code into the script’s settings. It stays on this Mac and in your own script.</p>
       <dl>
         <dt>One-time code <span className="quiet">(<code>SETUP_CODE</code>, then send <code>/start</code> and this code to your bot)</span></dt>
         <dd><code>{s.code}</code> <button className="linkish" onClick={() => copy(s.code)}>Copy</button> · <button className="linkish" onClick={async () => setS(await inboxApi.phoneNewCode())}>Make a new code</button></dd>
-        <dt>Web-address secret <span className="quiet">(<code>WEBHOOK_SECRET</code>)</span></dt>
-        <dd><code>{s.secret}</code> <button className="linkish" onClick={() => copy(s.secret)}>Copy</button></dd>
       </dl>
     </details>
   );

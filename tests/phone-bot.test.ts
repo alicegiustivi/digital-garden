@@ -11,14 +11,15 @@ const inbox = mkdtempSync(join(tmpdir(), "garden-inbox-"));
 process.env.GARDEN_INBOX_DIR = inbox;
 const { openDb } = await import("../src/server/db.ts");
 const { createApp } = await import("../src/server/app.ts");
+const { localDay } = await import("../src/server/inbox.ts");
 
 const PNG = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==", "base64");
-const OWNER = 111, STRANGER = 222, SECRET = "s3cret", CODE = "ABCD-2345";
+const OWNER = 111, STRANGER = 222, CODE = "ABCD-2345";
 const source = readFileSync(join(import.meta.dirname, "../phone-bot/Code.gs"), "utf8");
 
 type Call = { method: string; payload: any };
-let calls: Call[], props: Map<string, string>, cache: Map<string, string>, nextMsg: number, queue: any[], failNextFile: boolean, bigFile: boolean, bot: any;
-let tick = 0, updateId = 0;
+let calls: Call[], props: Map<string, string>, nextMsg: number, failNextFile: boolean, bigFile: boolean, bot: any;
+let tick = 0, updateId = 0, clock = 0, telegram: any[], whileWaiting: (() => any[])[];
 
 class Blob {
   constructor(public bytes: Buffer, public name = "", public mime = "") {}
@@ -43,30 +44,33 @@ function folderOf(path: string): any {
 
 function load() {
   const g: any = {
+    // A clock the bot's waiting moves forward, so nothing really sleeps. Whatever is lined up in whileWaiting reaches Telegram meanwhile.
+    Date: class extends Date { static now() { return clock; } },
     PropertiesService: { getScriptProperties: () => ({
       getProperty: (k: string) => props.get(k) ?? null, setProperty: (k: string, v: string) => props.set(k, v),
       deleteProperty: (k: string) => props.delete(k), getProperties: () => Object.fromEntries(props),
     }) },
-    CacheService: { getScriptCache: () => ({ get: (k: string) => cache.get(k) ?? null, put: (k: string, v: string) => cache.set(k, v) }) },
-    LockService: { getScriptLock: () => ({ waitLock() {}, releaseLock() {} }) },
-    ContentService: { createTextOutput: (s: string) => s },
+    LockService: { getScriptLock: () => ({ tryLock: () => true, releaseLock() {} }) },
     Session: { getScriptTimeZone: () => "UTC" },
     Utilities: {
-      // While one message waits, the next queued one arrives (as it would on Google's side, in a second run).
-      sleep: () => { const next = queue.shift(); if (next) bot.doPost(next); },
-      newBlob: (s: string, mime: string, name: string) => new Blob(Buffer.from(s), name, mime),
-      getUuid: () => randomUUID(),
+      sleep: (ms: number) => { clock += ms; const next = whileWaiting.shift(); if (next) telegram.push(...next()); },
+      newBlob: (str: string, mime: string, name: string) => new Blob(Buffer.from(str), name, mime),
       formatDate: (d: Date, _tz: string, f: string) => { const iso = d.toISOString(); return f === "HH:mm" ? iso.slice(11, 16) : f === "yyyy-MM-dd" ? iso.slice(0, 10) : `${d.getUTCDate()} ${["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][d.getUTCMonth()]}`; },
     },
     DriveApp: { getFolderById: (id: string) => { if (id === "gone") throw new Error("no folder"); return folderOf(id === "inbox" ? inbox : id.replace(/^id:/, "")); } },
     UrlFetchApp: { fetch: (url: string, opts: any = {}) => {
       if (url.includes("/file/bot")) return { getResponseCode: () => 200, getBlob: () => new Blob(bigFile ? Buffer.alloc(21 * 1024 * 1024) : PNG) };
       const method = url.split("/").pop()!;
-      calls.push({ method, payload: opts.payload ? JSON.parse(opts.payload) : {} });
+      const payload = opts.payload ? JSON.parse(opts.payload) : {};
+      if (method === "getUpdates") {
+        const result = telegram.filter((u) => u.update_id >= payload.offset).slice(0, payload.limit);
+        return { getContentText: () => JSON.stringify({ ok: true, result }) };
+      }
+      calls.push({ method, payload });
       const result = method === "sendMessage" ? { ok: true, result: { message_id: nextMsg++ } } : method === "getFile" ? { ok: true, result: { file_path: "photos/x.jpg" } } : { ok: true, result: true };
-      return { getContentText: () => JSON.stringify(result), getResponseCode: () => 200 };
+      return { getContentText: () => JSON.stringify(result) };
     } },
-    ScriptApp: { getProjectTriggers: () => [], deleteTrigger() {}, getService: () => ({ getUrl: () => "https://script.example/exec" }) },
+    ScriptApp: { getProjectTriggers: () => [], deleteTrigger() {}, newTrigger: () => ({ timeBased: () => ({ everyMinutes: () => ({ create() {} }), everyDays: () => ({ atHour: () => ({ create() {} }) }) }) }) },
   };
   const mod: any = { exports: {} };
   new Function("module", ...Object.keys(g), source)(mod, ...Object.values(g));
@@ -74,22 +78,24 @@ function load() {
 }
 
 const now = () => Math.floor(Date.now() / 1000);
-function update(message: any, from = OWNER) {
-  return { parameter: { secret: SECRET }, postData: { contents: JSON.stringify({ update_id: ++updateId, message: { message_id: ++tick + 1000, date: now(), from: { id: from }, chat: { id: from, type: "private" }, ...message } }) } };
+/** A message as Telegram would hand it to the bot (not yet delivered). */
+function message(m: any, from = OWNER) {
+  return { update_id: ++updateId, message: { message_id: ++tick + 1000, date: now(), from: { id: from }, chat: { id: from, type: "private" }, ...m } };
 }
-const send = (message: any, from = OWNER) => bot.doPost(update(message, from));
+/** The owner sends one thing and the bot checks Telegram once. */
+const send = (m: any, from = OWNER) => { telegram.push(message(m, from)); bot.poll(); };
 const said = () => calls.filter((c) => c.method === "sendMessage").map((c) => c.payload.text as string);
 const folders = () => readdirSync(inbox).filter((f) => statSync(join(inbox, f)).isDirectory());
 const capture = (name: string) => JSON.parse(readFileSync(join(inbox, name, "capture.json"), "utf8"));
 
 let sqlite: ReturnType<typeof openDb>["sqlite"], app: ReturnType<typeof createApp>, read: string[];
 const scan = async () => (await (await app.request("/api/inbox/scan", { method: "POST" })).json()) as any;
-const today = () => new Date().toISOString().slice(0, 10);
+const today = () => localDay(new Date()); // the Mac's day, as the Garden files captures
 const dayEntries = async () => ((await (await app.request(`/api/inbox/days/${today()}`)).json()) as any).entries as any[];
 beforeEach(() => {
   for (const f of readdirSync(inbox)) rmSync(join(inbox, f), { recursive: true, force: true });
-  calls = []; cache = new Map(); nextMsg = 5000; queue = []; failNextFile = false; bigFile = false; tick = 0;
-  props = new Map([["BOT_TOKEN", "test-token"], ["INBOX_FOLDER_ID", "inbox"], ["WEBHOOK_SECRET", SECRET], ["SETUP_CODE", CODE], ["CHAT_ID", String(OWNER)]]);
+  calls = []; nextMsg = 5000; failNextFile = false; bigFile = false; tick = 0; telegram = []; whileWaiting = []; clock = Date.now();
+  props = new Map([["BOT_TOKEN", "test-token"], ["INBOX_FOLDER_ID", "inbox"], ["SETUP_CODE", CODE], ["CHAT_ID", String(OWNER)]]);
   bot = load();
   sqlite = openDb(":memory:").sqlite; read = [];
   app = createApp(sqlite, { readLink: (_id, url) => read.push(url) });
@@ -115,12 +121,6 @@ describe("who the bot answers", () => {
     expect(props.has("SETUP_CODE")).toBe(false);
     send({ text: "/start ABCD-2345" }, OWNER);
     expect(props.has("CHAT_ID")).toBe(false);
-  });
-  it("ignores calls without the web-address secret", () => {
-    const u = update({ text: "https://example.com" });
-    u.parameter.secret = "wrong";
-    bot.doPost(u);
-    expect(calls).toEqual([]);
   });
 });
 
@@ -170,10 +170,10 @@ describe("saving and handing over", () => {
   });
 
   it("joins a comment sent just before a forward, and keeps who it came from", async () => {
-    queue.push(update({ forward_origin: { type: "channel", chat: { title: "Daily Reads", username: "dailyreads" }, message_id: 77 }, text: "The forwarded words" })); // arrives while the comment is held
+    whileWaiting.push(() => [message({ forward_origin: { type: "channel", chat: { title: "Daily Reads", username: "dailyreads" }, message_id: 77 }, text: "The forwarded words" })]); // arrives while the comment is held
     send({ text: "my take on this #private" });
-    expect(folders()).toEqual(["tg-1001"]); // named after the forward's message
-    expect(capture("tg-1001")).toMatchObject({ text: "my take on this #private", private: true, forward: { text: "The forwarded words", author: "Daily Reads", url: "https://t.me/dailyreads/77" } });
+    expect(folders()).toEqual(["tg-1002"]); // named after the forward's message
+    expect(capture("tg-1002")).toMatchObject({ text: "my take on this #private", private: true, forward: { text: "The forwarded words", author: "Daily Reads", url: "https://t.me/dailyreads/77" } });
     expect(said()).toHaveLength(1);
     expect(said()[0]).toMatch(/forwarded post · \d\d:\d\d · Private$/);
     await scan();
@@ -183,9 +183,10 @@ describe("saving and handing over", () => {
   });
 
   it("makes one folder and one receipt for an album", async () => {
-    const part = () => update({ photo: [{ file_id: "p", file_size: 50 }], media_group_id: "G9" });
-    queue.push(part(), part());
-    send({ photo: [{ file_id: "p", file_size: 50 }], media_group_id: "G9", caption: "trip" });
+    const part = (extra = {}) => message({ photo: [{ file_id: "p", file_size: 50 }], media_group_id: "G9", ...extra });
+    whileWaiting.push(() => [part()]); // the last photo reaches Telegram a moment after the first two
+    telegram.push(part({ caption: "trip" }), part());
+    bot.poll();
     expect(folders()).toEqual(["tg-gG9"]);
     expect(capture("tg-gG9").files).toHaveLength(3);
     expect(capture("tg-gG9").text).toBe("trip");
@@ -195,9 +196,9 @@ describe("saving and handing over", () => {
     expect((await dayEntries())[0].objects).toHaveLength(3);
   });
 
-  it("keeps an update that Telegram sends twice once", () => {
-    const u = update({ text: "https://example.com/once" });
-    bot.doPost(u); bot.doPost(u);
+  it("doesn't read a message twice", () => {
+    send({ text: "https://example.com/once" });
+    bot.poll(); bot.poll();
     expect(said()).toHaveLength(1);
     expect(folders()).toHaveLength(1);
   });
@@ -249,6 +250,13 @@ describe("commands and the heartbeat", () => {
     send({ text: "/help" });
     expect(said().pop()).toContain("#private");
   });
+  it("sets up without a webhook and installs its three checks", () => {
+    bot.connectBot();
+    expect(calls.map((c) => c.method)).toContain("deleteWebhook");
+    bot.installTriggers(); // runs without a hitch; the heartbeat is written
+    expect(existsSync(join(inbox, "heartbeat.txt"))).toBe(true);
+    bot.checkSetup();
+  });
   it("writes the heartbeat file the Garden reads", async () => {
     bot.heartbeat();
     expect(existsSync(join(inbox, "heartbeat.txt"))).toBe(true);
@@ -260,13 +268,11 @@ describe("commands and the heartbeat", () => {
 });
 
 describe("the setup code on the Mac", () => {
-  it("shows a one-time code and a secret, stable until renewed", async () => {
+  it("shows a one-time code, stable until renewed", async () => {
     const a = (await (await app.request("/api/inbox/setup")).json()) as any;
     expect(a.code).toMatch(/^[A-Z2-9]{4}-[A-Z2-9]{4}$/);
-    expect(a.secret).toMatch(/^[0-9a-f]{48}$/);
     expect((await (await app.request("/api/inbox/setup")).json()) as any).toEqual(a);
     const b = (await (await app.request("/api/inbox/setup/new-code", { method: "POST" })).json()) as any;
     expect(b.code).not.toBe(a.code);
-    expect(b.secret).toBe(a.secret);
   });
 });

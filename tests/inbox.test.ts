@@ -209,6 +209,13 @@ describe("failures and refusals", () => {
     expect(d.entries[0].objects).toHaveLength(1);
     expect(existsSync(dir)).toBe(false);
   });
+  it("takes a capture by itself once a file that was still downloading from Drive has arrived", async () => {
+    drop("late", "{", { "a.png": PNG }); // the description is there but its contents haven't downloaded yet
+    expect((await scan()).failed).toBe(1);
+    drop("late", { messageId: "late1", sentAt: SENT, files: [{ name: "a.png" }] }, { "a.png": PNG });
+    expect((await scan()).taken).toBe(1); // no Retry needed
+    expect(existsSync(join(inbox, "late"))).toBe(false);
+  });
   it("shows a description it can't read as failed, and offers Show file", async () => {
     drop("broken", "{ not json");
     await scan();

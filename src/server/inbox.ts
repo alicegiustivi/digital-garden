@@ -259,7 +259,9 @@ export function scanInbox(db: Db, deps: InboxDeps): Promise<{ taken: number; fai
     for (const e of entries.sort((a, b) => a.name.localeCompare(b.name))) {
       if (!e.isDirectory() || e.name.startsWith(".")) continue;
       try {
-        const r = await takeFolder(db, dir, e.name, deps);
+        // A file still downloading from Drive looks unreadable or missing for a while: look again on every check instead of giving up.
+        const syncing = !!db.prepare("SELECT 1 FROM inbox_captures WHERE folder = ? AND status = 'failed' AND (reason LIKE 'The description file couldn''t be read%' OR reason LIKE '%is missing from the folder%')").get(e.name);
+        const r = await takeFolder(db, dir, e.name, deps, syncing);
         if (r.outcome === "done") result.taken++;
         if (r.outcome === "failed" && r.reason) result.failed++;
       } catch (err) { console.error("Daily Inbox: couldn't take", e.name, err); }
