@@ -1,9 +1,10 @@
 /**
  * The Garden's phone bot (issue #38, decided in #15). It runs in YOUR Google Apps Script, never on the Mac.
  *
- * What it does: you message a private Telegram bot; it saves each message as ONE FOLDER in a Google Drive folder that syncs to
- * your Mac. The folder holds the photos, plus a description file `capture.json` written LAST (the Garden only takes a folder
- * once that file exists). Shape, read by src/server/inbox.ts:
+ * What it does: you message a private Telegram bot; once a minute the script asks Telegram for new messages (no web app, no
+ * webhook) and saves each one as ONE FOLDER in a Google Drive folder that syncs to your Mac. The folder holds the photos, plus a
+ * description file `capture.json` written LAST (the Garden only takes a folder once that file exists). Shape, read by
+ * src/server/inbox.ts:
  *   { messageId, sentAt (ISO), private?, text?, links?, forward?: { text, author, url? }, files?: [{ name }] }
  * It answers "✓ Saved · link · 14:02" (or "✗ Not saved, please send it again"). Every ~10 minutes it checks whether a capture
  * has left Drive (the Garden deletes the folder after taking it), then deletes your message and edits the receipt to
@@ -12,7 +13,6 @@
  * Settings live in Project Settings → Script Properties, never in this code:
  *   BOT_TOKEN        the key BotFather gave you
  *   INBOX_FOLDER_ID  the id of the Drive folder (the last part of its address)
- *   WEBHOOK_SECRET   the secret shown in the Garden (it goes on the web-app address, so only Telegram can call it)
  *   SETUP_CODE       the one-time code shown in the Garden; the bot forgets it after /start succeeds
  * The bot sets CHAT_ID itself: the one account that sent `/start <code>`. Everyone else is ignored.
  * Run `installTriggers`, `connectBot` and `checkSetup` once from the editor (see docs/phone-bot-setup.md).
@@ -22,6 +22,7 @@ var MAX_BYTES = 20 * 1024 * 1024; // Telegram's limit for bots
 var TEXT_WAIT_MS = 5500;   // a comment is held this long in case a forward follows it (Telegram sends the comment first)
 var JOIN_SECONDS = 5;      // a forward joins a comment sent at most this long before it
 var ALBUM_WAIT_MS = 5000;  // an album is finished once no new photo has arrived for this long
+var RUN_MS = 40000;        // one check of Telegram stops starting new waits after this long
 var HEARTBEAT_FILE = 'heartbeat.txt';
 var DESCRIPTION_FILE = 'capture.json';
 var IMAGE_EXT = { jpg: 1, jpeg: 1, png: 1, heic: 1, heif: 1, gif: 1, webp: 1, tif: 1, tiff: 1 };
@@ -31,7 +32,8 @@ var HELP_TEXT = 'Send me a link, a photo or a thought and I save it for your Gar
   '• Add #private anywhere and no AI will ever read it.\n' +
   '• Other #hashtags become Tags.\n' +
   '• Forward a post to keep it; text you send just before it becomes your comment.\n' +
-  '• I can\'t keep voice notes, PDFs, videos or files over 20 MB yet.\n\n' +
+  '• I can\'t keep voice notes, PDFs, videos or files over 20 MB yet.\n' +
+  '• I check for messages about once a minute, so answers can take a moment.\n\n' +
   '/waiting – what is still waiting for your Mac\n/help – this message';
 
 // ------------------------------------------------------------------ Telegram + settings
@@ -47,39 +49,48 @@ function tg_(method, payload) {
 }
 function say_(chatId, text) { return tg_('sendMessage', { chat_id: chatId, text: text }); }
 
-function locked_(fn) {
-  var lock = LockService.getScriptLock();
-  lock.waitLock(25000);
-  try { return fn(); } finally { lock.releaseLock(); }
-}
 function getJson_(k) { var v = setting_(k); if (!v) return null; try { return JSON.parse(v); } catch (e) { return null; } }
 function setJson_(k, v) { props_().setProperty(k, JSON.stringify(v)); }
 function inbox_() { return DriveApp.getFolderById(setting_('INBOX_FOLDER_ID')); }
 
-// ------------------------------------------------------------------ the web-app entry point (Telegram calls this)
+// ------------------------------------------------------------------ asking Telegram for new messages (runs every minute)
 
-function doPost(e) {
+/** Takes in everything new, then finishes anything that was waiting a moment (a comment for a forward, the rest of an album). */
+function poll() {
+  var lock = LockService.getScriptLock();
+  if (!lock.tryLock(5000)) return; // the previous check is still running
   try {
-    var secret = setting_('WEBHOOK_SECRET');
-    if (!secret || !e || !e.parameter || e.parameter.secret !== secret) return out_('no');
-    handleUpdate_(JSON.parse(e.postData.contents));
-  } catch (err) { console.error(String(err && err.message ? err.message : err)); }
-  return out_('ok'); // always 200, so Telegram never re-sends
+    props_().setProperty('LAST_POLL', new Date().toISOString());
+    var started = Date.now();
+    takeNew_();
+    flushDue_();
+    for (var wait = nextDue_(); wait !== null && Date.now() - started + wait < RUN_MS; wait = nextDue_()) {
+      Utilities.sleep(wait);
+      takeNew_(); // a forward may have arrived meanwhile
+      flushDue_();
+    }
+  } finally { lock.releaseLock(); }
 }
-function doGet() { return out_('ok'); }
-function out_(s) { return ContentService.createTextOutput(s); }
+
+function takeNew_() {
+  for (var round = 0; round < 5; round++) {
+    var r = tg_('getUpdates', { offset: Number(setting_('OFFSET') || 0), limit: 100, timeout: 0, allowed_updates: ['message'] });
+    if (!r.ok || !r.result || !r.result.length) return;
+    r.result.forEach(function (u) {
+      try { handleUpdate_(u); } catch (err) { console.error(String(err && err.message ? err.message : err)); }
+      props_().setProperty('OFFSET', String(u.update_id + 1)); // Telegram forgets it once we ask for the next
+    });
+  }
+}
 
 function handleUpdate_(u) {
   var m = u && u.message;
   if (!m || !m.from || !m.chat || m.chat.type !== 'private') return;
-  var cache = CacheService.getScriptCache();
-  if (cache.get('u' + u.update_id)) return; // Telegram sent the same update again
-  cache.put('u' + u.update_id, '1', 21600);
-
   var cmd = /^\/(\w+)(?:@\w+)?(?:\s+([\s\S]*))?$/.exec((m.text || '').trim());
   var owner = setting_('CHAT_ID');
   if (!owner) { if (cmd && cmd[1] === 'start') pair_(m, cmd[2]); return; } // nobody is paired yet: only /start <code> does anything
   if (String(m.chat.id) !== owner || String(m.from.id) !== owner) return; // not the owner: no answer at all
+  console.log('Handling update ' + u.update_id + ' (' + Object.keys(m).filter(function (k) { return ['from', 'chat', 'date'].indexOf(k) < 0; }).join(',') + ')'); // kinds only, never the text
 
   if (cmd) {
     if (cmd[1] === 'waiting') return say_(m.chat.id, waitingText_());
@@ -144,7 +155,7 @@ function wordsOf_(m) {
   var raw = m.text || m.caption || '';
   var links = [];
   (m.entities || m.caption_entities || []).forEach(function (en) { if (en.type === 'text_link' && en.url) links.push(en.url); });
-  var text = raw.replace(/https?:\/\/[^\s<>"]+/gi, function (u) { var t = trimUrl_(u); links.push(t); return ' '; });
+  var text = raw.replace(/https?:\/\/[^\s<>"]+/gi, function (u) { links.push(trimUrl_(u)); return ' '; });
   text = text.replace(/[ \t]{2,}/g, ' ').replace(/[ \t]*\n[ \t]*/g, '\n').trim();
   return { text: text, links: links.filter(function (l, i) { return links.indexOf(l) === i; }) };
 }
@@ -195,63 +206,75 @@ function capture_(m) {
   if (m.media_group_id) return albumPart_(m);
   var hasImage = !!(m.photo || m.document);
   var w = wordsOf_(m);
-  var cap = { chat: chat, ids: [m.message_id], sentAt: m.date, text: isForward_(m) ? '' : w.text, links: isForward_(m) ? [] : w.links, images: [], forward: null };
-  cap.messageId = String(m.message_id);
+  var fwd = isForward_(m);
+  var cap = { chat: chat, ids: [m.message_id], sentAt: m.date, text: fwd ? '' : w.text, links: fwd ? [] : w.links, images: [], forward: null, messageId: String(m.message_id) };
   try { if (hasImage) cap.images.push(fetchImage_(m)); }
   catch (e) { return say_(chat, e.message === 'too big' ? 'I can\'t keep files over 20 MB, nothing was saved.' : '✗ Not saved, please send it again'); }
 
-  if (isForward_(m)) {
+  if (fwd) {
     cap.forward = forwardOf_(m);
     // Telegram sends the owner's comment as a separate message just before a forward: join it.
-    var held = locked_(function () {
-      var h = getJson_('hold');
-      if (h && m.date - h.date <= JOIN_SECONDS && m.date - h.date >= -1) { props_().deleteProperty('hold'); return h; }
-      return null;
-    });
-    if (held) { cap.text = held.text; cap.ids.unshift(held.id); }
+    var h = getJson_('hold');
+    if (h && m.date - h.date <= JOIN_SECONDS && m.date - h.date >= -1) { props_().deleteProperty('hold'); cap.text = h.text; cap.ids.unshift(h.id); }
     return finish_(cap);
   }
   if (!hasImage && !cap.links.length) {
-    // Words alone might be the comment to a forward that follows: wait a moment before saving.
-    locked_(function () { setJson_('hold', { id: m.message_id, date: m.date, text: w.text }); });
-    Utilities.sleep(TEXT_WAIT_MS);
-    var mine = locked_(function () { var h = getJson_('hold'); if (h && h.id === m.message_id) { props_().deleteProperty('hold'); return true; } return false; });
-    if (!mine) return; // a forward took it: that capture sends the receipt
+    // Words alone might be the comment to a forward that follows: hold them a moment (flushDue_ saves them if nothing follows).
+    var old = getJson_('hold'); // an earlier held comment is saved first
+    if (old) flushHold_(old);
+    return setJson_('hold', { id: m.message_id, date: m.date, text: w.text, chat: chat, at: Date.now() });
   }
   finish_(cap);
 }
 
+function flushHold_(h) {
+  props_().deleteProperty('hold');
+  finish_({ chat: h.chat, ids: [h.id], sentAt: h.date, text: h.text, links: [], images: [], forward: null, messageId: String(h.id) });
+}
+
 function albumPart_(m) {
-  var chat = m.chat.id, gid = 'g' + m.media_group_id, stateKey = 'a:' + gid, marker = Utilities.getUuid();
-  var blob = null, failed = null;
-  try { blob = fetchImage_(m); } catch (e) { failed = e.message === 'too big' ? 'big' : 'fail'; }
-  locked_(function () {
-    var s = getJson_(stateKey) || { ids: [], files: [], text: '', sentAt: m.date, failed: null };
-    s.ids.push(m.message_id);
-    s.sentAt = Math.min(s.sentAt, m.date);
-    if (failed) s.failed = failed;
-    else {
-      try {
-        if (!s.folderId) s.folderId = inbox_().createFolder('tg-' + gid).getId();
-        DriveApp.getFolderById(s.folderId).createFile(blob);
-        s.files.push({ name: blob.getName() });
-      } catch (e) { s.failed = 'fail'; }
-    }
-    var w = wordsOf_(m);
-    if (w.text) { s.text = s.text ? s.text + '\n' + w.text : w.text; }
-    if (w.links.length) s.links = (s.links || []).concat(w.links);
-    s.marker = marker;
-    setJson_(stateKey, s);
-  });
-  Utilities.sleep(ALBUM_WAIT_MS);
-  var s = locked_(function () { var x = getJson_(stateKey); if (!x || x.marker !== marker) return null; props_().deleteProperty(stateKey); return x; });
-  if (!s) return; // a later photo of the album finishes it
+  var chat = m.chat.id, stateKey = 'a:g' + m.media_group_id;
+  var s = getJson_(stateKey) || { chat: chat, gid: 'g' + m.media_group_id, ids: [], files: [], text: '', sentAt: m.date, failed: null };
+  s.ids.push(m.message_id);
+  s.sentAt = Math.min(s.sentAt, m.date);
+  try {
+    var blob = fetchImage_(m);
+    if (!s.folderId) s.folderId = inbox_().createFolder('tg-' + s.gid).getId();
+    DriveApp.getFolderById(s.folderId).createFile(blob);
+    s.files.push({ name: blob.getName() });
+  } catch (e) { s.failed = e.message === 'too big' ? 'big' : 'fail'; }
+  var w = wordsOf_(m);
+  if (w.text) s.text = s.text ? s.text + '\n' + w.text : w.text;
+  if (w.links.length) s.links = (s.links || []).concat(w.links);
+  s.lastAt = Date.now();
+  setJson_(stateKey, s);
+}
+
+function finishAlbum_(key, s) {
+  props_().deleteProperty(key);
   if (s.failed) {
     if (s.folderId) try { DriveApp.getFolderById(s.folderId).setTrashed(true); } catch (e) {}
-    return say_(chat, s.failed === 'big' ? 'I can\'t keep files over 20 MB, nothing was saved.' : '✗ Not saved, please send it again');
+    return say_(s.chat, s.failed === 'big' ? 'I can\'t keep files over 20 MB, nothing was saved.' : '✗ Not saved, please send it again');
   }
-  var cap = { chat: chat, ids: s.ids, sentAt: s.sentAt, text: s.text, links: s.links || [], images: [], forward: null, messageId: gid, folderId: s.folderId, files: s.files };
-  finish_(cap);
+  finish_({ chat: s.chat, ids: s.ids, sentAt: s.sentAt, text: s.text, links: s.links || [], images: [], forward: null, messageId: s.gid, folderId: s.folderId, files: s.files });
+}
+
+/** Milliseconds until the next held comment or album is ready to save, or null when nothing is waiting. */
+function nextDue_() {
+  var due = [], h = getJson_('hold'), all = props_().getProperties();
+  if (h) due.push(h.at + TEXT_WAIT_MS);
+  Object.keys(all).forEach(function (k) { if (k.indexOf('a:') === 0) { var s = getJson_(k); if (s) due.push(s.lastAt + ALBUM_WAIT_MS); } });
+  return due.length ? Math.max(0, Math.min.apply(null, due) - Date.now()) : null;
+}
+/** Saves whatever has waited long enough with nothing new joining it. */
+function flushDue_() {
+  var h = getJson_('hold'), all = props_().getProperties();
+  if (h && Date.now() >= h.at + TEXT_WAIT_MS) flushHold_(h);
+  Object.keys(all).forEach(function (k) {
+    if (k.indexOf('a:') !== 0) return;
+    var s = getJson_(k);
+    if (s && Date.now() >= s.lastAt + ALBUM_WAIT_MS) finishAlbum_(k, s);
+  });
 }
 
 function receiptText_(cap, priv) {
@@ -343,36 +366,34 @@ function heartbeat() {
 
 function installTriggers() {
   ScriptApp.getProjectTriggers().forEach(function (t) { ScriptApp.deleteTrigger(t); });
+  ScriptApp.newTrigger('poll').timeBased().everyMinutes(1).create();
   ScriptApp.newTrigger('checkPickedUp').timeBased().everyMinutes(10).create();
   ScriptApp.newTrigger('heartbeat').timeBased().everyDays(1).atHour(6).create();
   heartbeat();
-  console.log('Triggers installed and the heartbeat written.');
+  console.log('Triggers installed (checks Telegram every minute) and the heartbeat written.');
 }
 
-/** Tells Telegram to call this script. Run after "Deploy → New deployment → Web app". */
+/** Switches off any webhook (the bot asks Telegram instead) and sets the /commands menu. */
 function connectBot() {
-  var url = ScriptApp.getService().getUrl(), secret = setting_('WEBHOOK_SECRET');
-  if (!url || !secret) throw new Error('Deploy the web app first, and set WEBHOOK_SECRET.');
-  var r = tg_('setWebhook', { url: url + '?secret=' + encodeURIComponent(secret), allowed_updates: ['message'], drop_pending_updates: true });
+  var r = tg_('deleteWebhook', { drop_pending_updates: true });
   tg_('setMyCommands', { commands: [{ command: 'waiting', description: 'What is waiting for your Mac' }, { command: 'help', description: 'What I can keep' }] });
-  console.log(r.ok ? 'Connected: Telegram will now call this script.' : 'Telegram said no: ' + (r.description || 'unknown'));
+  console.log(r.ok ? 'Ready: the bot will check Telegram every minute.' : 'Telegram said no: ' + (r.description || 'unknown'));
 }
 
 /** Checks every setting without printing any secret. */
 function checkSetup() {
   var say = function (ok, what) { console.log((ok ? '✓ ' : '✗ ') + what); };
-  ['BOT_TOKEN', 'INBOX_FOLDER_ID', 'WEBHOOK_SECRET'].forEach(function (k) { say(!!setting_(k), k + (setting_(k) ? ' is set' : ' is missing')); });
+  ['BOT_TOKEN', 'INBOX_FOLDER_ID'].forEach(function (k) { say(!!setting_(k), k + (setting_(k) ? ' is set' : ' is missing')); });
   say(!!setting_('CHAT_ID'), setting_('CHAT_ID') ? 'Paired with your account' : 'Not paired yet: send /start <code> to the bot' + (setting_('SETUP_CODE') ? '' : ' (SETUP_CODE is missing too)'));
   try { say(true, 'Drive folder: ' + inbox_().getName()); } catch (e) { say(false, 'The Drive folder can\'t be opened: check INBOX_FOLDER_ID'); }
   var me = tg_('getMe');
   say(me.ok, me.ok ? 'Bot: @' + me.result.username : 'Telegram doesn\'t accept the BOT_TOKEN');
   var wh = tg_('getWebhookInfo');
-  if (wh.ok) {
-    say(!!wh.result.url, wh.result.url ? 'Webhook is connected' : 'Webhook not connected: run connectBot');
-    if (wh.result.last_error_message) say(false, 'Telegram\'s last complaint: ' + wh.result.last_error_message);
-  }
-  say(ScriptApp.getProjectTriggers().length >= 2, 'Triggers: ' + ScriptApp.getProjectTriggers().length + ' installed');
+  if (wh.ok) say(!wh.result.url, wh.result.url ? 'A webhook is still set: run connectBot' : 'No webhook (good: the bot asks Telegram itself)');
+  var last = setting_('LAST_POLL'), ago = last ? Math.round((Date.now() - new Date(last).getTime()) / 1000) : null;
+  say(ago !== null && ago < 300, ago === null ? 'The bot has not checked Telegram yet: run installTriggers and wait a minute' : 'Last check of Telegram: ' + ago + ' seconds ago');
+  say(ScriptApp.getProjectTriggers().length >= 3, 'Triggers: ' + ScriptApp.getProjectTriggers().length + ' installed (3 expected)');
 }
 
 // Lets the tests load this file; Apps Script has no `module`, so this does nothing there.
-if (typeof module !== 'undefined') module.exports = { doPost: doPost, checkPickedUp: checkPickedUp, heartbeat: heartbeat, installTriggers: installTriggers, connectBot: connectBot, checkSetup: checkSetup, receiptText_: receiptText_, wordsOf_: wordsOf_, hasPrivate_: hasPrivate_ };
+if (typeof module !== 'undefined') module.exports = { poll: poll, checkPickedUp: checkPickedUp, heartbeat: heartbeat, installTriggers: installTriggers, connectBot: connectBot, checkSetup: checkSetup };
