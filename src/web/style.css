@@ -574,3 +574,7 @@ p.inbox-warn { margin: 10px 0; padding: 8px 14px; border-radius: 10px; backgroun
 .inbox-nav { display: flex; justify-content: space-between; margin-top: 26px; }
 .inbox-source-comment { margin: 8px 0 0; }
 .timeline .tday h3 .tday-inbox { font-weight: 400; margin-left: 10px; }
+.phone-setup { margin: 12px 0 20px; padding: 10px 16px; border-radius: 12px; background: var(--card); box-shadow: var(--shadow); }
+.phone-setup summary { cursor: pointer; font-weight: 500; }
+.phone-setup dt { margin-top: 10px; }
+.phone-setup dd { margin: 4px 0 0; overflow-wrap: anywhere; }

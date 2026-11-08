@@ -52,6 +52,10 @@ npm run mac:install
 
 A fresh empty Garden is created. If you change your mind, uninstall again and move `~/Garden-old` back to `~/Garden`.
 
+## Phone capture
+
+Send links, photos and thoughts from your phone through a private Telegram bot. The one-time setup checklist is in `docs/phone-bot-setup.md`; the bot's code is `phone-bot/Code.gs`.
+
 ## Privacy
 
 The Garden only answers requests from your own Mac (address `127.0.0.1`). Other devices on your network cannot open it, so there is no login.

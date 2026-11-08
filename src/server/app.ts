@@ -16,6 +16,7 @@ import { createAi, type Ai } from "./ai-queue.ts";
 import * as sg from "./suggestions.ts";
 import * as rs from "./researcher.ts";
 import * as ib from "./inbox.ts";
+import { phoneSetup, renewCode } from "./phone-setup.ts";
 import { createGate, forgetKey, GateError, looksLikeKey, saveKey } from "./ai-gate.ts";
 
 type Options = { /** Reads a saved link in the background. Tests replace it. */ readLink?: (id: string, url: string) => void; /** The AI queue. Tests give it a pretend OpenRouter. */ ai?: Ai; /** How often (ms) to look in the Drive inbox for phone captures. 0 = only when asked. */ inboxEvery?: number; /** Shows a folder in Finder. Tests replace it. */ reveal?: (path: string) => void };
@@ -232,6 +233,8 @@ export function createApp(sqlite: Database.Database, opts: Options = {}) {
   const inboxDeps: ib.InboxDeps = { readLink, enqueue: (ids) => ai.enqueueCaptured(ids) };
   const scan = () => ib.scanInbox(sqlite, inboxDeps).catch((e) => { console.error(e); return { taken: 0, failed: 0 }; });
   if (opts.inboxEvery) { setInterval(scan, opts.inboxEvery).unref(); setTimeout(scan, 1500).unref(); }
+  app.get("/api/inbox/setup", (c) => c.json(phoneSetup()));
+  app.post("/api/inbox/setup/new-code", (c) => c.json(renewCode()));
   app.get("/api/inbox", async (c) => c.json(await ib.inboxStatus(sqlite)));
   app.put("/api/inbox/folder", async (c) => { ib.setInboxDir((await c.req.json().catch(() => ({}))).path); void scan(); return c.json(await ib.inboxStatus(sqlite)); });
   app.post("/api/inbox/scan", async (c) => { const r = await scan(); return c.json({ ...r, ...(await ib.inboxStatus(sqlite)) }); });
