@@ -1,6 +1,7 @@
 import { CardStatus } from "./Ai";
 import { GardenStrip } from "./Garden";
 import { useEffect, useState } from "react";
+import { BackupNote } from "./Backup";
 import { api, inboxApi, displayTitle, TAG_COLORS, type Filters, type Summary, type TagRow, type Types } from "./api";
 import { FilterBar, noFilters, useFilterQuery, useSort, type FilterState } from "./Filters";
 import { showToast } from "./toast";
@@ -82,6 +83,7 @@ export function ThisWeek({ types, version, unreviewed, onNew, onOpen }: { types:
         <h2>This week <em>in your Garden</em></h2>
         <NewButtons types={types} onNew={onNew} />
       </header>
+      <BackupNote />
       <div className="banners">
         {unreviewed > 0 && <a className="banner" href="#/unreviewed">{unreviewed} Unreviewed <span aria-hidden="true">→</span></a>}
         <a className="banner" href="#/timeline">Timeline, day by day <span aria-hidden="true">→</span></a>

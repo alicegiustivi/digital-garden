@@ -17,9 +17,10 @@ import * as sg from "./suggestions.ts";
 import * as rs from "./researcher.ts";
 import * as ib from "./inbox.ts";
 import { phoneSetup, renewCode } from "./phone-setup.ts";
+import * as bk from "./backup.ts";
 import { createGate, forgetKey, GateError, looksLikeKey, saveKey } from "./ai-gate.ts";
 
-type Options = { /** Reads a saved link in the background. Tests replace it. */ readLink?: (id: string, url: string) => void; /** The AI queue. Tests give it a pretend OpenRouter. */ ai?: Ai; /** How often (ms) to look in the Drive inbox for phone captures. 0 = only when asked. */ inboxEvery?: number; /** Shows a folder in Finder. Tests replace it. */ reveal?: (path: string) => void };
+type Options = { /** Reads a saved link in the background. Tests replace it. */ readLink?: (id: string, url: string) => void; /** The AI queue. Tests give it a pretend OpenRouter. */ ai?: Ai; /** How often (ms) to look in the Drive inbox for phone captures. 0 = only when asked. */ inboxEvery?: number; /** Shows a folder in Finder. Tests replace it. */ reveal?: (path: string) => void; /** Daily Backup (issue #39). `every` = how often (ms) to check whether one is due; 0 = only when asked. Tests give their own password. */ backup?: { every?: number; password?: bk.PasswordSource } };
 
 export function createApp(sqlite: Database.Database, opts: Options = {}) {
   const readLink = opts.readLink ?? ((id: string, url: string) => void extractInto(sqlite, id, url));
@@ -228,6 +229,13 @@ export function createApp(sqlite: Database.Database, opts: Options = {}) {
     return kept ? c.json({ kept }) : c.json({ error: "Not found" }, 404);
   });
   app.post("/api/turns/:id/thought", (c) => { const id = rs.thoughtFromTurn(sqlite, Number(c.req.param("id"))); return id ? c.json({ id }, 201) : c.json({ error: "Not found" }, 404); });
+
+  // The daily encrypted Backup to Google Drive (issue #39).
+  const backupDeps: bk.BackupDeps = { password: opts.backup?.password ?? bk.keychainPassword };
+  if (opts.backup?.every) { setInterval(() => void bk.backupIfDue(sqlite, backupDeps), opts.backup.every).unref(); setTimeout(() => void bk.backupIfDue(sqlite, backupDeps), 20_000).unref(); }
+  app.get("/api/backup", (c) => c.json(bk.backupStatus()));
+  app.put("/api/backup/folder", async (c) => { bk.setBackupDir((await c.req.json().catch(() => ({}))).path); return c.json(bk.backupStatus()); });
+  app.post("/api/backup/run", async (c) => { const r = await bk.runBackup(sqlite, backupDeps); return c.json({ ...r, ...bk.backupStatus() }); });
 
   // The Daily Inbox (issue #37): phone captures that arrived in the Drive folder, by day.
   const inboxDeps: ib.InboxDeps = { readLink, enqueue: (ids) => ai.enqueueCaptured(ids) };
