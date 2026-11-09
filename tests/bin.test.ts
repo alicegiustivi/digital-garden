@@ -121,4 +121,30 @@ describe("Undo for small removals", () => {
     await call("POST", "/api/tags/restore", gone);
     expect((await call("GET", "/api/tags")).json).toMatchObject([{ id: tag.id, name: "x", color: tag.color, count: 2 }]);
   });
+
+  it("removing a Tag works on a Private Object and leaves every Object itself unchanged", async () => {
+    const a = await make("thought", "Secret"), b = await make("thought", "B");
+    sqlite.prepare("UPDATE objects SET private = 1 WHERE id = ?").run(a.id);
+    await call("POST", `/api/objects/${a.id}/tags`, { name: "x" });
+    await call("POST", `/api/objects/${b.id}/tags`, { name: "x" });
+    const before = sqlite.prepare("SELECT id, type, title, private, updated_at FROM objects ORDER BY id").all();
+    const tag = (await call("GET", "/api/tags")).json[0];
+    expect((await call("DELETE", `/api/tags/${tag.id}`)).json.objects).toBe(2);
+    expect(count("SELECT count(*) AS n FROM object_tags")).toBe(0);
+    expect(sqlite.prepare("SELECT id, type, title, private, updated_at FROM objects ORDER BY id").all()).toEqual(before);
+  });
+
+  it("remembers a removed AI Tag as turned down, not an owner Tag, and Undo forgets it", async () => {
+    const a = await make("thought", "A"), b = await make("thought", "B");
+    await call("POST", `/api/objects/${a.id}/tags`, { name: "x" });
+    await call("POST", `/api/objects/${b.id}/tags`, { name: "x" });
+    sqlite.prepare("UPDATE object_tags SET origin = 'ai', ai_role = 'archivist', ai_model = 'm', ai_date = '2026-01-01' WHERE object_id = ?").run(a.id);
+    const tag = (await call("GET", "/api/tags")).json[0];
+    const gone = (await call("DELETE", `/api/tags/${tag.id}`)).json;
+    const rejected = sqlite.prepare("SELECT object_id FROM ai_rejected WHERE kind = 'tag' AND value = 'x'").all();
+    expect(rejected).toEqual([{ object_id: a.id }]);
+    await call("POST", "/api/tags/restore", gone);
+    expect(count("SELECT count(*) AS n FROM ai_rejected")).toBe(0);
+    expect(count("SELECT count(*) AS n FROM object_tags WHERE origin = 'ai'")).toBe(1);
+  });
 });
