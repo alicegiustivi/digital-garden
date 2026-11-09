@@ -4,10 +4,11 @@ export type Field = { key: string; value: string } & OriginInfo;
 export type Tag = { id: number; name: string; color: string } & OriginInfo;
 export type Block = { id: number; text: string } & OriginInfo;
 export type Summary = {
-  id: string; type: string; private: boolean; unreviewed: boolean; hasImage: boolean; createdAt: string; updatedAt: string;
+  id: string; type: string; private: boolean; unreviewed: boolean; hasImage: boolean; portrait: string | null; createdAt: string; updatedAt: string;
   fields: Field[]; firstLine: string; tags: Tag[]; connectionCount: number;
 };
-export type MentionInfo = { id: string; missing: boolean; type?: string; title?: string; private?: boolean; tags?: Tag[]; connectionCount?: number; inBin?: boolean; kind?: string | null; label?: string | null };
+export type PortraitBack = { stem: string; width: number | null; height: number | null } | null;
+export type MentionInfo = { id: string; missing: boolean; type?: string; title?: string; private?: boolean; tags?: Tag[]; connectionCount?: number; portrait?: string | null; inBin?: boolean; kind?: string | null; label?: string | null };
 export type Obj = Summary & {
   blocks: Block[]; mentions?: Record<string, MentionInfo>;
   typeAi?: { aiRole: string; aiModel: string; aiDate: string } | null; aiReadBeforePrivate?: string | null;
@@ -166,6 +167,16 @@ export const api = {
   setConnection: (id: number, patch: { kind?: string; subject?: string; note?: string }) => call<unknown>("PATCH", `/api/connections/${id}`, patch),
   disconnect: (id: number) => call<{ was: RemovedConnection }>("DELETE", `/api/connections/${id}`),
   restoreConnection: (was: RemovedConnection) => call<unknown>("POST", "/api/connections/restore", was),
+  // A Person's Portrait (issue #69). Each answer carries "previous", what Undo sets back.
+  setPortrait: async (id: string, file: File): Promise<Obj & { previous: PortraitBack }> => {
+    const form = new FormData();
+    form.set("image", file, file.name || "Portrait");
+    const res = await fetch(`/api/objects/${id}/portrait`, { method: "PUT", body: form });
+    if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error ?? res.statusText);
+    return res.json();
+  },
+  removePortrait: (id: string) => call<Obj & { previous: PortraitBack }>("DELETE", `/api/objects/${id}/portrait`),
+  restorePortrait: (id: string, back: PortraitBack) => call<Obj & { previous: PortraitBack }>("POST", `/api/objects/${id}/portrait/restore`, { back }),
   deleteObject: (id: string) => call<unknown>("DELETE", `/api/objects/${id}`),
   restoreObject: (id: string) => call<unknown>("POST", `/api/objects/${id}/restore`),
   bin: () => call<BinRow[]>("GET", "/api/bin"),

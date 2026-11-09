@@ -53,7 +53,7 @@ function sentenceFor(db: Db, me: string, other: string): { text: string; by: "ot
 const shapeOther = (db: Db, id: string) => {
   const row = db.prepare("SELECT * FROM objects WHERE id = ?").get(id);
   const [s] = summarise(db, [row]);
-  return { id, type: s.type, title: titleOf(db, id), private: s.private, tags: s.tags, connectionCount: s.connectionCount };
+  return { id, type: s.type, title: titleOf(db, id), private: s.private, tags: s.tags, connectionCount: s.connectionCount, portrait: s.portrait };
 };
 
 export function connectionsOf(db: Db, id: string) {
@@ -292,6 +292,7 @@ export function mergeObjects(db: Db, keepId: string, dropId: string, picks: Reco
       db.prepare("INSERT INTO blocks (object_id, position, text, origin, ai_role, ai_model, ai_date) VALUES (?, ?, ?, ?, ?, ?, ?)").run(keepId, ++pos, b.text, b.origin, b.ai_role, b.ai_model, b.ai_date);
     db.prepare("DELETE FROM blocks WHERE object_id = ?").run(dropId);
     db.prepare("UPDATE OR IGNORE source_images SET object_id = ? WHERE object_id = ?").run(keepId, dropId);
+    db.prepare("UPDATE OR IGNORE person_portraits SET object_id = ? WHERE object_id = ?").run(keepId, dropId);
     db.prepare("UPDATE OR IGNORE open_questions SET object_id = ? WHERE object_id = ?").run(keepId, dropId);
     db.prepare("DELETE FROM open_questions WHERE object_id = ?").run(dropId);
     // Mentions of the merged Object, anywhere, now point at the kept one.

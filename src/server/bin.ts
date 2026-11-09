@@ -6,6 +6,7 @@ import { join } from "node:path";
 import type Database from "better-sqlite3";
 import { BadRequest, summarise, titleOf } from "./objects.ts";
 import { imagesDir } from "./paths.ts";
+import { dropPortraitFiles } from "./portraits.ts";
 import { mentionToken, syncMentions } from "./mentions.ts";
 import { emptyInquiryBin, purgeExpiredInquiries } from "./researcher.ts";
 
@@ -42,13 +43,14 @@ export function purgeObjects(db: Db, ids: string[]) {
       if (!db.prepare("SELECT 1 FROM objects WHERE id = ? AND deleted_at IS NOT NULL").get(id)) continue; // only the Bin can be purged
       for (const table of ["connections"]) db.prepare(`DELETE FROM ${table} WHERE from_id = ? OR to_id = ?`).run(id, id);
       db.prepare("DELETE FROM ai_suggestions WHERE json_extract(data, '$.otherId') = ?").run(id);
-      for (const table of ["object_tags", "field_values", "blocks", "source_images", "ai_jobs", "ai_runs", "ai_rejected", "ai_notes", "ai_suggestions", "concept_versions", "open_questions", "garden_dismissed"]) db.prepare(`DELETE FROM ${table} WHERE object_id = ?`).run(id);
+      for (const table of ["object_tags", "field_values", "blocks", "source_images", "person_portraits", "ai_jobs", "ai_runs", "ai_rejected", "ai_notes", "ai_suggestions", "concept_versions", "open_questions", "garden_dismissed"]) db.prepare(`DELETE FROM ${table} WHERE object_id = ?`).run(id);
       db.prepare("UPDATE open_questions SET settled_by = NULL WHERE settled_by = ?").run(id);
       db.prepare("DELETE FROM objects WHERE id = ?").run(id);
       gone.push(id);
     }
   })();
   // Picture files are removed after the database commit; a failure here only leaves a stray file.
+  for (const id of gone) void dropPortraitFiles(db, id);
   for (const id of gone) for (const f of [`${id}.jpg`, `${id}.thumb.jpg`]) void rm(join(imagesDir(), f), { force: true }).catch(() => {});
   return gone.length;
 }

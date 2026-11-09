@@ -8,7 +8,7 @@ import { Plugin, PluginKey } from "@tiptap/pm/state";
 import { Decoration, DecorationSet } from "@tiptap/pm/view";
 import Suggestion, { exitSuggestion } from "@tiptap/suggestion";
 import type { MentionInfo } from "./api";
-import { Icon, TagPill, typeVar } from "./ui";
+import { Icon, Portrait, TagPill, typeVar } from "./ui";
 
 export type MentionCtx = { info: Record<string, MentionInfo>; typeLabel: (type: string) => string; open: (id: string, beside: boolean) => void };
 export const MentionContext = createContext<MentionCtx>({ info: {}, typeLabel: (t) => t, open: () => {} });
@@ -39,7 +39,8 @@ function MentionView({ node }: NodeViewProps) {
       <a className="mention" href={`#/o/${id}`} onClick={go} title={`${typeLabel(m.type!)}. ⌥-click opens it beside this one.`}>
         <Icon name={m.type!} />{m.title}
       </a>
-      <a className="object-card" href={`#/o/${id}`} onClick={go} contentEditable={false}>
+      <a className={`object-card${m.type === "person" ? " has-portrait" : ""}`} href={`#/o/${id}`} onClick={go} contentEditable={false}>
+        {m.type === "person" && <span className="oc-portrait"><Portrait stem={m.portrait} size={44} name={m.title} /></span>}
         <span className="oc-kind"><Icon name={m.type!} /> {typeLabel(m.type!)}{m.private && <> · <Icon name="lock" /> Private</>}</span>
         <span className="oc-title">{m.title}</span>
         {!!m.tags?.length && <span className="oc-tags">{m.tags.map((t) => <TagPill key={t.id} tag={t} />)}</span>}

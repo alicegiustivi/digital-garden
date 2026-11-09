@@ -87,6 +87,7 @@ export function gatherGarden(db: Db, opts: ExportOptions = {}, now = new Date())
   const objTags = by(all("SELECT * FROM object_tags"));
   const blocks = by(all("SELECT * FROM blocks ORDER BY object_id, position"));
   const images = new Map(all("SELECT * FROM source_images").map((i) => [i.object_id, i]));
+  const portraits = new Map(all("SELECT * FROM person_portraits").map((i) => [i.object_id, i]));
   const questions = new Map(all("SELECT * FROM open_questions").map((q) => [q.object_id, q]));
   const versions = by(all("SELECT * FROM concept_versions ORDER BY object_id, day DESC"));
   const notes = by(all("SELECT * FROM ai_notes ORDER BY id"));
@@ -96,6 +97,7 @@ export function gatherGarden(db: Db, opts: ExportOptions = {}, now = new Date())
 
   const objects = objRows.map((o) => {
     const img = images.get(o.id);
+    const por = portraits.get(o.id);
     const q = questions.get(o.id);
     return {
       id: o.id as string, type: o.type as string, title: o.title as string | null, displayTitle: titleOf(db, o.id),
@@ -106,6 +108,7 @@ export function gatherGarden(db: Db, opts: ExportOptions = {}, now = new Date())
       tags: (objTags.get(o.id) ?? []).filter((t) => tagRows.has(t.tag_id)).map((t) => ({ name: tagRows.get(t.tag_id).name as string, color: tagRows.get(t.tag_id).color as string, ...originOf(t, false) })),
       body: (blocks.get(o.id) ?? []).map((b) => ({ position: b.position as number, text: b.text as string, ...originOf(b) })),
       image: img ? { file: img.file as string, width: img.width as number | null, height: img.height as number | null } : null,
+      portrait: por ? { file: `${por.stem}.jpg` as string, width: por.width as number | null, height: por.height as number | null, origin: "owner" as const } : null,
       openQuestion: q ? { openedAt: q.opened_at as string, settledAt: (q.settled_at ?? null) as string | null, settledBy: (q.settled_by ?? null) as string | null } : null,
       conceptVersions: (versions.get(o.id) ?? []).map((v) => ({ day: v.day as string, savedAt: v.saved_at as string, origin: "owner", paragraphs: json<string[]>(v.paragraphs, []) })),
       aiNotes: (notes.get(o.id) ?? []).map((n) => ({ id: n.id as number, kind: n.kind as string, text: n.text as string, origin: "ai", aiRole: n.ai_role as string, aiModel: n.ai_model as string, aiDate: n.ai_date as string, createdAt: n.created_at as string, inquiryId: (n.inquiry_id ?? null) as string | null, question: (n.question ?? null) as string | null })),
@@ -215,6 +218,7 @@ function markdownFor(g: Garden, L: ReturnType<typeof layout>, privateIds: Set<st
     }
     if (lines[lines.length - 1] !== "") lines.push("");
     for (const l of lead) lines.push(l, "");
+    if (o.portrait) lines.push(`![Portrait of ${o.displayTitle.replace(/[\[\]]/g, "")}](${rel(here, "images/" + o.portrait.file)})`, "");
     if (o.image) lines.push(`![${o.displayTitle.replace(/[\[\]]/g, "")}](${rel(here, "images/" + o.image.file)})`, "");
     // body
     for (const b of o.body) {
@@ -296,7 +300,7 @@ This folder is an **Export** of your Digital Garden, made ${day10(g.exportedAt)}
 ${g.objectTypes.map((t) => `- **${t.plural}/** — one file per ${t.label}, named by its title. Each shows its type, dates, Tags and fields, then the body, then its Connections.`).join("\n")}
 - **Inquiries/** — one file per question you put to the Researcher, with its answers and the Objects it read.
 - **Daily Inbox/** — one file per day of things you sent from your phone, with your comments.
-- **images/** — the pictures (the shrunk copies the Garden keeps; there are no larger originals).
+- **images/** — the pictures, including People's Portraits (the shrunk copies the Garden keeps; there are no larger originals).
 - **Tags.md** — every Tag and how many Objects carry it.
 - **garden.json** — everything the Garden knows, for other programs. **If the readable files and garden.json ever disagree, garden.json is right.** It also holds things the files leave out: suggestions you turned down, the history of what the AI changed, Concept views, and captures that didn't arrive.
 
@@ -324,7 +328,7 @@ async function writeFolder(db: Db, tmp: string, opts: ExportOptions, deps: Expor
   const L = layout(g);
   const leftOut = new Set<string>(opts.leaveOutPrivate ? (db.prepare("SELECT id FROM objects WHERE private = 1 AND deleted_at IS NULL").all() as any[]).map((r) => r.id) : []); // only the ids, to say "[a Private Object]"; their content is never read
   const M = markdownFor(g, L, leftOut);
-  const imgs = g.objects.filter((o) => o.image);
+  const imgs = g.objects.flatMap((o) => [o.image, o.portrait].filter((x): x is NonNullable<typeof x> => !!x));
   const total = g.objects.length + g.inquiries.length + L.days.size + imgs.length + 3;
   let n = 0;
   const step = async (path: string) => { await deps.beforeFile?.(n, path); onProgress({ done: ++n, total }); if (n % 20 === 0) await new Promise((r) => setImmediate(r)); }; // let the Garden answer the owner meanwhile
@@ -334,9 +338,9 @@ async function writeFolder(db: Db, tmp: string, opts: ExportOptions, deps: Expor
   for (const [day, path] of L.days) await put(path, M.dayFile(day, path));
   let missing = 0;
   for (const o of imgs) {
-    await step("images/" + o.image!.file);
+    await step("images/" + o.file);
     await mkdir(join(tmp, "images"), { recursive: true });
-    try { await copyFile(join(imagesDir(), o.image!.file), join(tmp, "images", o.image!.file)); } catch { missing++; (o.image as any).missing = true; }
+    try { await copyFile(join(imagesDir(), o.file), join(tmp, "images", o.file)); } catch { missing++; (o as any).missing = true; }
   }
   await put("Tags.md", M.tagsFile());
   await put("Read me first.md", M.readMe());
