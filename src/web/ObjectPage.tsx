@@ -171,17 +171,18 @@ export function ObjectPage({ id, types, fresh, onChanged, beside, onDeleted }: P
             </p>
           )}
 
-          <div className="byline">
-            {pills.map((f) => <FieldPill key={f.key} def={f} obj={obj} onSave={(v) => saveFields({ [f.key]: v })} />)}
-          </div>
+          <Properties
+            defs={pills}
+            obj={obj}
+            onSave={(key, v) => saveFields({ [key]: v })}
+            tags={<div className="tags">
+              {obj.tags.map((t) => <TagPill key={t.id} tag={t} linked onRemove={() => removeTagHere(t)} />)}
+              <TagInput known={allTags} onAdd={addTag} />
+            </div>}
+          />
 
           {obj.type === "thought" && <div className="byline"><OpenQuestionControl id={obj.id} beside={beside} /></div>}
           {obj.type === "concept" && <DeskSummary desk={desk} types={types} />}
-
-          <div className="tags">
-            {obj.tags.map((t) => <TagPill key={t.id} tag={t} linked onRemove={() => removeTagHere(t)} />)}
-            <TagInput known={allTags} onAdd={addTag} />
-          </div>
 
           <ArchivistSuggestions obj={obj} types={types} onChanged={update} />
           <AiStatusLine id={obj.id} onChanged={update} />
@@ -251,19 +252,54 @@ export function ObjectPage({ id, types, fresh, onChanged, beside, onDeleted }: P
   );
 }
 
-function FieldPill({ def, obj, onSave }: { def: FieldDef; obj: Obj; onSave: (v: string) => void }) {
-  const f = fieldOf(obj, def.key);
+/** An Object's properties as quiet rows: only the ones with a value, plus Tags, and one "Add property" for the rest (no empty dashed chips). */
+function Properties({ defs, obj, onSave, tags }: { defs: FieldDef[]; obj: Obj; onSave: (key: string, v: string) => void; tags: React.ReactNode }) {
+  const [added, setAdded] = useState<string[]>([]); // chosen from "Add property", kept on screen while still empty
+  const [menu, setMenu] = useState(false);
+  const box = useRef<HTMLDivElement>(null);
+  useEffect(() => setAdded([]), [obj.id]);
+  useEffect(() => {
+    if (!menu) return;
+    const out = (e: MouseEvent) => !box.current?.contains(e.target as Node) && setMenu(false);
+    const esc = (e: KeyboardEvent) => e.key === "Escape" && setMenu(false);
+    document.addEventListener("mousedown", out);
+    document.addEventListener("keydown", esc);
+    return () => { document.removeEventListener("mousedown", out); document.removeEventListener("keydown", esc); };
+  }, [menu]);
+  const shown = defs.filter((d) => fieldOf(obj, d.key) || added.includes(d.key));
+  const rest = defs.filter((d) => !shown.includes(d));
   return (
-    <span className={`pill ${f ? "" : "ghost"}`}>
-      {f ? <span className="k">{def.label}</span> : null}
-      <Editable
-        value={f?.value ?? ""}
-        origin={f}
-        options={def.input === "select" ? def.options : null}
-        placeholder={`+ ${def.label}`}
-        onSave={onSave}
-      />
-    </span>
+    <dl className="props">
+      {shown.map((d) => {
+        const f = fieldOf(obj, d.key);
+        return (
+          <div className="prop" key={d.key}>
+            <dt>{d.label}</dt>
+            <dd>
+              <Editable
+                value={f?.value ?? ""}
+                origin={f}
+                options={d.input === "select" ? d.options : null}
+                startEditing={!f && added[added.length - 1] === d.key}
+                placeholder={`Add ${d.label.toLowerCase()}`}
+                onSave={(v) => onSave(d.key, v)}
+              />
+            </dd>
+          </div>
+        );
+      })}
+      <div className="prop prop-tags"><dt>Tags</dt><dd>{tags}</dd></div>
+      {rest.length > 0 && (
+        <div className="prop-add more" ref={box}>
+          <button className="add-prop" aria-haspopup="menu" aria-expanded={menu} onClick={() => setMenu(!menu)}><Icon name="plus" /> Add property</button>
+          {menu && (
+            <div className="menu" role="menu">
+              {rest.map((d) => <button key={d.key} role="menuitem" onClick={() => { setAdded((a) => [...a, d.key]); setMenu(false); }}>{d.label}</button>)}
+            </div>
+          )}
+        </div>
+      )}
+    </dl>
   );
 }
 
@@ -275,9 +311,10 @@ function TagInput({ known, onAdd }: { known: TagRow[]; onAdd: (name: string) => 
         className="tag-input"
         value={text}
         list="known-tags"
-        placeholder="+ tag  (press t)"
+        placeholder="Add tag"
+        title="Press t anywhere on this page to jump here"
         aria-label="Add a Tag"
-        size={Math.max(text.length, 14)}
+        size={Math.max(text.length, 8)}
         onChange={(e) => setText(e.target.value)}
         onKeyDown={(e) => {
           if ((e.key === "Enter" || e.key === ",") && text.trim()) { e.preventDefault(); onAdd(text); setText(""); }

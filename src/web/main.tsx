@@ -9,7 +9,7 @@ import { SidePane } from "./Connections";
 import { useRefresh } from "./refresh";
 import { Toasts } from "./toast";
 import { BinPage } from "./Bin";
-import { BackupPage, useBackup } from "./Backup";
+import { BackupPage } from "./Backup";
 import { ExportPage } from "./Export";
 import { AiLine, AiPage, aiChanged } from "./Ai";
 import type { Summary } from "./api";
@@ -38,72 +38,89 @@ const useHash = () => {
 };
 const go = (h: string) => { location.hash = h; };
 
-const NAV = [
-  { label: "Overview", hash: "#/overview", type: null },
-  { label: "This week", hash: "#/", type: null },
-  { label: "Sources", hash: "#/sources", type: "source" },
-  { label: "Concepts", hash: "#/concepts", type: "concept" },
-  { label: "Thoughts", hash: "#/thoughts", type: "thought" },
-  { label: "People", hash: "#/people", type: "person" },
-  { label: "Tags", hash: "#/tags", type: null },
-  { label: "Timeline", hash: "#/timeline", type: null },
-  { label: "Map", hash: "#/map", type: null },
-  { label: "Inquiries", hash: "#/inquiries", type: null },
-];
 const TYPE_OF_ROUTE: Record<string, string> = { sources: "source", concepts: "concept", thoughts: "thought", people: "person" };
+const TYPE_ROWS = [
+  { key: "source", label: "Sources", hash: "#/sources" },
+  { key: "concept", label: "Concepts", hash: "#/concepts" },
+  { key: "thought", label: "Thoughts", hash: "#/thoughts" },
+  { key: "person", label: "People", hash: "#/people" },
+];
 
-function TopBar({ hash, unreviewed, onCapture, onSearch }: { hash: string; unreviewed: number; onCapture: () => void; onSearch: () => void }) {
-  const [open, setOpen] = useState(false);
-  const [appearance, setAppearanceState] = useState<Appearance>(getAppearance());
-  const [backup] = useBackup(open ? 1 : 0);
-  const box = useRef<HTMLDivElement>(null);
+/** How many Objects of each type there are, for the side column. */
+function useTypeCounts(version: number) {
+  const [counts, setCounts] = useState<Record<string, number>>({});
   useEffect(() => {
-    if (!open) return;
-    const out = (e: MouseEvent) => !box.current?.contains(e.target as Node) && setOpen(false);
-    const esc = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
-    document.addEventListener("mousedown", out);
-    document.addEventListener("keydown", esc);
-    return () => { document.removeEventListener("mousedown", out); document.removeEventListener("keydown", esc); };
-  }, [open]);
+    let live = true;
+    Promise.all(TYPE_ROWS.map((t) => api.list({ type: t.key }).then((r) => [t.key, r.length] as const)))
+      .then((pairs) => live && setCounts(Object.fromEntries(pairs))).catch(() => {});
+    return () => { live = false; };
+  }, [version]);
+  return counts;
+}
+
+function SideLink({ href, on, type, children, count, onGo }: { href: string; on: boolean; type?: string; children: React.ReactNode; count?: number; onGo?: () => void }) {
+  return (
+    <a href={href} className={`side-link${on ? " on" : ""}`} style={type ? typeVar(type) : undefined} aria-current={on ? "page" : undefined} onClick={onGo}>
+      {type && <Icon name={type} />}
+      <span className="side-label">{children}</span>
+      {count !== undefined && <span className="side-count">{count}</span>}
+    </a>
+  );
+}
+
+/** The left column: Capture and Search on top, then everything the Garden has, then the rarely-used pages and Appearance. */
+function SideColumn({ hash, unreviewed, version, onCapture, onSearch }: { hash: string; unreviewed: number; version: number; onCapture: () => void; onSearch: () => void }) {
+  const [menu, setMenu] = useState(false); // only used on a narrow window, where the column folds away
+  const [appearance, setAppearanceState] = useState<Appearance>(getAppearance());
+  const counts = useTypeCounts(version);
+  useEffect(() => setMenu(false), [hash]);
   const section0 = "#/" + hash.slice(2).split("?")[0].split("/")[0];
   const section = section0 === "#/inquiry" ? "#/inquiries" : section0;
+  const here = (h: string) => section === h || (h === "#/" && hash === "#/");
   const choose = (a: Appearance) => { setAppearance(a); setAppearanceState(a); };
   return (
-    <header className="mast wrap">
-      <a className="wm" href="#/">Garden</a>
-      <nav aria-label="Main">
-        {NAV.map((n) => (
-          <a key={n.hash} href={n.hash} style={n.type ? typeVar(n.type) : undefined} className={section === n.hash || (n.hash === "#/" && hash === "#/") ? "on" : ""}>
-            {n.type && <Icon name={n.type} />}
-            {n.label}
-          </a>
-        ))}
-        <a href="#/unreviewed" className={section === "#/unreviewed" ? "on" : ""}>Unreviewed ({unreviewed})</a>
-        <button className="cap search-btn" onClick={onSearch} title="Search everything"><Icon name="search" /> Search <kbd>⌘K</kbd></button>
+    <aside className={`side${menu ? " open" : ""}`} aria-label="Garden">
+      <div className="side-top">
+        <a className="wm" href="#/">Garden</a>
+        <button className="side-fold" aria-expanded={menu} aria-controls="side-nav" onClick={() => setMenu(!menu)}>Menu <Icon name="chevron" /></button>
+      </div>
+      <div className="side-acts">
         <button className="cap" onClick={onCapture} title="Capture a thought"><Icon name="plus" /> Capture <kbd>{captureKey()}</kbd></button>
-        <AiLine />
-        <div className="more" ref={box}>
-          <button aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen(!open)}>More <Icon name="chevron" /></button>
-          {open && (
-            <div className="menu" role="menu">
-              <a className="menu-link" href="#/inbox" onClick={() => setOpen(false)}><span className="tick" />Daily Inbox</a>
-              <a className="menu-link" href="#/questions" onClick={() => setOpen(false)}><span className="tick" />Questions</a>
-              <a className="menu-link" href="#/bin" onClick={() => setOpen(false)}><span className="tick" />Bin</a>
-              <a className="menu-link" href="#/backup" onClick={() => setOpen(false)}><span className="tick" />Backup{backup ? <span className="quiet small"> · {backup.line}</span> : null}</a>
-              <a className="menu-link" href="#/export" onClick={() => setOpen(false)}><span className="tick" />Export my Garden…</a>
-              <a className="menu-link" href="#/ai" onClick={() => setOpen(false)}><span className="tick" />AI</a>
-              <a className="menu-link" href="#/bookmark" onClick={() => setOpen(false)}><span className="tick" />Save to Garden bookmark</a>
-              <div className="menu-h">Appearance</div>
-              {([["light", "Light"], ["dark", "Dark (Espresso)"], ["system", "Same as Mac"]] as [Appearance, string][]).map(([v, label]) => (
-                <button key={v} role="menuitemradio" aria-checked={appearance === v} className={appearance === v ? "on" : ""} onClick={() => choose(v)}>
-                  <span className="tick">{appearance === v ? "✓" : ""}</span>{label}
-                </button>
-              ))}
-            </div>
-          )}
+        <button className="cap quiet-cap" onClick={onSearch} title="Search everything"><Icon name="search" /> Search <kbd>⌘K</kbd></button>
+      </div>
+      <nav id="side-nav" aria-label="Main">
+        <div className="side-group">
+          <SideLink href="#/" on={here("#/")}>This week</SideLink>
+          <SideLink href="#/overview" on={here("#/overview")}>Overview</SideLink>
+          <SideLink href="#/unreviewed" on={here("#/unreviewed")} count={unreviewed}>Unreviewed</SideLink>
+        </div>
+        <div className="side-group">
+          <h3 className="side-h">Object Types</h3>
+          {TYPE_ROWS.map((t) => <SideLink key={t.key} href={t.hash} type={t.key} on={here(t.hash)} count={counts[t.key]}>{t.label}</SideLink>)}
+        </div>
+        <div className="side-group">
+          <SideLink href="#/tags" on={here("#/tags")}>Tags</SideLink>
+          <SideLink href="#/timeline" on={here("#/timeline")}>Timeline</SideLink>
+          <SideLink href="#/map" on={here("#/map")}>Map</SideLink>
+          <SideLink href="#/inquiries" on={here("#/inquiries")}>Inquiries</SideLink>
+        </div>
+        <div className="side-group">
+          <h3 className="side-h">More</h3>
+          <SideLink href="#/inbox" on={here("#/inbox")}>Daily Inbox</SideLink>
+          <SideLink href="#/questions" on={here("#/questions")}>Questions</SideLink>
+          <SideLink href="#/bin" on={here("#/bin")}>Bin</SideLink>
+          <SideLink href="#/backup" on={here("#/backup")}>Backup</SideLink>
+          <SideLink href="#/export" on={here("#/export")}>Export</SideLink>
+          <AiLine on={here("#/ai")} />
+          <SideLink href="#/bookmark" on={here("#/bookmark")}>Bookmark</SideLink>
+        </div>
+        <div className="side-group side-look" role="radiogroup" aria-label="Appearance">
+          {([["light", "Light"], ["dark", "Dark"], ["system", "Mac"]] as [Appearance, string][]).map(([v, label]) => (
+            <button key={v} role="radio" aria-checked={appearance === v} className={appearance === v ? "on" : ""} title={v === "dark" ? "Dark (Espresso)" : v === "system" ? "Same as Mac" : "Light"} onClick={() => choose(v)}>{label}</button>
+          ))}
         </div>
       </nav>
-    </header>
+    </aside>
   );
 }
 
@@ -115,8 +132,8 @@ function BookmarkPage() {
     link.current?.setAttribute("href", "javascript:" + encodeURIComponent(code));
   }, []);
   return (
-    <main className="wrap page bookmark-page">
-      <h2>Save to Garden</h2>
+    <main className="wrap text-page bookmark-page">
+      <header className="vol"><h2>Save to Garden</h2></header>
       <p className="quiet">One click in your browser sends the page you're reading to Capture, with its link already filled in.</p>
       <ol>
         <li>Show your browser's bookmarks bar (in Chrome or Safari: View ▸ Show Bookmarks Bar).</li>
@@ -256,7 +273,7 @@ function App() {
     const paneId = parts[2] === "with" ? parts[3] : undefined;
     const beside = (b: string) => go(`#/o/${mainId}/with/${b}`);
     page = (
-      <main className={`wrap page ${paneId ? "split" : ""}`}>
+      <main className={`page ${paneId ? "split" : ""}`}>
         <div className="split-main">
           <ObjectPage key={mainId} id={mainId} types={types} fresh={fresh === mainId || wasMadeHere(mainId)} onChanged={changed} beside={beside} onDeleted={() => go("#/")} />
         </div>
@@ -301,8 +318,10 @@ function App() {
 
   return (
     <>
-      <TopBar hash={hash} unreviewed={unreviewed?.length ?? 0} onCapture={() => { setPeek(null); setCapture(true); }} onSearch={() => { setPeek(null); setSearching(true); }} />
-      {page}
+      <div className="shell">
+        <SideColumn hash={hash} version={version} unreviewed={unreviewed?.length ?? 0} onCapture={() => { setPeek(null); setCapture(true); }} onSearch={() => { setPeek(null); setSearching(true); }} />
+        <div className="main">{page}</div>
+      </div>
       <Toasts />
       {capture && (
         <Capture

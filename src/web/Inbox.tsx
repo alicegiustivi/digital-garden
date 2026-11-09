@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { inboxApi, type InboxComment, type InboxEntry, type InboxStatus, type Types } from "./api";
 import { Card } from "./Lists";
-import { Icon } from "./ui";
+import { Hint, Icon } from "./ui";
 import { showToast } from "./toast";
 
 export const dayLabel = (day: string) => {
@@ -126,7 +126,9 @@ export function InboxPage({ day, types, version, onOpen, onChanged }: { day?: st
       <header className="vol">
         <h2>{day ? <><a className="quiet" href="#/inbox">Daily Inbox</a> · {dayLabel(day)}</> : "Daily Inbox"}</h2>
       </header>
-      <p className="quiet small">Everything you sent from your phone that day, in the order you sent it. Things typed on the Mac aren’t here. Your comments stay here, in your words, until you turn one into a Thought.</p>
+      <Hint short="Everything you sent from your phone that day, in the order you sent it.">
+        <p>Things typed on the Mac aren’t here. Your comments stay here, in your words, until you turn one into a Thought.</p>
+      </Hint>
       {status && <Warning s={status} onChanged={setStatus} />}
       {status && !day && <PhoneSetup connected={!!status.lastSync} />}
       {!day && status && (

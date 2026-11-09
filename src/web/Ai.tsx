@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { api, type AiStatus, type AiSummary, type Obj } from "./api";
-import { Icon } from "./ui";
+import { Hint, Icon } from "./ui";
 
 const clock = (iso: string) => new Date(iso).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
 
@@ -19,11 +19,11 @@ export function useAi(every = 15000) {
 export const aiChanged = () => window.dispatchEvent(new Event("garden-ai"));
 
 /** The quiet AI line in the top bar. */
-export function AiLine() {
+export function AiLine({ on }: { on?: boolean } = {}) {
   const ai = useAi();
   if (!ai) return null;
   const text = !ai.keySet ? "AI · add your key" : ai.keyProblem ? "AI · key needs attention" : `AI · ${ai.low ? `only ${ai.left} calls left today` : `${ai.left} calls left`}${ai.waiting ? ` · ${ai.waiting} waiting` : ""}`;
-  return <a className={`ai-line ${ai.keySet && !ai.keyProblem && !ai.low ? "" : "attn"}`} href="#/ai" title="Today's free AI allowance, shared by the Archivist and the Researcher">{text}</a>;
+  return <a className={`side-link ai-line${on ? " on" : ""} ${ai.keySet && !ai.keyProblem && !ai.low ? "" : "attn"}`} href="#/ai" title="Today's free AI allowance, shared by the Archivist and the Researcher">{text}</a>;
 }
 
 const statusText = (st: AiStatus): string =>
@@ -109,7 +109,9 @@ export function AiPage() {
   return (
     <main className="contents wrap ai-page">
       <header className="vol"><h2>AI</h2></header>
-      <p className="quiet">The Researcher answers questions you ask it, about one Object or the whole Garden; its answers are AI Notes that stay in Inquiries until you keep one on an Object. The Archivist reads each new capture and fills in what it can: the kind of thing it is, who wrote it, when, and a few Tags. Tags and facts it adds are marked ✦ and can be undone in one click. Connections it finds (related, or authored by) are added the same way, marked ✦ with their own Undo. A more specific Connection (supports, contradicts, builds on, inspired by), a change of type and new Objects wait on the Object as Suggestions until you approve them (then they show ✧). A short summary of a Source appears as an AI Note beside your words, never inside them. It never reads anything you marked Private, and it never writes in your words.</p>
+      <Hint short="Your OpenRouter key and today’s free AI allowance. The AI never reads Private Objects and never writes in your words.">
+      <p>The Researcher answers questions you ask it, about one Object or the whole Garden; its answers are AI Notes that stay in Inquiries until you keep one on an Object. The Archivist reads each new capture and fills in what it can: the kind of thing it is, who wrote it, when, and a few Tags. Tags and facts it adds are marked ✦ and can be undone in one click. Connections it finds (related, or authored by) are added the same way, marked ✦ with their own Undo. A more specific Connection (supports, contradicts, builds on, inspired by), a change of type and new Objects wait on the Object as Suggestions until you approve them (then they show ✧). A short summary of a Source appears as an AI Note beside your words, never inside them. It never reads anything you marked Private, and it never writes in your words.</p>
+      </Hint>
 
       <h3>Your OpenRouter key</h3>
       {ai?.keySet && !ai.keyProblem ? (

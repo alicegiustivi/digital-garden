@@ -202,7 +202,7 @@ export function OpenQuestionControl({ id, beside }: { id: string; beside: (id: s
     api.setQuestion(id, state, settledBy).then((r) => { setQ(r); setSettling(false); setBy(""); refresh(); }).catch((e) => showToast(e.message));
   if (q === undefined) return null;
   if (!q)
-    return <button className="pill ghost" title="Mark this Thought as a question you mean to keep returning to" onClick={() => set("open")}>+ Open Question</button>;
+    return <button className="add-prop" title="Mark this Thought as a question you mean to keep returning to" onClick={() => set("open")}><Icon name="plus" /> Open Question</button>;
   return (
     <span className="oq">
       <span className={`pill ${q.state === "open" ? "oq-open" : ""}`}>

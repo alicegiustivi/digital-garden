@@ -88,3 +88,13 @@ export function Portrait({ stem, size, name, full }: { stem?: string | null; siz
     ? <img className="portrait" style={px} src={`/api/portraits/${stem}/${full ? "full" : "thumb"}`} alt={name ? `Portrait of ${name}` : "Portrait"} />
     : <span className="portrait ph" style={{ ...px, ["--c" as string]: "var(--t-person)" }} aria-hidden="true"><span style={{ width: size * 0.56, height: size * 0.56 }}><Icon name="person" /></span></span>;
 }
+
+/** A one-line hint with the long explanation behind a fold ("How this works"). Used wherever a page used to open with a wall of grey text. */
+export function Hint({ short, children }: { short: ReactNode; children?: ReactNode }) {
+  return (
+    <div className="hint">
+      <p className="quiet">{short}</p>
+      {children && <details className="how"><summary>How this works</summary><div className="how-body">{children}</div></details>}
+    </div>
+  );
+}

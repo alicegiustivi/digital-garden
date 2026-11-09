@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { api, type BinInquiry, type BinRow, type Types } from "./api";
 import { refresh } from "./refresh";
-import { Icon, formatDay, typeVar } from "./ui";
+import { Hint, Icon, formatDay, typeVar } from "./ui";
 
 /** The Bin: deleted Objects wait here 30 days. Restoring brings back everything, Connections included. */
 export function BinPage({ types, onChanged }: { types: Types; onChanged: () => void }) {
@@ -16,7 +16,9 @@ export function BinPage({ types, onChanged }: { types: Types; onChanged: () => v
   return (
     <main className="contents wrap">
       <header className="vol"><h2>Bin{rows ? <em> {rows.length}</em> : null}</h2></header>
-      <p className="quiet small">Deleted Objects wait here for 30 days, hidden from everything else. Restore one and it comes back exactly as it was, with its Connections. After 30 days, or when you empty the Bin, it is gone for good.</p>
+      <Hint short="Deleted Objects wait here for 30 days, then they are gone for good.">
+        <p>While they wait they are hidden from everything else. Restore one and it comes back exactly as it was, with its Connections. When you empty the Bin, they are gone at once.</p>
+      </Hint>
       {error && <p className="quiet small" role="alert">{error}</p>}
       {rows && !rows.length && !asked.length && <p className="quiet">The Bin is empty.</p>}
       {rows && (rows.length > 0 || asked.length > 0) && (

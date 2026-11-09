@@ -5,7 +5,7 @@ import { BackupNote } from "./Backup";
 import { api, inboxApi, displayTitle, TAG_COLORS, type Filters, type Summary, type TagRow, type Types } from "./api";
 import { FilterBar, noFilters, useFilterQuery, useSort, type FilterState } from "./Filters";
 import { showToast } from "./toast";
-import { Icon, Portrait, TagPill, TypeChip, formatDay, subOf, typeVar, tagVar } from "./ui";
+import { Hint, Icon, Portrait, TagPill, TypeChip, formatDay, subOf, typeVar, tagVar } from "./ui";
 
 export function useList(q: Filters, version: number) {
   const [rows, setRows] = useState<Summary[] | null>(null);
@@ -85,10 +85,6 @@ export function ThisWeek({ types, version, unreviewed, onNew, onOpen }: { types:
         <NewButtons types={types} onNew={onNew} />
       </header>
       <BackupNote />
-      <div className="banners">
-        {unreviewed > 0 && <a className="banner" href="#/unreviewed">{unreviewed} Unreviewed <span aria-hidden="true">→</span></a>}
-        <a className="banner" href="#/timeline">Timeline, day by day <span aria-hidden="true">→</span></a>
-      </div>
       <div className="weekgrid">
       <div className="week-main">
       {rows && lead && (
@@ -270,7 +266,9 @@ export function UnreviewedPage({ rows, types, onOpen, onReviewed }: {
     <main className="contents wrap">
       <header className="vol"><h2>Unreviewed{rows ? <em> {rows.length}</em> : null}</h2></header>
       {rows && !rows.length && <p className="quiet">Nothing waiting. Everything you capture shows up here until you tick it Reviewed.</p>}
-      {rows && rows.length > 0 && <p className="quiet small">Open one to step through them with the arrow keys. Press R to tick Reviewed and move on. Reviewed only means “I’ve looked at this”.</p>}
+      {rows && rows.length > 0 && <Hint short="Open one, then use the arrow keys to step through and R to tick it Reviewed.">
+        <p>Reviewed only means “I’ve looked at this”. It approves and rejects nothing; pending Suggestions stay where they are.</p>
+      </Hint>}
       {rows && groupByAge(rows).map((g) => (
         <section key={g.name} className="ugroup">
           <div className="ugroup-h">
