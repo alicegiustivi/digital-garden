@@ -18,9 +18,10 @@ import * as rs from "./researcher.ts";
 import * as ib from "./inbox.ts";
 import { phoneSetup, renewCode } from "./phone-setup.ts";
 import * as bk from "./backup.ts";
+import * as ex from "./export.ts";
 import { createGate, forgetKey, GateError, looksLikeKey, saveKey } from "./ai-gate.ts";
 
-type Options = { /** Reads a saved link in the background. Tests replace it. */ readLink?: (id: string, url: string) => void; /** The AI queue. Tests give it a pretend OpenRouter. */ ai?: Ai; /** How often (ms) to look in the Drive inbox for phone captures. 0 = only when asked. */ inboxEvery?: number; /** Shows a folder in Finder. Tests replace it. */ reveal?: (path: string) => void; /** Daily Backup (issue #39). `every` = how often (ms) to check whether one is due; 0 = only when asked. Tests give their own password. */ backup?: { every?: number; password?: bk.PasswordSource } };
+type Options = { /** Reads a saved link in the background. Tests replace it. */ readLink?: (id: string, url: string) => void; /** The AI queue. Tests give it a pretend OpenRouter. */ ai?: Ai; /** How often (ms) to look in the Drive inbox for phone captures. 0 = only when asked. */ inboxEvery?: number; /** Shows a folder in Finder. Tests replace it. */ reveal?: (path: string) => void; /** Daily Backup (issue #39). `every` = how often (ms) to check whether one is due; 0 = only when asked. Tests give their own password. */ backup?: { every?: number; password?: bk.PasswordSource }; /** Export my Garden (issue #40). Tests replace the Finder pieces and can stop an Export part-way. */ exporter?: { choose?: () => Promise<string | null>; reveal?: (path: string) => void; deps?: ex.ExportDeps } };
 
 export function createApp(sqlite: Database.Database, opts: Options = {}) {
   const readLink = opts.readLink ?? ((id: string, url: string) => void extractInto(sqlite, id, url));
@@ -263,6 +264,17 @@ export function createApp(sqlite: Database.Database, opts: Options = {}) {
     (opts.reveal ?? ib.revealInFinder)(f.path);
     return c.json({ shown: true });
   });
+
+  // Export my Garden (issue #40): a readable copy, not encrypted, never used to restore.
+  void ex.cleanUpUnfinished();
+  app.get("/api/export", (c) => c.json(ex.exportStatus()));
+  app.post("/api/export", async (c) => {
+    const b = await c.req.json().catch(() => ({}));
+    void ex.startExport(sqlite, { folder: b.folder, leaveOutPrivate: !!b.leaveOutPrivate }, opts.exporter?.deps);
+    return c.json(ex.exportStatus());
+  });
+  app.post("/api/export/choose", async (c) => c.json({ path: await (opts.exporter?.choose ?? ex.chooseFolder)() }));
+  app.post("/api/export/reveal", (c) => { const s = ex.exportStatus(); if (s.state !== "done" || !s.path) return c.json({ error: "Not found" }, 404); (opts.exporter?.reveal ?? ex.revealInFinder)(s.path); return c.json({ shown: true }); });
 
   app.use("/*", serveStatic({ root: "./dist/web" }));
   app.get("*", serveStatic({ path: "./dist/web/index.html" }));

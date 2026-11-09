@@ -10,6 +10,7 @@ import { useRefresh } from "./refresh";
 import { Toasts } from "./toast";
 import { BinPage } from "./Bin";
 import { BackupPage, useBackup } from "./Backup";
+import { ExportPage } from "./Export";
 import { AiLine, AiPage, aiChanged } from "./Ai";
 import type { Summary } from "./api";
 import { Icon, typeVar } from "./ui";
@@ -87,6 +88,7 @@ function TopBar({ hash, unreviewed, onCapture, onSearch }: { hash: string; unrev
               <a className="menu-link" href="#/questions" onClick={() => setOpen(false)}><span className="tick" />Questions</a>
               <a className="menu-link" href="#/bin" onClick={() => setOpen(false)}><span className="tick" />Bin</a>
               <a className="menu-link" href="#/backup" onClick={() => setOpen(false)}><span className="tick" />Backup{backup ? <span className="quiet small"> · {backup.line}</span> : null}</a>
+              <a className="menu-link" href="#/export" onClick={() => setOpen(false)}><span className="tick" />Export my Garden…</a>
               <a className="menu-link" href="#/ai" onClick={() => setOpen(false)}><span className="tick" />AI</a>
               <a className="menu-link" href="#/bookmark" onClick={() => setOpen(false)}><span className="tick" />Save to Garden bookmark</a>
               <div className="menu-h">Appearance</div>
@@ -281,6 +283,8 @@ function App() {
     page = <BinPage types={types} onChanged={changed} />;
   } else if (parts[0] === "backup") {
     page = <BackupPage />;
+  } else if (parts[0] === "export") {
+    page = <ExportPage />;
   } else if (parts[0] === "ai") {
     page = <AiPage />;
   } else if (parts[0] === "bookmark") {
