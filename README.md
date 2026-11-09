@@ -52,6 +52,10 @@ npm run mac:install
 
 A fresh empty Garden is created. If you change your mind, uninstall again and move `~/Garden-old` back to `~/Garden`.
 
+## Install, update, restore: ask an agent
+
+Open this folder with an agent and say **"install my Garden"**, **"update my Garden"**, **"restore my Garden"** or **"bring back 'X' from Monday's backup"**. It follows the written recipes in `docs/recipes.md`, backing up first and switching back if an update fails. Nothing updates unless you ask.
+
 ## Phone capture
 
 Send links, photos and thoughts from your phone through a private Telegram bot. The one-time setup checklist is in `docs/phone-bot-setup.md`; the bot's code is `phone-bot/Code.gs`.

@@ -11,7 +11,7 @@ A **Backup** (not an Export) is a daily copy of the Garden, scrambled (AES-256-G
 ## Every day
 The Garden makes a Backup after 03:00 (or as soon as the Mac is awake after that). More ▸ Backup shows "Backed up today 03:12". If none has worked for two days, **This week** shows "Backup hasn't run since Tuesday" with **Try again**. There are no system notifications.
 
-## Restoring (recipe for the agent: "restore my Garden")
+## Restoring (recipe for the agent: "restore my Garden"; the full recipes are in `recipes.md`)
 1. Install the Garden on the Mac (`git clone`, `npm install`, `npm run mac:install`), then stop it: `launchctl bootout gui/$(id -u)/com.digital-garden.server`.
 2. Owner signs in to the Google Drive app. Find the Backup folder (look for `garden-backup.json`).
 3. Owner chooses the day: `GARDEN_BACKUP_DIR=<folder> npm run backup -- list` (newest by default).
@@ -19,4 +19,4 @@ The Garden makes a Backup after 03:00 (or as soon as the Mac is awake after that
 5. `GARDEN_BACKUP_DIR=<folder> npm run backup -- restore <day|latest> ~/Garden`. If the Keychain has no password (a new Mac), it asks; the owner types it hidden. Run `npm run backup:password` afterwards so the new Mac remembers it.
 6. Start the Garden (`npm run mac:install`), set More ▸ Backup to the folder, and reconnect the phone capture folder under Daily Inbox.
 
-**One thing from an old Backup** ("bring back 'X' from Monday"): restore that day into a *spare* folder (step 5 with a temporary path), open it separately, and copy just that Object back, marked as restored from that date, Origins intact.
+**One thing from an old Backup** ("bring back 'X' from Monday"): `npm run backup -- bring-back <day> "<title>" [--look]` opens that day in a spare folder and copies just that Object back, tagged `restored-<day>`, Origins intact. See `recipes.md` recipe 4.

@@ -6,16 +6,17 @@
 set -euo pipefail
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
 NODE="$(command -v node)"
-LABEL="com.digital-garden.server"
+LABEL="${GARDEN_LABEL:-com.digital-garden.server}"   # GARDEN_LABEL / GARDEN_APP / GARDEN_DIR only change where a throwaway test copy goes
 PLIST="$HOME/Library/LaunchAgents/$LABEL.plist"
-APP="$HOME/Applications/Garden.app"
+APP="${GARDEN_APP:-$HOME/Applications/Garden.app}"
 PORT="${GARDEN_PORT:-4747}"
 
 cd "$REPO"
 [ -d node_modules ] || npm install
 npm run build
 
-mkdir -p "$HOME/Garden" "$HOME/Library/LaunchAgents" "$HOME/Applications"
+GARDEN_HOME="${GARDEN_DIR:-$HOME/Garden}"
+mkdir -p "$GARDEN_HOME" "$HOME/Library/LaunchAgents" "$(dirname "$APP")"
 
 cat > "$PLIST" <<PLISTEOF
 <?xml version="1.0" encoding="UTF-8"?>
@@ -26,16 +27,21 @@ cat > "$PLIST" <<PLISTEOF
     <string>$NODE</string><string>$REPO/node_modules/.bin/tsx</string><string>$REPO/src/server/main.ts</string>
   </array>
   <key>WorkingDirectory</key><string>$REPO</string>
-  <key>EnvironmentVariables</key><dict><key>GARDEN_PORT</key><string>$PORT</string></dict>
+  <key>EnvironmentVariables</key><dict><key>GARDEN_PORT</key><string>$PORT</string>${GARDEN_DIR:+<key>GARDEN_DIR</key><string>$GARDEN_DIR</string>}</dict>
   <key>RunAtLoad</key><true/>
   <key>KeepAlive</key><true/>
-  <key>StandardOutPath</key><string>$HOME/Garden/server.log</string>
-  <key>StandardErrorPath</key><string>$HOME/Garden/server.log</string>
+  <key>StandardOutPath</key><string>$GARDEN_HOME/server.log</string>
+  <key>StandardErrorPath</key><string>$GARDEN_HOME/server.log</string>
 </dict></plist>
 PLISTEOF
 
 launchctl bootout "gui/$(id -u)/$LABEL" 2>/dev/null || true
-launchctl bootstrap "gui/$(id -u)" "$PLIST"
+# Starting can fail with an "I/O error" when the old copy was only just stopped: wait a moment and try again.
+for try in 1 2 3; do
+  launchctl bootstrap "gui/$(id -u)" "$PLIST" 2>/dev/null && break
+  sleep 2; launchctl bootout "gui/$(id -u)/$LABEL" 2>/dev/null || true; sleep 1
+  [ "$try" = 3 ] && launchctl bootstrap "gui/$(id -u)" "$PLIST"
+done
 
 # The Dock app: a small launcher that makes sure the Garden is running, then opens a window.
 rm -rf "$APP"
