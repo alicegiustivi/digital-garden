@@ -5,7 +5,7 @@ import { BackupNote } from "./Backup";
 import { api, inboxApi, displayTitle, TAG_COLORS, type Filters, type Summary, type TagRow, type Types } from "./api";
 import { FilterBar, noFilters, useFilterQuery, useSort, type FilterState } from "./Filters";
 import { showToast } from "./toast";
-import { Icon, TagPill, TypeChip, formatDay, subOf, typeVar, tagVar } from "./ui";
+import { Icon, Portrait, TagPill, TypeChip, formatDay, subOf, typeVar, tagVar } from "./ui";
 
 export function useList(q: Filters, version: number) {
   const [rows, setRows] = useState<Summary[] | null>(null);
@@ -18,6 +18,7 @@ export function Card({ o, types, onOpen }: { o: Summary; types: Types; onOpen: (
   const label = types.types.find((t) => t.key === o.type)!.label;
   return (
     <article className="story" style={typeVar(o.type)} tabIndex={0} role="button" onClick={onOpen} onKeyDown={(e) => e.key === "Enter" && onOpen()}>
+      {o.type === "person" && <Portrait stem={o.portrait} size={48} name={displayTitle(o)} />}
       <span className="kk"><Icon name={o.type} /> {label}{subOf(o) ? ` · ${subOf(o)}` : ""}</span>
       <h4>{displayTitle(o)}</h4>
       <div className="m">

@@ -80,3 +80,11 @@ export function subOf(o: Summary): string | undefined {
 }
 
 export { displayTitle };
+
+/** A Person's Portrait as a round photo, or a neutral placeholder in the Person colour (issue #69). */
+export function Portrait({ stem, size, name, full }: { stem?: string | null; size: number; name?: string; full?: boolean }) {
+  const px = { width: size, height: size } as React.CSSProperties;
+  return stem
+    ? <img className="portrait" style={px} src={`/api/portraits/${stem}/${full ? "full" : "thumb"}`} alt={name ? `Portrait of ${name}` : "Portrait"} />
+    : <span className="portrait ph" style={{ ...px, ["--c" as string]: "var(--t-person)" }} aria-hidden="true"><span style={{ width: size * 0.56, height: size * 0.56 }}><Icon name="person" /></span></span>;
+}

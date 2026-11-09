@@ -1,6 +1,6 @@
 import { InboxCommentLine } from "./Inbox";
 import { useEffect, useRef, useState } from "react";
-import { api, fieldOf, type FieldDef, type Obj, type TagRow, type TypeDef, type Types } from "./api";
+import { api, fieldOf, type PortraitBack, type FieldDef, type Obj, type TagRow, type TypeDef, type Types } from "./api";
 import { BodyEditor } from "./BodyEditor";
 import { Editable } from "./Editable";
 import { AiStatusLine } from "./Ai";
@@ -11,7 +11,7 @@ import { ConceptDesk, DeskSummary, OpenQuestionControl, useDesk } from "./Desk";
 import { wasMadeHere } from "./fresh";
 import { refresh, useRefresh } from "./refresh";
 import { showToast } from "./toast";
-import { Icon, Marked, TagPill, TypeChip, formatDay, subOf, typeVar } from "./ui";
+import { Icon, Marked, Portrait, TagPill, TypeChip, formatDay, subOf, typeVar } from "./ui";
 
 type Props = { id: string; types: Types; fresh?: boolean; onChanged: () => void; beside: (id: string) => void; onDeleted?: () => void };
 
@@ -152,6 +152,8 @@ export function ObjectPage({ id, types, fresh, onChanged, beside, onDeleted }: P
             />
           </div>
 
+          {obj.type === "person" && <PortraitControl obj={obj} name={title?.value || "this Person"} onChanged={update} />}
+
           <h1 className="title">
             <Editable
               multiline
@@ -284,5 +286,50 @@ function TagInput({ known, onAdd }: { known: TagRow[]; onAdd: (name: string) => 
       />
       <datalist id="known-tags">{known.map((t) => <option key={t.id} value={t.name} />)}</datalist>
     </>
+  );
+}
+
+/** A Person's Portrait (issue #69): click to choose a photo, drop one on it, or click it and paste. Replace or remove, with Undo. */
+function PortraitControl({ obj, name, onChanged }: { obj: Obj; name: string; onChanged: (o: Obj) => void }) {
+  const input = useRef<HTMLInputElement>(null);
+  const [over, setOver] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const had = !!obj.portrait;
+  const apply = (o: Obj & { previous: PortraitBack }) => { const { previous: _p, ...rest } = o as any; onChanged(rest as Obj); refresh(); };
+  const undoTo = (back: PortraitBack) => async () => apply(await api.restorePortrait(obj.id, back));
+  const choose = async (files: File[]) => {
+    const pic = files.find((f) => f.type.startsWith("image/") || /\.(heic|heif)$/i.test(f.name));
+    if (!pic) { showToast("That isn't a photo. Choose a picture file (HEIC works too)."); return; }
+    setBusy(true);
+    try {
+      const r = await api.setPortrait(obj.id, pic);
+      apply(r);
+      showToast(had ? "Portrait replaced." : "Portrait added.", undoTo(r.previous));
+    } catch (e) { showToast((e as Error).message); }
+    finally { setBusy(false); }
+  };
+  const remove = async () => {
+    const r = await api.removePortrait(obj.id);
+    apply(r);
+    showToast("Portrait removed.", undoTo(r.previous));
+  };
+  return (
+    <div className={`portrait-box${over ? " over" : ""}`}
+      onDragOver={(e) => { e.preventDefault(); setOver(true); }} onDragLeave={() => setOver(false)}
+      onDrop={(e) => { e.preventDefault(); setOver(false); void choose([...e.dataTransfer.files]); }}>
+      <button className="portrait-pick" type="button" disabled={busy} aria-label={had ? "Replace the Portrait" : "Add a Portrait"}
+        title="Click to choose a photo. You can also drop one here, or click and then paste (⌘V)."
+        onClick={() => input.current?.click()}
+        onPaste={(e) => { const f = [...e.clipboardData.files]; if (f.length) { e.preventDefault(); void choose(f); } }}>
+        <Portrait stem={obj.portrait} size={112} name={name} full />
+        {busy && <span className="portrait-busy">Shrinking…</span>}
+      </button>
+      <input ref={input} type="file" accept="image/*,.heic,.heif" hidden onChange={(e) => { const f = [...(e.target.files ?? [])]; e.target.value = ""; if (f.length) void choose(f); }} />
+      <span className="portrait-actions">
+        {had ? (<><button type="button" className="linkish" onClick={() => input.current?.click()}>Replace</button><button type="button" className="linkish" onClick={remove}>Remove</button></>)
+          : <button type="button" className="linkish" onClick={() => input.current?.click()}>Add a Portrait</button>}
+        {!had && <span className="quiet small">or drop a photo here, or click the circle and paste</span>}
+      </span>
+    </div>
   );
 }

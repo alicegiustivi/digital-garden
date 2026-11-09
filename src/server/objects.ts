@@ -70,6 +70,7 @@ export function summarise(db: Db, rows: any[]) {
     )
     .all(...ids) as any[];
   const withImage = new Set((db.prepare(`SELECT object_id FROM source_images WHERE object_id IN (${marks})`).all(...ids) as any[]).map((r) => r.object_id));
+  const portraits = new Map((db.prepare(`SELECT object_id, stem FROM person_portraits WHERE object_id IN (${marks})`).all(...ids) as any[]).map((r) => [r.object_id, r.stem as string]));
   const tags = tagsFor(db, ids);
   return rows.map((r) => ({
     id: r.id,
@@ -77,6 +78,7 @@ export function summarise(db: Db, rows: any[]) {
     private: !!r.private,
     unreviewed: !!r.unreviewed,
     hasImage: withImage.has(r.id),
+    portrait: r.type === "person" ? (portraits.get(r.id) ?? null) : null, // a Person's Portrait (issue #69): the owner's photo, never sent to an AI
     createdAt: iso(r.created_at),
     updatedAt: iso(r.updated_at ?? r.created_at),
     fields: fields.filter((f) => f.object_id === r.id).map((f) => ({ key: f.field, value: f.value, ...originOf(f) })),

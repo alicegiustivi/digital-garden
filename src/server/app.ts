@@ -8,6 +8,8 @@ import { graph } from "./graph.ts";
 
 import { extractInto } from "./extract.ts";
 import { readImage } from "./images.ts";
+import { portraitFile, removePortrait, restorePortrait, setPortrait } from "./portraits.ts";
+import { readFile } from "node:fs/promises";
 import * as bin from "./bin.ts";
 import { search, briefs } from "./search.ts";
 import { timeline } from "./timeline.ts";
@@ -72,6 +74,25 @@ export function createApp(sqlite: Database.Database, opts: Options = {}) {
     try {
       return new Response(new Uint8Array(await readImage(id, c.req.param("kind") === "thumb")), { headers: { "content-type": "image/jpeg", "cache-control": "max-age=86400" } });
     } catch { return c.json({ error: "Not found" }, 404); }
+  });
+  // A Person's Portrait (issue #69): add or replace, remove, and Undo (which sets back the one the answer named as "previous").
+  const portraitAnswer = (c: any, id: string, r: { previous: unknown } | null) => {
+    if (!r) return c.json({ error: "Not found" }, 404);
+    const obj = o.getObject(sqlite, id);
+    return obj ? c.json({ ...obj, mentions: k.mentionInfo(sqlite, id), previous: r.previous }) : c.json({ error: "Not found" }, 404);
+  };
+  app.put("/api/objects/:id/portrait", async (c) => {
+    const form = await c.req.formData().catch(() => null);
+    const f = form?.get("image");
+    if (!f || typeof f === "string") throw new o.BadRequest("Choose a photo first");
+    return portraitAnswer(c, c.req.param("id"), await setPortrait(sqlite, c.req.param("id"), f.name || "Portrait", Buffer.from(await f.arrayBuffer())));
+  });
+  app.delete("/api/objects/:id/portrait", async (c) => portraitAnswer(c, c.req.param("id"), await removePortrait(sqlite, c.req.param("id"))));
+  app.post("/api/objects/:id/portrait/restore", async (c) => portraitAnswer(c, c.req.param("id"), await restorePortrait(sqlite, c.req.param("id"), (await c.req.json().catch(() => ({}))).back ?? null)));
+  app.get("/api/portraits/:stem/:kind", async (c) => {
+    const file = portraitFile(c.req.param("stem"), c.req.param("kind") === "thumb");
+    if (!file) return c.json({ error: "Not found" }, 404);
+    try { return new Response(new Uint8Array(await readFile(file)), { headers: { "content-type": "image/jpeg", "cache-control": "max-age=31536000, immutable" } }); } catch { return c.json({ error: "Not found" }, 404); }
   });
   app.post("/api/reviewed", async (c) => c.json(o.markReviewed(sqlite, (await c.req.json().catch(() => ({}))).ids)));
   // An Object with the Mentions its body makes, so the editor can draw them.

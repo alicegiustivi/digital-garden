@@ -63,7 +63,7 @@ export function bringBack(spare: Db, live: Db, day: string, query: string, opts:
   live.transaction(() => {
     // The Object comes back as it was. It is not "Unreviewed" again and is not in the Bin, even if it was when the Backup was made.
     tables.objects = copyRows(spare, live, "objects", "id = ?", m.id, false, { deleted_at: null });
-    for (const t of ["field_values", "blocks", "ai_notes", "open_questions", "concept_versions", "source_images"]) {
+    for (const t of ["field_values", "blocks", "ai_notes", "open_questions", "concept_versions", "source_images", "person_portraits"]) {
       tables[t] = copyRows(spare, live, t, "object_id = ?", m.id, t === "field_values" || t === "blocks" || t === "ai_notes");
     }
     // Tags are matched by name, so the Garden's own Tag colours win; Tags that are gone are made again.
@@ -88,6 +88,11 @@ export function bringBack(spare: Db, live: Db, day: string, query: string, opts:
   })();
   const img = live.prepare("SELECT file, thumb FROM source_images WHERE object_id = ?").get(m.id) as any;
   for (const f of [img?.file, img?.thumb].filter(Boolean)) {
+    const from = join(opts.spareImages, f);
+    if (existsSync(from)) { copyFileSync(from, join(opts.liveImages, f)); images++; }
+  }
+  const por = live.prepare("SELECT stem FROM person_portraits WHERE object_id = ?").get(m.id) as any;
+  for (const f of por ? [`${por.stem}.jpg`, `${por.stem}.thumb.jpg`] : []) {
     const from = join(opts.spareImages, f);
     if (existsSync(from)) { copyFileSync(from, join(opts.liveImages, f)); images++; }
   }
