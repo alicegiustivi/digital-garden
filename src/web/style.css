@@ -323,7 +323,9 @@ select.edit { font-size: 13.5px; }
 .finder { margin: 10px 0; background: var(--card); border-radius: 18px; padding: 8px; box-shadow: var(--shadow-up), 0 0 0 1px var(--line); }
 .finder-top { display: flex; gap: 6px; align-items: center; }
 .finder-top input { flex: 1; padding: 8px 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--sheet); outline: none; }
-.finder-rows { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 1px; }
+.finder-rows { list-style: none; margin: 4px 0 0; padding: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 1px; }
+.finder-rows li > .pill, .finder-rows li > .quiet { flex: none; }
+.finder-rows .mp-k { flex: none; }
 .finder-rows li { display: flex; align-items: center; gap: 8px; padding: 5px 8px; border-radius: 12px; }
 .finder-rows li a { flex: 1; min-width: 0; display: flex; gap: 8px; align-items: center; color: var(--c); text-decoration: none; }
 .finder-rows li.none { padding: 8px 10px; }
