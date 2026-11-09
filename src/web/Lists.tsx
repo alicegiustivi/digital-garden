@@ -135,7 +135,7 @@ export function TagsPage({ tag, types, version, onOpen, go, onChanged }: { onCha
     setMode(null);
     go("#/tags");
     reload();
-    showToast(`Tag #${gone.tag.name} removed from ${gone.objects} ${gone.objects === 1 ? "Object" : "Objects"}.`, async () => { await api.restoreTag(gone); reload(); });
+    showToast(`Tag #${gone.tag.name} deleted. It was on ${gone.objects} ${gone.objects === 1 ? "Object" : "Objects"}.`, async () => { await api.restoreTag(gone); reload(); });
   };
   const doConcept = async () => {
     if (!current) return;
@@ -193,7 +193,7 @@ export function TagsPage({ tag, types, version, onOpen, go, onChanged }: { onCha
             <button className="pill action" onClick={() => { setMode("rename"); setName(current.name); setProblem(""); }}>Rename…</button>
             <button className="pill action" disabled={(tags?.length ?? 0) < 2} onClick={() => { setMode("merge"); setInto(""); setProblem(""); }}>Merge into another…</button>
             <button className="pill action" onClick={() => { setMode("concept"); setKeepTag(false); setProblem(""); }}>Turn into Concept…</button>
-            <button className="pill action" onClick={() => setMode("remove")}>Remove from the whole Garden…</button>
+            <button className="pill action" onClick={() => setMode("remove")}>Delete Tag…</button>
           </p>
           {mode === "rename" && (
             <form className="confirm" onSubmit={(e) => { e.preventDefault(); doRename(); }}>
@@ -229,8 +229,8 @@ export function TagsPage({ tag, types, version, onOpen, go, onChanged }: { onCha
           )}
           {mode === "remove" && (
             <p className="confirm" role="alertdialog">
-              Remove “{current.name}” from {current.count} {current.count === 1 ? "Object" : "Objects"}?{" "}
-              <button className="pill action danger" onClick={doRemove}>Remove</button>{" "}
+              Delete #{current.name} permanently? It is on {current.count} {current.count === 1 ? "Object" : "Objects"}; the {current.count === 1 ? "Object stays" : "Objects stay"}, only the Tag goes.{" "}
+              <button className="pill action danger" onClick={doRemove}>Delete</button>{" "}
               <button className="pill toggle" onClick={() => setMode(null)}>Keep it</button>
             </p>
           )}
