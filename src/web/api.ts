@@ -48,7 +48,7 @@ export type AiSummary = {
   budgets: { archivist: { used: number; limit: number }; researcher: { used: number; limit: number } };
   reset: { at: string; source: string }; models: string[];
 };
-export type AiRun = { id: number; model: string; at: string; facts: string[]; tags: string[] };
+export type AiRun = { id: number; model: string; at: string; facts: string[]; tags: string[]; connections: number };
 export type AiStatus = { pending?: number; state: "none" | "private" | "waiting" | "working" | "busy" | "tomorrow" | "failed" | "done"; run: AiRun | null; canRun: boolean; nextTryAt?: string; needsKey?: boolean };
 export type Filters = { type?: string; tag?: string; since?: string; until?: string; unreviewed?: string; noConnections?: string; sort?: string };
 export type Hit = Summary & { title: string; match: { where: "title" | "tag" | "body" | "field" | "note"; label: string; text: string; origin: OriginInfo } | null };
@@ -106,6 +106,7 @@ export const api = {
   forgetAiKey: () => call<AiSummary>("DELETE", "/api/ai/key"),
   aiFlush: () => call<unknown>("POST", "/api/ai/flush"),
   aiStatus: (id: string) => call<AiStatus>("GET", `/api/objects/${id}/ai`),
+  undoAiConnection: (connId: number) => call<{ ok: true; objectIds: string[] }>("POST", `/api/connections/${connId}/undo-ai`),
   aiRun: (id: string) => call<AiStatus>("POST", `/api/objects/${id}/ai/run`),
   aiUndo: (id: string) => call<Obj>("POST", `/api/objects/${id}/ai/undo`),
   suggestions: (id: string) => call<Suggestions>("GET", `/api/objects/${id}/suggestions`),

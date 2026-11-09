@@ -46,7 +46,7 @@ export function CardStatus({ id, private: priv }: { id: string; private: boolean
   }, [id]);
   const text = st ? statusText(st) : priv ? "Private, not read" : "Waiting";
   const n = st?.pending ?? 0;
-  return <>Archivist: {st?.state === "none" ? "not asked yet" : text}{n > 0 && <> · {n} {n === 1 ? "Suggestion" : "Suggestions"}</>}{st?.state === "failed" && <> · <button className="link-btn" onClick={() => api.aiRun(id).then(setSt).then(aiChanged)}>Retry</button></>}</>;
+  return <>Archivist: {st?.state === "none" ? "not asked yet" : text}{!!st?.run?.connections && <> · {st.run.connections} {st.run.connections === 1 ? "Connection" : "Connections"} added <button className="link-btn" onClick={() => api.aiUndo(id).then(() => api.aiStatus(id)).then(setSt).then(aiChanged)}>Undo</button></>}{n > 0 && <> · {n} {n === 1 ? "Suggestion" : "Suggestions"}</>}{st?.state === "failed" && <> · <button className="link-btn" onClick={() => api.aiRun(id).then(setSt).then(aiChanged)}>Retry</button></>}</>;
 }
 
 /** What the Archivist is doing with this Object, and its marked work with one-click Undo. */
@@ -79,9 +79,9 @@ export function AiStatusLine({ id, onChanged }: { id: string; onChanged: (o: Obj
     <div className="ai-status small quiet" role="status">
       {line && st.state !== "none" && <p><span className="o-ai-mark">✦</span> Archivist: {line}</p>}
       {again && <p><button className="link-btn" onClick={retry} title="Uses one or two of today’s calls. Anything you rejected stays rejected.">Ask the Archivist again</button></p>}
-      {st.run && (
+      {st.run && (st.run.facts.length > 0 || st.run.tags.length > 0 || st.run.connections > 0) && (
         <p>
-          <span className="o-ai-mark">✦</span> The Archivist added {[st.run.facts.length ? `${st.run.facts.join(", ")}` : "", st.run.tags.length ? `${st.run.tags.length === 1 ? "a Tag" : st.run.tags.length + " Tags"}` : ""].filter(Boolean).join(" and ")}.{" "}
+          <span className="o-ai-mark">✦</span> The Archivist added {[st.run.facts.length ? `${st.run.facts.join(", ")}` : "", st.run.tags.length ? `${st.run.tags.length === 1 ? "a Tag" : st.run.tags.length + " Tags"}` : "", st.run.connections ? `${st.run.connections} ${st.run.connections === 1 ? "Connection" : "Connections"}` : ""].filter(Boolean).join(" and ")}.{" "}
           <button className="link-btn" onClick={undo}>Undo</button>
         </p>
       )}
@@ -109,7 +109,7 @@ export function AiPage() {
   return (
     <main className="contents wrap ai-page">
       <header className="vol"><h2>AI</h2></header>
-      <p className="quiet">The Researcher answers questions you ask it, about one Object or the whole Garden; its answers are AI Notes that stay in Inquiries until you keep one on an Object. The Archivist reads each new capture and fills in what it can: the kind of thing it is, who wrote it, when, and a few Tags. Tags and facts it adds are marked ✦ and can be undone in one click. Connections, a change of type and new Objects wait on the Object as Suggestions until you approve them (then they show ✧). A short summary of a Source appears as an AI Note beside your words, never inside them. It never reads anything you marked Private, and it never writes in your words.</p>
+      <p className="quiet">The Researcher answers questions you ask it, about one Object or the whole Garden; its answers are AI Notes that stay in Inquiries until you keep one on an Object. The Archivist reads each new capture and fills in what it can: the kind of thing it is, who wrote it, when, and a few Tags. Tags and facts it adds are marked ✦ and can be undone in one click. Connections it finds (related, or authored by) are added the same way, marked ✦ with their own Undo. A more specific Connection (supports, contradicts, builds on, inspired by), a change of type and new Objects wait on the Object as Suggestions until you approve them (then they show ✧). A short summary of a Source appears as an AI Note beside your words, never inside them. It never reads anything you marked Private, and it never writes in your words.</p>
 
       <h3>Your OpenRouter key</h3>
       {ai?.keySet && !ai.keyProblem ? (

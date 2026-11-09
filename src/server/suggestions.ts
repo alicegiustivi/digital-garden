@@ -1,4 +1,6 @@
-// Suggestions and AI Notes (issue #32; CONTEXT.md: Suggestion, Approve, AI Note; ADR 0001).
+// Suggestions and AI Notes (issue #32; CONTEXT.md: Suggestion, Approve, AI Note; ADR 0001, 0003).
+// Since issue #66 a Connection of kind related / authored by is NOT a Suggestion: it is applied at once, marked ✦ and undone in
+// one click (see applyProposals). Specific kinds, a change of kind and Researcher Connections still wait for approval.
 // The Archivist's single call may come back with more than facts and Tags. What touches structure waits here as a
 // Suggestion until the owner approves or rejects it; AI-written text is kept as an AI Note beside the body.
 //  - Approving keeps AI Origin for good (shown ✧). Only editing a short value afterwards makes it the owner's.
@@ -10,10 +12,12 @@ import type Database from "better-sqlite3";
 import { BadRequest, titleOf } from "./objects.ts";
 import { readable, type Candidate } from "./ai-prompt.ts";
 import { renderRefs, sourceOfNote } from "./researcher.ts";
+import { AI_CONFIG } from "./ai-config.ts";
+import { addDirectConnection, recordInRun } from "./archivist.ts";
 
 type Db = Database.Database;
 export const ROLE = "Archivist";
-export const MAX_CONNECTIONS = 5;
+export const MAX_CONNECTIONS = AI_CONFIG.maxConnections; // one setting (ai-config.ts)
 const MAX_NEW_OBJECTS = 3;
 
 /** What the model said beyond the facts and Tags. Anything unclear is left out, never guessed at. */
@@ -53,13 +57,14 @@ type Stored = { kind: "connection" | "type" | "object" | "title"; data: Record<s
  * Turns what the model proposed into pending Suggestions and an AI Note, in one go. Replaces whatever was still pending
  * on this Object (so "Ask again" gives a fresh list). Returns how many Suggestions are now waiting.
  */
-export function applyProposals(db: Db, id: string, p: Proposals, candidates: Candidate[], model: string, now: Date): number {
+export function applyProposals(db: Db, id: string, p: Proposals, candidates: Candidate[], model: string, now: Date, runId: number | null = null): number {
   const obj = db.prepare("SELECT type FROM objects WHERE id = ? AND deleted_at IS NULL AND private = 0").get(id) as any;
   if (!obj) return 0; // gone, or made Private while the AI was thinking: nothing is written
   const date = now.toISOString().slice(0, 10);
   const isThought = obj.type === "thought";
   const turnedDown = (kind: string, value: string) => !!db.prepare("SELECT 1 FROM ai_rejected WHERE object_id = ? AND kind = ? AND value = ?").get(id, kind, value);
   const list: Stored[] = [];
+  const direct: { otherId: string; kind: "related" | "authored by" }[] = []; // applied at once below (issue #66)
 
   if (isThought) {
     // A Thought is the owner's. The one thing offered is a title, and only while it has none.
@@ -67,6 +72,7 @@ export function applyProposals(db: Db, id: string, p: Proposals, candidates: Can
     if (p.thoughtTitle && !hasTitle && !turnedDown("title", norm(p.thoughtTitle))) list.push({ kind: "title", data: { title: p.thoughtTitle } });
   } else {
     // Connections: only to the Objects it was shown (never Private ones), "related", or "authored by" for a Person on a Source.
+    // These are applied directly (marked ✦, undoable); only a new Object (a Person) or a change of type waits as a Suggestion.
     const shown = new Map(candidates.map((c) => [c.ref, c]));
     const taken = new Set<string>();
     const connect = (otherId: string, kind: "related" | "authored by") => {
@@ -74,7 +80,7 @@ export function applyProposals(db: Db, id: string, p: Proposals, candidates: Can
       if (!readable(db, otherId) || turnedDown("connection", otherId)) return;
       if (db.prepare("SELECT 1 FROM connections WHERE (from_id = ? AND to_id = ?) OR (from_id = ? AND to_id = ?)").get(id, otherId, otherId, id)) return;
       taken.add(otherId);
-      list.push({ kind: "connection", data: { otherId, kind } });
+      direct.push({ otherId, kind });
     };
     const people = candidates.filter((c) => c.type === "person");
     for (const person of p.people) {
@@ -97,6 +103,8 @@ export function applyProposals(db: Db, id: string, p: Proposals, candidates: Can
     db.prepare("DELETE FROM ai_suggestions WHERE object_id = ? AND ai_role = ?").run(id, ROLE); // (the Researcher's are not the Archivist's to replace)
     const ins = db.prepare("INSERT INTO ai_suggestions (object_id, kind, data, ai_role, ai_model, ai_date, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)");
     for (const s of list) ins.run(id, s.kind, JSON.stringify(s.data), ROLE, model, date, now.toISOString());
+    const added = direct.flatMap((d) => { const cid = addDirectConnection(db, id, d.otherId, d.kind, model, date); return cid ? [{ kind: "connection" as const, connectionId: cid, otherId: d.otherId, connKind: d.kind }] : []; });
+    if (added.length) recordInRun(db, id, model, now, runId, added);
     // An AI Note: a short summary of a Source. A fresh one replaces the Archivist's earlier summary on this Object.
     if (obj.type === "source" && p.summary) {
       db.prepare("DELETE FROM ai_notes WHERE object_id = ? AND kind = 'summary'").run(id);
@@ -254,4 +262,29 @@ export function startThoughtFromNote(db: Db, noteId: number) {
     db.prepare("INSERT INTO connections (from_id, to_id, kind, origin) VALUES (?, ?, 'inspired by', 'owner')").run(id, n.object_id);
   })();
   return id;
+}
+
+/**
+ * Issue #66, once: Connections the Archivist proposed before the rule changed (related / authored by, still waiting) are applied
+ * now, each marked ✦ and undoable. The owner chose this over leaving them. Safe to run on every start: nothing is left to do after.
+ */
+export function applyWaitingConnections(db: Db, now: Date = new Date()): number {
+  const rows = db.prepare("SELECT * FROM ai_suggestions WHERE kind = 'connection' AND ai_role = ? ORDER BY id").all(ROLE) as any[];
+  let applied = 0;
+  db.transaction(() => {
+    const byObject = new Map<string, { model: string; added: any[] }>();
+    for (const r of rows) {
+      const d = JSON.parse(r.data);
+      if (d.kind !== "related" && d.kind !== "authored by") continue; // a specific kind keeps waiting
+      const cid = addDirectConnection(db, r.object_id, d.otherId, d.kind, r.ai_model, r.ai_date);
+      db.prepare("DELETE FROM ai_suggestions WHERE id = ?").run(r.id);
+      if (!cid) continue;
+      const g = byObject.get(r.object_id) ?? { model: r.ai_model as string, added: [] };
+      g.added.push({ kind: "connection", connectionId: cid, otherId: d.otherId, connKind: d.kind });
+      byObject.set(r.object_id, g);
+      applied++;
+    }
+    for (const [id, g] of byObject) recordInRun(db, id, g.model, now, null, g.added);
+  })();
+  return applied;
 }

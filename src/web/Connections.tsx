@@ -133,6 +133,9 @@ export function ConnectionsPanel({ obj, types, beside }: { obj: Pick<Obj, "id">;
               <span className="quiet small">{c.other.connectionCount} {c.other.connectionCount === 1 ? "Connection" : "Connections"}</span>
               <span className="grow" />
               <button className="x" onClick={() => beside(c.other.id)} aria-label={`Open ${c.other.title} beside this one`} title="Open beside"><Icon name="expand" /></button>
+              {c.origin === "ai" && !c.approved && c.aiRole === "Archivist" && (
+                <button className="link-btn" onClick={() => run(api.undoAiConnection(c.id).then(() => showToast(`Taken back. The Archivist won’t connect ${c.other.title} again unless you ask.`)))} title="Take back this Connection the Archivist added">Undo</button>
+              )}
               {!c.fromText && <button className="x" onClick={() => removeConnection(c)} aria-label={`Remove the Connection to ${c.other.title}`}><Icon name="close" /></button>}
             </div>
             {c.sentence && (

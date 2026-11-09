@@ -227,8 +227,8 @@ export function createAi(db: Db, opts: { gate: Gate; now?: () => Date; hasKey?: 
       }
       const findings = parseFindings(text);
       if (!findings) continue;
-      applyFindings(db, id, findings, model, ctx.now);
-      applyProposals(db, id, parseProposals(jsonOf(text)), prompt.candidates, model, ctx.now); // Suggestions and the AI Note, from the same call
+      const runId = applyFindings(db, id, findings, model, ctx.now);
+      applyProposals(db, id, parseProposals(jsonOf(text)), prompt.candidates, model, ctx.now, runId); // Connections (applied), Suggestions and the AI Note, from the same call
       return "done";
     }
     return sawBusy ? { busy: true } : { unusable: true };

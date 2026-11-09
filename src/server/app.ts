@@ -14,6 +14,7 @@ import * as ov from "./overview.ts";
 import * as dk from "./desk.ts";
 import { createAi, type Ai } from "./ai-queue.ts";
 import * as sg from "./suggestions.ts";
+import * as ar from "./archivist.ts";
 import * as rs from "./researcher.ts";
 import * as ib from "./inbox.ts";
 import { phoneSetup, renewCode } from "./phone-setup.ts";
@@ -179,6 +180,7 @@ export function createApp(sqlite: Database.Database, opts: Options = {}) {
   app.post("/api/ai/flush", (c) => c.json({ released: ai.flushCaptures() }));
   app.get("/api/objects/:id/ai", (c) => found(c, ai.statusOf(c.req.param("id"))));
   app.post("/api/objects/:id/ai/run", (c) => (ai.request(c.req.param("id")) ? c.json(ai.statusOf(c.req.param("id"))) : c.json({ error: "The Archivist can't read this one" }, 400)));
+  app.post("/api/connections/:id/undo-ai", (c) => { const r = ar.undoConnection(sqlite, Number(c.req.param("id"))); return r ? c.json({ ...r, ok: true }) : c.json({ error: "That Connection is no longer the Archivist's to undo" }, 404); });
   app.post("/api/objects/:id/ai/undo", (c) => (ai.undo(c.req.param("id")) ? c.json(o.getObject(sqlite, c.req.param("id"))) : c.json({ error: "Nothing to undo" }, 404)));
 
   // Suggestions and AI Notes (issue #32)

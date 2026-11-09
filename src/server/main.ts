@@ -6,6 +6,7 @@ import { gardenDir } from "./paths.ts";
 import { purgeExpired } from "./bin.ts";
 import { createAi } from "./ai-queue.ts";
 import { createGate } from "./ai-gate.ts";
+import { applyWaitingConnections } from "./suggestions.ts";
 
 const PORT = Number(process.env.GARDEN_PORT ?? 4747);
 // 127.0.0.1 = this Mac only. Other devices on the network cannot connect (ADR 0002).
@@ -13,6 +14,7 @@ const HOST = "127.0.0.1";
 
 const { sqlite } = openDb();
 resumeReading(sqlite);
+applyWaitingConnections(sqlite); // issue #66: Connections proposed under the old rule are applied once, marked and undoable
 // Anything that has sat in the Bin for 30 days goes for good: checked now, then once an hour.
 purgeExpired(sqlite);
 setInterval(() => purgeExpired(sqlite), 36e5).unref();

@@ -32,7 +32,8 @@ const wording = (s: Suggestion, types: Types, current: string): React.ReactNode 
  */
 export function ArchivistSuggestions({ obj, types, onChanged }: { obj: Obj; types: Types; onChanged: (o: Obj) => void }) {
   const [s, setS] = useState<Suggestions | null>(null);
-  const load = () => { api.suggestions(obj.id).then(setS).catch(() => {}); };
+  const [added, setAdded] = useState(0); // Connections the Archivist added directly (issue #66)
+  const load = () => { api.suggestions(obj.id).then(setS).catch(() => {}); api.aiStatus(obj.id).then((st) => setAdded(st.run?.connections ?? 0)).catch(() => {}); };
   useLive(load, [obj.id, obj.private]);
   const [error, setError] = useState<string>();
 
@@ -44,7 +45,8 @@ export function ArchivistSuggestions({ obj, types, onChanged }: { obj: Obj; type
       </>
     );
   }
-  if (!s || (!s.pending.length && !s.rejected)) return null;
+  if (!s || (!s.pending.length && !s.rejected && !added)) return null;
+  const undoAdded = async () => { onChanged(await api.aiUndo(obj.id)); refresh(); load(); showToast("Taken back. The Archivist won’t add them again."); };
 
   const approve = async (x: Suggestion) => {
     setError(undefined);
@@ -61,6 +63,9 @@ export function ArchivistSuggestions({ obj, types, onChanged }: { obj: Obj; type
   return (
     <section className="archivist-block" aria-label="Suggestions from the AI">
       <h3><span className="o-ai-mark">✦</span> {s.pending.some((x) => x.aiRole === "Researcher") ? (s.pending.every((x) => x.aiRole === "Researcher") ? "From the Researcher" : "From the Archivist and the Researcher") : "From the Archivist"}</h3>
+      {added > 0 && (
+        <p><span className="o-ai-mark">✦</span> {added} {added === 1 ? "Connection" : "Connections"} added <span className="quiet small">(see Connections, marked ✦)</span> <button className="link-btn" onClick={undoAdded}>Undo</button></p>
+      )}
       {s.pending.length > 0 && (
         <ul>
           {s.pending.map((x) => (
