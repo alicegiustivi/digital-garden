@@ -17,16 +17,21 @@ export function useList(q: Filters, version: number) {
 export function Card({ o, types, onOpen }: { o: Summary; types: Types; onOpen: () => void }) {
   const label = types.types.find((t) => t.key === o.type)!.label;
   return (
-    <article className="story" style={typeVar(o.type)} tabIndex={0} role="button" onClick={onOpen} onKeyDown={(e) => e.key === "Enter" && onOpen()}>
-      {o.type === "person" && <Portrait stem={o.portrait} size={48} name={displayTitle(o)} />}
-      <span className="kk"><Icon name={o.type} /> {label}{subOf(o) ? ` · ${subOf(o)}` : ""}</span>
-      <h4>{displayTitle(o)}</h4>
-      <div className="m">
-        <span>{formatDay(o.updatedAt)}</span>
-        {o.connectionCount > 0 && <span>{o.connectionCount} {o.connectionCount === 1 ? "Connection" : "Connections"}</span>}
-        {o.private && <span title="Private: no AI reads this"><Icon name="lock" /> Private</span>}
+    <article className={`story t-${o.type}`} style={typeVar(o.type)} tabIndex={0} role="button" onClick={onOpen} onKeyDown={(e) => e.key === "Enter" && onOpen()}>
+      {o.type === "source" && (o.hasImage
+        ? <img className="story-img" src={`/api/images/${o.id}/thumb`} alt="" loading="lazy" />
+        : <span className="story-img ph"><Icon name="source" /></span>)}
+      {o.type === "person" && <Portrait stem={o.portrait} size={56} name={displayTitle(o)} />}
+      <div className="story-text">
+        <span className="kk"><Icon name={o.type} /> {label}{subOf(o) ? ` · ${subOf(o)}` : ""}</span>
+        <h4>{displayTitle(o)}</h4>
+        <div className="m">
+          <span>{formatDay(o.updatedAt)}</span>
+          {o.connectionCount > 0 && <span>{o.connectionCount} {o.connectionCount === 1 ? "Connection" : "Connections"}</span>}
+          {o.private && <span title="Private: no AI reads this"><Icon name="lock" /> Private</span>}
+        </div>
+        {o.tags.length > 0 && <div className="tags">{o.tags.map((t) => <TagPill key={t.id} tag={t} />)}</div>}
       </div>
-      {o.tags.length > 0 && <div className="tags">{o.tags.map((t) => <TagPill key={t.id} tag={t} />)}</div>}
     </article>
   );
 }
@@ -89,15 +94,15 @@ export function ThisWeek({ types, version, unreviewed, onNew, onOpen }: { types:
       <div className="week-main">
       {rows && lead && (
         <article className="lead" style={typeVar("source")} tabIndex={0} role="button" onClick={() => onOpen(lead.id, ids)} onKeyDown={(e) => e.key === "Enter" && onOpen(lead.id, ids)}>
-          <div className="washbox">
-            <span className="big"><Icon name="source" /></span>
-            <div className="tags">{lead.tags.map((t) => <TagPill key={t.id} tag={t} />)}</div>
-          </div>
+          {lead.hasImage
+            ? <img className="lead-img" src={`/api/images/${lead.id}/full`} alt="" />
+            : <div className="washbox"><span className="big"><Icon name="source" /></span></div>}
           <div className="story-lead">
             <span className="kk"><Icon name="source" /> Newest Source{subOf(lead) ? ` · ${subOf(lead)}` : ""}</span>
             <h3>{displayTitle(lead)}</h3>
             <p>{lead.fields.find((f) => f.key === "captured")?.value ?? lead.firstLine}</p>
             <div className="m"><span>{formatDay(lead.updatedAt)}</span></div>
+            {lead.tags.length > 0 && <div className="tags">{lead.tags.map((t) => <TagPill key={t.id} tag={t} />)}</div>}
           </div>
         </article>
       )}
