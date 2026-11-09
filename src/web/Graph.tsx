@@ -175,7 +175,7 @@ function Canvas({ sim, items, links, under, onNode, onNodeDouble, edgeLabels, se
       </div>
       {hover && itemById.get(hover) && (
         <div className="gx-hover" style={typeVar(itemById.get(hover)!.type)}>
-          <b>{itemById.get(hover)!.label}</b> {itemById.get(hover)!.sub && <span className="quiet small">{itemById.get(hover)!.sub}</span>}
+          <i className="dot" /><b>{itemById.get(hover)!.label}</b> {itemById.get(hover)!.sub && <span className="quiet small">{itemById.get(hover)!.sub}</span>}
           <span className="quiet small"> · click: peek · ⌥-click: second pane</span>
         </div>
       )}

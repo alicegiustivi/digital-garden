@@ -8,7 +8,7 @@ const main = readFileSync("src/web/main.tsx", "utf8");
 describe("the Issue look", () => {
   it("uses the Espresso colours in dark mode", () => {
     const dark = css.slice(css.indexOf(':root[data-scheme="dark"]'));
-    for (const hex of ["#191613", "#1f1b17", "#26221d", "#2c2722", "#352f29", "#ede6db", "#a59c90", "#6f675d"]) expect(dark).toContain(hex);
+    for (const hex of ["#191613", "#1f1b17", "#26221d", "#2c2722", "#352f29", "#ede6db", "#a59c90", "#8c8376"]) expect(dark).toContain(hex);
     for (const hex of ["#72b2cb", "#ab96e2", "#dcae5c", "#e6907c"]) expect(dark).toContain(hex);
   });
   it("Origin marks use glyphs, lines and italics, never colour", () => {
