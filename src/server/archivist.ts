@@ -1,7 +1,8 @@
 // The Archivist (CONTEXT.md: Archivist). For a newly captured Object it names the format, fills in facts about a Source
 // (title, authors, date) and adds Tags. All of it is an AI Contribution applied directly: marked ✦ with the role, model and
 // date (ADR 0001), and undone in one click. It never touches the owner's words, never overwrites anything the owner wrote,
-// and never creates structure (Connections, a new Object, a change of Object Type): those are Suggestions (suggestions.ts).
+// and never creates a new Object or changes an Object Type: those are Suggestions (suggestions.ts). Since issue #66 it also
+// adds Connections of kind "related" and "authored by" directly (ADR 0003): marked ✦, undone in one click, remembered if undone.
 import type Database from "better-sqlite3";
 import { cleanTagName, tagIdFor } from "./objects.ts";
 
@@ -38,7 +39,8 @@ export function parseFindings(text: string): Findings | null {
 
 type Change =
   | { kind: "field"; field: string; before: null | { value: string; origin: string; aiRole: string | null; aiModel: string | null; aiDate: string | null } }
-  | { kind: "tag"; tagId: number; name: string };
+  | { kind: "tag"; tagId: number; name: string }
+  | { kind: "connection"; connectionId: number; otherId: string; connKind: string };
 
 /** Applies findings in one go (all or nothing) and records what changed. Returns the run id, or null if nothing changed. */
 export function applyFindings(db: Db, id: string, f: Findings, model: string, now: Date): number | null {
@@ -81,6 +83,52 @@ export function applyFindings(db: Db, id: string, f: Findings, model: string, no
   return Number(db.prepare("INSERT INTO ai_runs (object_id, model, created_at, changes) VALUES (?, ?, ?, ?)").run(id, model, now.toISOString(), JSON.stringify(changes)).lastInsertRowid);
 }
 
+const pairExists = (db: Db, a: string, b: string) => db.prepare("SELECT 1 FROM connections WHERE (from_id = ? AND to_id = ?) OR (from_id = ? AND to_id = ?)").get(a, b, b, a);
+const usable = (db: Db, id: string) => !!db.prepare("SELECT 1 FROM objects WHERE id = ? AND deleted_at IS NULL AND private = 0").get(id);
+
+/**
+ * Adds one Connection the Archivist found, applied at once with AI Origin (not yet approved, so it shows ✦). Skips a pair that is
+ * already connected, one the owner undid before, and anything Private or in the Bin. Returns the new Connection's id, or null.
+ */
+export function addDirectConnection(db: Db, id: string, otherId: string, kind: "related" | "authored by", model: string, date: string): number | null {
+  if (id === otherId || !usable(db, id) || !usable(db, otherId) || pairExists(db, id, otherId)) return null;
+  if (db.prepare("SELECT 1 FROM ai_rejected WHERE object_id = ? AND kind = 'connection' AND value = ?").get(id, otherId)) return null;
+  return Number(db.prepare("INSERT INTO connections (from_id, to_id, kind, origin, ai_role, ai_model, ai_date, approved) VALUES (?, ?, ?, 'ai', ?, ?, ?, 0)").run(id, otherId, kind, ROLE, model, date).lastInsertRowid);
+}
+
+/** Adds changes to this run (or starts a run when the facts and Tags changed nothing), so one Undo covers it all. */
+export function recordInRun(db: Db, id: string, model: string, now: Date, runId: number | null, added: Change[]) {
+  const run = runId ? (db.prepare("SELECT * FROM ai_runs WHERE id = ? AND undone_at IS NULL").get(runId) as any) : null;
+  if (run) {
+    db.prepare("UPDATE ai_runs SET changes = ? WHERE id = ?").run(JSON.stringify([...(JSON.parse(run.changes) as Change[]), ...added]), run.id);
+  } else {
+    db.prepare("INSERT INTO ai_runs (object_id, model, created_at, changes) VALUES (?, ?, ?, ?)").run(id, model, now.toISOString(), JSON.stringify(added));
+  }
+  db.prepare("UPDATE objects SET updated_at = datetime('now') WHERE id = ?").run(id);
+}
+
+/** Undo one Archivist Connection: it is removed and remembered from both ends, so it is not proposed again unless the owner asks. */
+function takeBack(db: Db, c: { id: number; from_id: string; to_id: string }) {
+  db.prepare("DELETE FROM connections WHERE id = ?").run(c.id);
+  const remember = db.prepare("INSERT OR IGNORE INTO ai_rejected (object_id, kind, value) VALUES (?, 'connection', ?)");
+  remember.run(c.from_id, c.to_id);
+  remember.run(c.to_id, c.from_id);
+}
+
+/** One click on one Connection. Only a Connection still the Archivist's (not approved, not the owner's) can be taken back this way. */
+export function undoConnection(db: Db, connectionId: number): { objectIds: string[] } | null {
+  const c = db.prepare("SELECT * FROM connections WHERE id = ? AND origin = 'ai' AND approved = 0 AND ai_role = ?").get(connectionId, ROLE) as any;
+  if (!c) return null;
+  db.transaction(() => {
+    takeBack(db, c);
+    db.prepare("UPDATE objects SET updated_at = datetime('now') WHERE id IN (?, ?)").run(c.from_id, c.to_id);
+  })();
+  return { objectIds: [c.from_id, c.to_id] };
+}
+
+const stillThere = (db: Db, c: { connectionId: number; otherId: string }) =>
+  !!db.prepare("SELECT 1 FROM connections WHERE id = ? AND origin = 'ai' AND approved = 0 AND (from_id = ? OR to_id = ?)").get(c.connectionId, c.otherId, c.otherId);
+
 /** The latest Archivist run on this Object that has not been undone, described for the page. */
 export function lastRun(db: Db, id: string) {
   const r = db.prepare("SELECT * FROM ai_runs WHERE object_id = ? AND undone_at IS NULL ORDER BY id DESC LIMIT 1").get(id) as any;
@@ -92,6 +140,7 @@ export function lastRun(db: Db, id: string) {
     at: r.created_at as string,
     facts: changes.filter((c) => c.kind === "field").map((c: any) => c.field as string),
     tags: changes.filter((c) => c.kind === "tag").map((c: any) => c.name as string),
+    connections: changes.filter((c: any) => c.kind === "connection" && stillThere(db, c)).length,
   };
 }
 
@@ -102,7 +151,11 @@ export function undoRun(db: Db, id: string) {
   const changes = JSON.parse(r.changes) as Change[];
   db.transaction(() => {
     for (const c of changes) {
-      if (c.kind === "tag") {
+      if (c.kind === "connection") {
+        // Only while it is still the Archivist's own: an approved one or one the owner changed the kind of has become theirs to keep.
+        const cur = db.prepare("SELECT * FROM connections WHERE id = ? AND origin = 'ai' AND approved = 0 AND ai_role = ?").get(c.connectionId, ROLE) as any;
+        if (cur && (cur.from_id === c.otherId || cur.to_id === c.otherId)) takeBack(db, cur);
+      } else if (c.kind === "tag") {
         const cur = db.prepare("SELECT origin FROM object_tags WHERE object_id = ? AND tag_id = ?").get(id, c.tagId) as any;
         if (cur?.origin !== "ai") continue; // the owner has since made it their own
         db.prepare("DELETE FROM object_tags WHERE object_id = ? AND tag_id = ?").run(id, c.tagId);

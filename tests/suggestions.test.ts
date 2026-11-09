@@ -72,90 +72,160 @@ describe("what the Archivist is shown to connect to", () => {
   });
 });
 
-describe("Suggestions from the Archivist", () => {
-  it("proposes related Connections (at most 5) that wait; nothing joins the Garden until Approve", async () => {
+/** A Suggestion that still waits for approval (a specific kind, as the Researcher or an older Archivist might leave): seeded directly. */
+const seedWaiting = (objectId: string, otherId: string, kind: string, role = "Archivist") =>
+  Number(sqlite.prepare("INSERT INTO ai_suggestions (object_id, kind, data, ai_role, ai_model, ai_date, created_at) VALUES (?, 'connection', ?, ?, 'm-test', '2026-11-07', '2026-11-07T09:00:00Z')").run(objectId, JSON.stringify({ otherId, kind }), role).lastInsertRowid);
+const conns = async (id: string) => (await call("GET", `/api/objects/${id}/connections`)).json as any[];
+
+describe("Archivist Connections apply directly (issue #66)", () => {
+  it("adds related Connections at once (up to the cap of 10), marked AI and not yet approved, with role, model and date", async () => {
     const src = await make("source", "Soil and gardens");
-    const others = [];
-    for (let i = 0; i < 7; i++) others.push(await make("source", `Soil gardens ${i}`));
-    const refs = others.map((o, i) => refOf(src.id, `Soil gardens ${i}`)!);
-    await look(src.id, { tags: [], related: refs.slice(0, 7), summary: null });
-    const s = await sugg(src.id);
-    expect(s.pending).toHaveLength(5);
-    expect(s.pending[0]).toMatchObject({ kind: "connection", connectionKind: "related", origin: "ai", aiRole: "Archivist", approved: false });
-    expect((await call("GET", `/api/objects/${src.id}/connections`)).json).toEqual([]); // nothing took effect
+    const refs: string[] = [];
+    for (let i = 0; i < 12; i++) await make("source", `Soil gardens ${i}`);
+    for (let i = 0; i < 12; i++) refs.push(refOf(src.id, `Soil gardens ${i}`)!);
+    await look(src.id, { tags: [], related: refs, summary: null });
+    const c = await conns(src.id);
+    expect(c).toHaveLength(10);
+    expect(c[0]).toMatchObject({ kind: "related", origin: "ai", aiRole: "Archivist", approved: false });
+    expect(c[0].aiModel).toBeTruthy();
+    expect(c[0].aiDate).toBe("2026-11-07");
+    expect((await sugg(src.id)).pending).toEqual([]); // nothing waits for approval
+    expect((await call("GET", `/api/objects/${src.id}/ai`)).json.run.connections).toBe(10);
+  });
+  it("the cap lives in one setting", async () => {
+    const { AI_CONFIG } = await import("../src/server/ai-config.ts");
+    expect(AI_CONFIG.maxConnections).toBe(10);
+    expect(String(archivistPrompt(sqlite, (await make("source", "X")).id)!.messages[0].content)).toContain(`At most ${AI_CONFIG.maxConnections}.`);
   });
   it("ignores a ref it was never shown, and a pair that is already connected", async () => {
     const a = await make("source", "Bees and gardens");
     const b = await make("source", "Bees gardens two");
     await call("POST", "/api/connections", { a: a.id, b: b.id });
     await look(a.id, { related: ["c99", "c1"] });
-    expect((await sugg(a.id)).pending).toEqual([]);
+    expect(await conns(a.id)).toHaveLength(1);
+    expect((await conns(a.id))[0].origin).toBe("owner");
   });
-  it("Approve keeps AI Origin and marks it approved; the Connection is real from then on", async () => {
+  it("one click on one Connection takes it back, and it is remembered from both ends and not proposed again", async () => {
     const a = await make("source", "Bees and gardens");
     const b = await make("source", "Bees gardens two");
     await look(a.id, { related: [refOf(a.id, "Bees gardens two")] });
+    const [c] = await conns(a.id);
+    expect((await call("POST", `/api/connections/${c.id}/undo-ai`)).status).toBe(200);
+    expect(await conns(a.id)).toEqual([]);
+    expect(archivistPrompt(sqlite, a.id)!.candidates.map((x) => x.id)).not.toContain(b.id);
+    expect(archivistPrompt(sqlite, b.id)!.candidates.map((x) => x.id)).not.toContain(a.id);
+    await look(a.id, { related: ["c1"] });
+    expect(await conns(a.id)).toEqual([]);
+    // unless the owner asks
+    await call("POST", `/api/objects/${a.id}/ai/forget-rejected`);
+    await look(a.id, { related: [refOf(a.id, "Bees gardens two")] });
+    expect(await conns(a.id)).toHaveLength(1);
+  });
+  it("cannot undo this way a Connection the owner made or approved", async () => {
+    const a = await make("source", "Bees and gardens");
+    const b = await make("source", "Bees gardens two");
+    const own = (await call("POST", "/api/connections", { a: a.id, b: b.id })).json;
+    expect((await call("POST", `/api/connections/${own.id}/undo-ai`)).status).toBe(404);
+    expect(await conns(a.id)).toHaveLength(1);
+  });
+  it("the run's Undo takes back the Tags and the Connections together, and remembers both", async () => {
+    const a = await make("source", "Bees and gardens");
+    const b = await make("source", "Bees gardens two");
+    await look(a.id, { tags: ["bees"], related: [refOf(a.id, "Bees gardens two")] });
+    expect((await call("GET", `/api/objects/${a.id}/ai`)).json.run).toMatchObject({ tags: ["bees"], connections: 1 });
+    expect((await call("POST", `/api/objects/${a.id}/ai/undo`)).status).toBe(200);
+    expect(await conns(a.id)).toEqual([]);
+    expect(archivistPrompt(sqlite, a.id)!.candidates.map((x) => x.id)).not.toContain(b.id);
+  });
+  it("a Connection whose kind the owner changed has become theirs: the run's Undo leaves it", async () => {
+    const a = await make("source", "Bees and gardens");
+    await make("source", "Bees gardens two");
+    await look(a.id, { related: [refOf(a.id, "Bees gardens two")] });
+    const [c] = await conns(a.id);
+    await call("PATCH", `/api/connections/${c.id}`, { kind: "supports", subject: a.id });
+    await call("POST", `/api/objects/${a.id}/ai/undo`);
+    expect(await conns(a.id)).toMatchObject([{ kind: "supports", origin: "owner" }]);
+  });
+  it("Ask again adds only new pairs (never a pair already connected) and does not repeat", async () => {
+    const a = await make("source", "Bees and gardens");
+    await make("source", "Bees gardens two");
+    await make("source", "Bees gardens three");
+    await look(a.id, { related: [refOf(a.id, "Bees gardens two")] });
+    await look(a.id, { related: [refOf(a.id, "Bees gardens three")] });
+    expect((await conns(a.id)).map((c: any) => c.other.title).sort()).toEqual(["Bees gardens three", "Bees gardens two"]);
+  });
+  it("adds 'authored by' for a Person already in the Garden, directly", async () => {
+    const ada = await make("person", "Ada Green");
+    const src = await make("source", "A book");
+    await look(src.id, { people: [{ name: "ada green", central: false }] });
+    expect(await conns(src.id)).toMatchObject([{ label: "authored by", origin: "ai", approved: false, other: { id: ada.id } }]);
+    expect((await sugg(src.id)).pending).toEqual([]);
+  });
+  it("never connects a Private Object, and never reads or adds to one", async () => {
+    const a = await make("source", "Bees and gardens");
+    await make("source", "Bees gardens secret", { private: true });
+    await look(a.id, { related: ["c1", "c2"] });
+    expect(await conns(a.id)).toEqual([]);
+    const priv = await make("source", "Bees private", { private: true });
+    const n = sent.length;
+    await call("POST", `/api/objects/${priv.id}/ai/run`);
+    await ai.tick();
+    expect(sent.length).toBe(n);
+  });
+  it("still never creates an Object, changes a type or writes a Thought: those wait as Suggestions", async () => {
+    const src = await make("source", "Ada Green");
+    await look(src.id, { type: "person", people: [{ name: "Central Figure", central: true }] });
+    expect((await sugg(src.id)).pending.map((p: any) => p.kind).sort()).toEqual(["object", "type"]);
+    expect((await call("GET", `/api/objects/${src.id}`)).json.type).toBe("source");
+    expect((await call("GET", "/api/objects?type=person")).json).toHaveLength(0);
+  });
+  it("specific kinds stay Suggestions that wait; Approve makes them real and keeps AI Origin (✧)", async () => {
+    const a = await make("source", "Bees and gardens");
+    const b = await make("source", "Bees gardens two");
+    const sid = seedWaiting(a.id, b.id, "supports");
     const [s] = (await sugg(a.id)).pending;
-    const done = await call("POST", `/api/suggestions/${s.id}/approve`);
-    expect(done.status).toBe(200);
-    const conns = (await call("GET", `/api/objects/${a.id}/connections`)).json;
-    expect(conns).toHaveLength(1);
-    expect(conns[0]).toMatchObject({ origin: "ai", aiRole: "Archivist", approved: true, kind: "related" });
-    expect((await call("GET", `/api/objects/${b.id}/connections`)).json[0]).toMatchObject({ origin: "ai", approved: true });
-    expect((await sugg(a.id)).pending).toEqual([]);
+    expect(s).toMatchObject({ id: sid, kind: "connection", connectionKind: "supports", approved: false });
+    expect(await conns(a.id)).toEqual([]);
+    expect((await call("POST", `/api/suggestions/${sid}/approve`)).status).toBe(200);
+    expect(await conns(a.id)).toMatchObject([{ kind: "supports", origin: "ai", approved: true }]);
+    expect((await call("POST", `/api/connections/${(await conns(a.id))[0].id}/undo-ai`)).status).toBe(404); // approved: the owner's to remove, not an AI undo
   });
   it("choosing another kind afterwards makes the Connection the owner's", async () => {
     const a = await make("source", "Bees and gardens");
     await make("source", "Bees gardens two");
     await look(a.id, { related: [refOf(a.id, "Bees gardens two")] });
-    await call("POST", `/api/suggestions/${(await sugg(a.id)).pending[0].id}/approve`);
-    const c = (await call("GET", `/api/objects/${a.id}/connections`)).json[0];
+    const c = (await conns(a.id))[0];
     await call("PATCH", `/api/connections/${c.id}`, { kind: "supports", subject: a.id });
-    expect((await call("GET", `/api/objects/${a.id}/connections`)).json[0]).toMatchObject({ origin: "owner", approved: false, kind: "supports" });
+    expect((await conns(a.id))[0]).toMatchObject({ origin: "owner", approved: false, kind: "supports" });
   });
-  it("Reject is remembered: Ask again does not propose it, until the owner asks to allow it", async () => {
+  it("Ask again replaces what the Archivist left waiting (a specific kind) and uses one call", async () => {
     const a = await make("source", "Bees and gardens");
     const b = await make("source", "Bees gardens two");
-    await look(a.id, { related: [refOf(a.id, "Bees gardens two")] });
-    await call("POST", `/api/suggestions/${(await sugg(a.id)).pending[0].id}/reject`);
-    expect((await sugg(a.id)).pending).toEqual([]);
-    expect((await sugg(a.id)).rejected).toBe(1);
-    // asking again: it is not even shown to the model, and a reply naming it changes nothing
-    expect(archivistPrompt(sqlite, a.id)!.candidates.map((c) => c.id)).not.toContain(b.id);
-    await look(a.id, { related: ["c1"] });
-    expect((await sugg(a.id)).pending).toEqual([]);
-    // the owner asks to allow rejected ones again
-    expect((await call("POST", `/api/objects/${a.id}/ai/forget-rejected`)).json.forgotten).toBe(1);
-    expect(archivistPrompt(sqlite, a.id)!.candidates.map((c) => c.id)).toContain(b.id);
-    await look(a.id, { related: [refOf(a.id, "Bees gardens two")] });
-    expect((await sugg(a.id)).pending).toHaveLength(1);
-  });
-  it("Ask again uses one call, or two when the first model gave nothing usable, and replaces the old pending list", async () => {
-    const a = await make("source", "Bees and gardens");
-    await make("source", "Bees gardens two");
-    await make("source", "Bees gardens three");
-    await look(a.id, { related: [refOf(a.id, "Bees gardens two")] });
+    seedWaiting(a.id, b.id, "builds on");
+    await look(a.id, { related: [] });
     expect(sent).toHaveLength(1);
-    replies.push("not json at all");
-    reply({ related: [refOf(a.id, "Bees gardens three")] });
-    await call("POST", `/api/objects/${a.id}/ai/run`);
-    clock = new Date(clock.getTime() + 10_000);
-    await ai.tick();
-    expect(sent).toHaveLength(3);
-    const p = (await sugg(a.id)).pending;
-    expect(p).toHaveLength(1);
-    expect(p[0].other.title).toBe("Bees gardens three");
+    expect((await sugg(a.id)).pending).toEqual([]);
   });
-  it("proposes 'authored by' for a Person already in the Garden, and Approve links the Source to them", async () => {
-    const ada = await make("person", "Ada Green");
-    const src = await make("source", "A book");
-    await look(src.id, { people: [{ name: "ada green", central: false }] });
-    const [s] = (await sugg(src.id)).pending;
-    expect(s).toMatchObject({ kind: "connection", connectionKind: "authored by", other: { id: ada.id } });
-    await call("POST", `/api/suggestions/${s.id}/approve`);
-    const c = (await call("GET", `/api/objects/${src.id}/connections`)).json[0];
-    expect(c).toMatchObject({ label: "authored by", origin: "ai", approved: true });
+  it("Connections waiting from before (related / authored by) are applied once, marked and undoable; specific kinds and the Researcher's keep waiting", async () => {
+    const { applyWaitingConnections } = await import("../src/server/suggestions.ts");
+    const a = await make("source", "Bees and gardens");
+    const b = await make("source", "Bees gardens two");
+    const c = await make("source", "Bees gardens three");
+    const d = await make("source", "Bees gardens four");
+    seedWaiting(a.id, b.id, "related");
+    seedWaiting(a.id, c.id, "supports");
+    seedWaiting(a.id, d.id, "related", "Researcher");
+    expect(applyWaitingConnections(sqlite)).toBe(1);
+    expect(applyWaitingConnections(sqlite)).toBe(0);
+    expect(await conns(a.id)).toMatchObject([{ other: { id: b.id }, origin: "ai", approved: false }]);
+    expect((await sugg(a.id)).pending.map((p: any) => p.connectionKind).sort()).toEqual(["related", "supports"]);
+    expect((await call("GET", `/api/objects/${a.id}/ai`)).json.run.connections).toBe(1);
+    await call("POST", `/api/objects/${a.id}/ai/undo`);
+    expect(await conns(a.id)).toEqual([]);
   });
+});
+
+describe("Suggestions from the Archivist", () => {
   it("proposes a new Person only when central or named on two Sources, never from a one-off mention", async () => {
     const one = await make("source", "First");
     await look(one.id, { people: [{ name: "Passing Name", central: false }] });
@@ -272,9 +342,9 @@ describe("Making an Object Private", () => {
     const a = await make("source", "Bees and gardens");
     const b = await make("source", "Bees gardens two");
     const c = await make("source", "Bees gardens three");
-    await look(a.id, { related: [refOf(a.id, "Bees gardens two"), refOf(a.id, "Bees gardens three")], summary: "A summary." });
-    const pend = (await sugg(a.id)).pending;
-    await call("POST", `/api/suggestions/${pend.find((p: any) => p.other.id === c.id).id}/approve`); // approved: stays
+    await look(a.id, { summary: "A summary." });
+    seedWaiting(a.id, b.id, "supports");
+    await call("POST", `/api/suggestions/${seedWaiting(a.id, c.id, "supports")}/approve`); // approved: stays
     // Private on the other end drops the one pointing at it
     await call("PATCH", `/api/objects/${b.id}`, { private: true });
     expect((await sugg(a.id)).pending).toEqual([]);

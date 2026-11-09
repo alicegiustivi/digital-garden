@@ -43,7 +43,7 @@ A light, global label any Object can carry, costing nothing to add. It means wha
 _Avoid_: Topic, label, category, keyword
 
 **Connection**:
-A link between two Objects in the Garden, of one Connection Kind, visible from both Objects. Two Objects have at most one Connection between them. A Tag on an Object is not a Connection.
+A link between two Objects in the Garden, of one Connection Kind, visible from both Objects. Two Objects have at most one Connection between them. A Tag on an Object is not a Connection. The owner makes Connections; the Archivist also adds Connections of kind related and authored by on its own, marked ✦ and undone in one click (see AI Contribution). Every other kind, and a change of kind, is the owner's or a Suggestion.
 _Avoid_: Relationship, relation, edge, backlink
 
 **Connection Kind**:
@@ -105,11 +105,11 @@ The AI role the owner starts on purpose to explore, question and analyze what is
 _Avoid_: Chatbot, assistant, copilot
 
 **AI Contribution**:
-Anything with AI Origin. It takes one of three forms: applied directly but marked and undone in one click (Tags, and extracted facts about a Source such as its title, authors' names, date and format); a Suggestion; or an AI Note. Whatever touches structure or a Thought is always a Suggestion.
+Anything with AI Origin. It takes one of three forms: applied directly but marked and undone in one click (Tags, extracted facts about a Source such as its title, authors' names, date and format, and the Archivist's Connections of kind related and authored by, up to about 10 per Object); a Suggestion; or an AI Note. A new Object, a change of Object Type, a specific Connection Kind (supports, contradicts, builds on, inspired by), a change of kind on an existing Connection, a Connection found in a Researcher answer, and anything that touches a Thought are always Suggestions.
 _Avoid_: AI output, AI content, generated content
 
 **Suggestion**:
-An AI Contribution that only takes effect once the owner approves it, such as a Connection, a change of Object Type, a new Object, or a title for a Thought. Anything rejected, including a removed AI Tag, is remembered and not proposed again unless the owner asks.
+An AI Contribution that only takes effect once the owner approves it, such as a specific kind of Connection, a Connection from a Researcher answer, a change of Object Type, a new Object, or a title for a Thought. Anything rejected, including a removed AI Tag or an undone AI Connection, is remembered and not proposed again unless the owner asks.
 _Avoid_: Recommendation, auto-link
 
 **Approve**:

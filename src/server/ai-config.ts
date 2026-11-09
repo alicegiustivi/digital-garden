@@ -20,6 +20,8 @@ export const AI_CONFIG = {
    * with 100 left that is still about 50 questions (each takes two calls), enough to see it coming and not nag before.
    */
   lowCallsWarning: 100,
+  /** The most Connections the Archivist adds to one Object in one go (issue #66). Applied directly, marked and undoable. */
+  maxConnections: 10,
   /** A model that answers but gives nothing usable is tried this many times before "Couldn't read this". */
   maxUnusable: 3,
 };

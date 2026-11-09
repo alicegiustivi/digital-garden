@@ -5,6 +5,7 @@ import type Database from "better-sqlite3";
 import { MENTION } from "./mentions.ts";
 import { titleOf } from "./objects.ts";
 import { sharesWords } from "./connections.ts";
+import { AI_CONFIG } from "./ai-config.ts";
 
 type Db = Database.Database;
 
@@ -68,7 +69,7 @@ Rules:
 - "title", "authors" and "published" are facts about the item itself (published as YYYY, YYYY-MM or YYYY-MM-DD). Use null unless the text shows them. Never invent.
 - "tags" are at most 5 short lowercase words or hyphenated phrases. Reuse a known Tag when it fits.
 - "summary" is 2 or 3 plain sentences saying what the item says, for a Source only. It is clearly yours, never the owner's voice; null if there is too little text.
-- "related" lists the refs (like "c2") of Objects from the list "Objects it could be connected to" that really are about the same thing. At most 5. Use [] if none fit; never invent a ref.
+- "related" lists the refs (like "c2") of Objects from the list "Objects it could be connected to" that really are about the same thing. At most ${AI_CONFIG.maxConnections}. Use [] if none fit; never invent a ref.
 - "people" lists people the item is by or mainly about. "central" is true only if the item is mainly about that person.
 - "type" is "source" or "person" only if the Kind of Object is clearly wrong, else null.
 - "thoughtTitle" is a short title, only for a Thought that has none, else null.
