@@ -132,6 +132,7 @@ export function ObjectPage({ id, types, fresh, onChanged, beside, onDeleted }: P
   return (
     <article className="object" style={typeVar(obj.type)}>
       <section className="cover">
+        {obj.hasImage && <img className="cover-pic" src={`/api/images/${obj.id}/full`} alt={title?.value ?? "Captured image"} />}
         <div className="in">
           <div className="kicker">
             <span className="big"><Icon name={obj.type} /></span>
@@ -220,7 +221,6 @@ export function ObjectPage({ id, types, fresh, onChanged, beside, onDeleted }: P
             <button role="tab" aria-selected={tab === "ask"} className={tab === "ask" ? "on" : ""} onClick={() => setTab("ask")}>Ask</button>
           </div>
           {tab === "ask" ? <AskPanel objectId={obj.id} type={obj.type} isPrivate={obj.private} /> : <>
-          {obj.hasImage && <figure className="cover-img"><img src={`/api/images/${obj.id}/full`} alt={title?.value ?? "Captured image"} /></figure>}
           {quotes.map((b) => (
             <blockquote key={b.id} className="b-src"><Marked o={b}>{b.text}</Marked></blockquote>
           ))}
