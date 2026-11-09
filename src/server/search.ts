@@ -1,24 +1,25 @@
 // The owner's search (issue #33). Everything here runs on this Mac from the Garden's own full-text index (SQLite FTS5);
 // no AI and nothing leaves the machine. Private Objects are searched like any other (CONTEXT.md: Private), Bin Objects never.
 //
-// What it reads: titles, bodies, Tags, field values (a Source's extracted text is one), and AI Notes. Daily Inbox comments and
-// Inquiries will join the same index when those exist (phone Capture and the Researcher are later builds).
+// What it reads: titles, bodies, Tags, field values (a Source's extracted text is one), AI Notes, and the owner's phone-capture
+// comments (found on the Source they were sent with, issue #63). Inquiries will join when the Researcher's answers do.
 //
 // How a query is read: every word must be found, anywhere in the same Object, and a word matches the start of a word
 // ("conc" finds "concept"). Typo tolerance (decided here): if a word finds nothing, it is swapped for the closest words
 // the Garden really contains (one slip for words of 4-7 letters, two for longer ones) and the page says so.
 import type Database from "better-sqlite3";
 import { MENTION } from "./mentions.ts";
+import { allComments } from "./inbox-comments.ts";
 import { filterSql, summarise, titleOf, type Filters, type Sort } from "./objects.ts";
 
 type Db = Database.Database;
 type OriginInfo = { origin: "source" | "ai" | "owner"; aiRole: string | null; aiModel: string | null; aiDate: string | null; approved: boolean };
 const originOf = (r: any): OriginInfo => ({ origin: r.origin, aiRole: r.ai_role ?? null, aiModel: r.ai_model ?? null, aiDate: r.ai_date ?? null, approved: r.origin === "ai" && !!r.approved });
 
-export type Where = "title" | "tag" | "body" | "field" | "note";
+export type Where = "title" | "tag" | "body" | "field" | "note" | "comment";
 type Piece = { key: string; objectId: string; where: Where; label: string; text: string; origin: OriginInfo; weight: number; words: string[] };
 
-const WEIGHT: Record<Where, number> = { title: 10, tag: 6, body: 4, field: 3, note: 2 };
+const WEIGHT: Record<Where, number> = { title: 10, tag: 6, body: 4, comment: 4, field: 3, note: 2 };
 const fold = (s: string) => s.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
 const wordsOf = (s: string) => fold(s).match(/[\p{L}\p{N}]+/gu) ?? [];
 
@@ -47,6 +48,7 @@ function closeWords(db: Db, term: string): string[] {
   const max = term.length >= 8 ? 2 : 1;
   const vocab = (db.prepare("SELECT term FROM search_vocab WHERE length(term) >= ?").all(term.length - max) as any[]).map((r) => r.term as string);
   const tagWords = (db.prepare("SELECT name FROM tags").all() as any[]).flatMap((r) => wordsOf(r.name));
+  for (const c of allComments(db)) tagWords.push(...wordsOf(c.text)); // comment words are not in the index, so they are added here
   const found = new Map<string, number>();
   for (const w of new Set([...vocab, ...tagWords])) {
     if (w === term || /\d/.test(w)) continue; // numbers and the letters-and-digits of Mention references are not words
@@ -83,6 +85,12 @@ function piecesFor(db: Db, variants: string[], eligible: Set<string>): Piece[] {
         if (n) out.push({ key: `n${r.rid}`, objectId: r.object_id, where: "note", label: "AI Note", text, origin: originOf({ ...n, origin: "ai" }), weight: WEIGHT.note, words });
       }
     }
+  }
+  // Comments sent with a phone capture are the owner's words beside a Source, kept with the Daily Inbox entry.
+  for (const c of allComments(db)) {
+    if (!eligible.has(c.objectId)) continue;
+    const words = wordsOf(c.text).filter((w) => variants.some((v) => w.startsWith(v)));
+    if (words.length) out.push({ key: `c${c.captureId}:${c.objectId}`, objectId: c.objectId, where: "comment", label: "Comment from the inbox", text: c.text, origin: { origin: "owner", aiRole: null, aiModel: null, aiDate: null, approved: false }, weight: WEIGHT.comment, words });
   }
   const tags = db.prepare("SELECT ot.object_id, t.id, t.name, ot.origin, ot.ai_role, ot.ai_model, ot.ai_date FROM object_tags ot JOIN tags t ON t.id = ot.tag_id").all() as any[];
   for (const t of tags) {

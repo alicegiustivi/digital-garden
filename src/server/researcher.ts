@@ -12,6 +12,7 @@ import type Database from "better-sqlite3";
 import { AI_CONFIG } from "./ai-config.ts";
 import { GateError, type Gate } from "./ai-gate.ts";
 import { cleanText, readable } from "./ai-prompt.ts";
+import { commentForAi } from "./inbox-comments.ts";
 import type { Outcome } from "./ai-queue.ts";
 import { jsonOf } from "./archivist.ts";
 import { sharesWords } from "./connections.ts";
@@ -109,7 +110,8 @@ function rawText(db: Db, id: string): string {
   const f = (db.prepare("SELECT value FROM field_values WHERE object_id = ? AND field <> 'extraction'").all(id) as any[]).map((r) => r.value);
   const b = (db.prepare("SELECT text FROM blocks WHERE object_id = ?").all(id) as any[]).map((r) => r.text.replace(MENTION, ""));
   const t = (db.prepare("SELECT t.name FROM object_tags ot JOIN tags t ON t.id = ot.tag_id WHERE ot.object_id = ?").all(id) as any[]).map((r) => r.name);
-  return [titleOf(db, id), ...f, ...b, ...t].join("\n");
+  const c = commentForAi(db, id);
+  return [titleOf(db, id), ...f, ...b, ...t, ...(c ? [c] : [])].join("\n");
 }
 
 function cardLine(db: Db, c: Card): string {
@@ -123,13 +125,15 @@ function cardLine(db: Db, c: Card): string {
 }
 
 /** One Object, in full, with every piece labelled by its Origin. AI Notes are never included: an earlier answer is not evidence. */
-function fullObject(db: Db, ref: string, id: string, cap: number): string {
+export function fullObject(db: Db, ref: string, id: string, cap: number): string {
   const o = live(db, id)!;
   const lines: string[] = [`[${ref}] ${o.type}: "${titleOf(db, id)}"`];
   const fields = db.prepare("SELECT * FROM field_values WHERE object_id = ? AND field NOT IN ('extraction', 'title')").all(id) as any[];
   for (const f of fields) lines.push(`${f.field} (${labelOf(f)}): ${String(f.value).slice(0, 3000)}`);
   const blocks = (db.prepare("SELECT * FROM blocks WHERE object_id = ? ORDER BY position").all(id) as any[]).map((b) => ({ ...b, text: cleanText(db, b.text) })).filter((b) => b.text);
   if (blocks.length) { lines.push("Text:"); for (const b of blocks) lines.push(`- (${labelOf(b)}) ${b.text.slice(0, 3000)}`); }
+  const comment = commentForAi(db, id); // the owner's phone-capture comment, only ever shown inside its Source (issue #63)
+  if (comment) lines.push(`Comment sent with it (the owner's words): ${cleanText(db, comment).slice(0, 3000)}`);
   const tags = (db.prepare("SELECT t.name, ot.origin FROM object_tags ot JOIN tags t ON t.id = ot.tag_id WHERE ot.object_id = ?").all(id) as any[]);
   if (tags.length) lines.push(`Tags: ${tags.map((t) => `${t.name}${t.origin === "ai" ? " (AI)" : ""}`).join(", ")}`);
   // Connections to other readable Objects, by title and kind (never to a Private one).

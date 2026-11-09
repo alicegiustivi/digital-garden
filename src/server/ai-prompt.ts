@@ -6,6 +6,7 @@ import { MENTION } from "./mentions.ts";
 import { titleOf } from "./objects.ts";
 import { sharesWords } from "./connections.ts";
 import { AI_CONFIG } from "./ai-config.ts";
+import { commentForAi } from "./inbox-comments.ts";
 
 type Db = Database.Database;
 
@@ -88,6 +89,9 @@ export function archivistPrompt(db: Db, id: string, image?: { dataUrl: string })
     lines.push("Text:");
     for (const b of body) lines.push(`- (${labelOf(b)}) ${b.text.slice(0, 3000)}`);
   }
+  // The owner's comment sent with this capture from the phone: their words, so it is labelled that way (issue #63).
+  const comment = commentForAi(db, id);
+  if (comment) lines.push(`Comment sent with it (the owner's words): ${cleanText(db, comment).slice(0, 3000)}`);
   const tags = db.prepare("SELECT t.name FROM object_tags ot JOIN tags t ON t.id = ot.tag_id WHERE ot.object_id = ?").all(id) as any[];
   if (tags.length) lines.push(`Tags already on it: ${tags.map((t) => t.name).join(", ")}`);
   const cands = candidatesFor(db, id);
