@@ -18,6 +18,7 @@ import { Palette, SearchPage } from "./Search";
 import { TimelinePage } from "./Timeline";
 import { InboxPage } from "./Inbox";
 import { OverviewPage } from "./Overview";
+import { MapPage } from "./Graph";
 import { QuestionsPageView } from "./Garden";
 import { InquiriesPage, InquiryPage } from "./Inquiries";
 import { wasMadeHere } from "./fresh";
@@ -46,6 +47,7 @@ const NAV = [
   { label: "People", hash: "#/people", type: "person" },
   { label: "Tags", hash: "#/tags", type: null },
   { label: "Timeline", hash: "#/timeline", type: null },
+  { label: "Map", hash: "#/map", type: null },
   { label: "Inquiries", hash: "#/inquiries", type: null },
 ];
 const TYPE_OF_ROUTE: Record<string, string> = { sources: "source", concepts: "concept", thoughts: "thought", people: "person" };
@@ -267,6 +269,8 @@ function App() {
     page = <SearchPage key={hash} hash={hash} types={types} version={version} onOpen={open} />;
   } else if (parts[0] === "overview") {
     page = <OverviewPage types={types} version={version} onOpen={open} go={go} onChanged={changed} />;
+  } else if (parts[0] === "map") {
+    page = <MapPage types={types} version={version} onOpen={open} go={go} focus={/^[0-9a-f-]{36}$/.test(parts[1] ?? "") ? parts[1] : undefined} />;
   } else if (parts[0] === "timeline") {
     page = <TimelinePage types={types} version={version} onOpen={open} />;
   } else if (parts[0] === "inbox") {

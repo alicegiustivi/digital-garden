@@ -50,6 +50,10 @@ _Avoid_: Relationship, relation, edge, backlink
 How two connected Objects relate, chosen from a fixed list: related (the default), supports, contradicts, builds on, inspired by, mentions, authored by. Directed kinds read differently from each end (supports / supported by).
 _Avoid_: Link type, relation type, predicate
 
+**Map**:
+The Garden drawn as a graph: either the whole Garden clustered by Concept, with filters that fade what doesn't match, or a full-size graph around one Object that reaches one, two or three Connections out. It only shows; it changes nothing. Objects are labelled and coloured by Object Type, Connection Kinds and AI Origin (✦ ✧) are visible, Private Objects carry a lock (the owner sees them; no AI does), and Objects in the Bin are left out.
+_Avoid_: Graph view, network, web
+
 **Mention**:
 A reference to another Object written inside an Object's body. It creates a Connection of kind "mentions", which lasts only as long as the reference stays in the text, unless the owner gives that Connection another kind. Inside a paragraph it reads as a quiet link; on a line of its own it shows as an Object Card.
 _Avoid_: Inline link, wikilink, @-link
