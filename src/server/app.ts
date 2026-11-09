@@ -4,6 +4,8 @@ import type Database from "better-sqlite3";
 import * as o from "./objects.ts";
 import { capture } from "./capture.ts";
 import * as k from "./connections.ts";
+import { graph } from "./graph.ts";
+
 import { extractInto } from "./extract.ts";
 import { readImage } from "./images.ts";
 import * as bin from "./bin.ts";
@@ -138,6 +140,7 @@ export function createApp(sqlite: Database.Database, opts: Options = {}) {
     return r ? c.json(r) : c.json({ error: "Not found" }, 404);
   });
   // The Overview and Turn into Concept (issue #34)
+  app.get("/api/graph", (c) => c.json(graph(sqlite)));
   app.get("/api/overview", (c) => c.json(ov.overview(sqlite)));
   app.get("/api/objects/:id/light-up", (c) => found(c, ov.lightUp(sqlite, c.req.param("id"))));
   app.post("/api/tags/:id/concept", async (c) => {

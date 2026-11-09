@@ -218,7 +218,7 @@ export function MapView({ id, types, onOpen }: { id: string; types: Types; onOpe
         </g>
       </svg>
       <figcaption className="quiet small">
-        {rows.length === 0 ? "No Connections yet." : rows.length > shown.length ? `Showing ${shown.length} of ${rows.length} Connections.` : `${rows.length} ${rows.length === 1 ? "Connection" : "Connections"}.`} Click one to open it; ⌥-click puts it in this pane.
+        {rows.length === 0 ? "No Connections yet." : rows.length > shown.length ? `Showing ${shown.length} of ${rows.length} Connections.` : `${rows.length} ${rows.length === 1 ? "Connection" : "Connections"}.`} Click one to open it; ⌥-click puts it in this pane. <a href={`#/map/${id}`}>Draw it bigger</a>
       </figcaption>
     </figure>
   );

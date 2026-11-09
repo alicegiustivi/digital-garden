@@ -226,3 +226,9 @@ export const inboxApi = {
   inboxRetry: (captureId: number) => call<{ outcome: string; reason?: string }>("POST", `/api/inbox/captures/${captureId}/retry`),
   inboxReveal: (captureId: number) => call<unknown>("POST", `/api/inbox/captures/${captureId}/reveal`),
 };
+
+// The Map (issue #82)
+export type GraphNode = { id: string; type: string; title: string; private: boolean; tags: string[]; created: string; changed: string };
+export type GraphEdge = { id: number; from: string; to: string; kind: string; origin: string; approved: boolean };
+export type GraphData = { nodes: GraphNode[]; edges: GraphEdge[] };
+export const fetchGraph = () => call<GraphData>("GET", "/api/graph");
