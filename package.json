@@ -10,7 +10,9 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "mac:install": "bash scripts/install-mac.sh",
-    "mac:uninstall": "bash scripts/uninstall-mac.sh"
+    "mac:uninstall": "bash scripts/uninstall-mac.sh",
+    "backup": "tsx src/server/backup-cli.ts",
+    "backup:password": "tsx src/server/backup-cli.ts password"
   },
   "dependencies": {
     "@hono/node-server": "^2.1.6",

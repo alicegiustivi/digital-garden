@@ -9,6 +9,7 @@ import { SidePane } from "./Connections";
 import { useRefresh } from "./refresh";
 import { Toasts } from "./toast";
 import { BinPage } from "./Bin";
+import { BackupPage, useBackup } from "./Backup";
 import { AiLine, AiPage, aiChanged } from "./Ai";
 import type { Summary } from "./api";
 import { Icon, typeVar } from "./ui";
@@ -51,6 +52,7 @@ const TYPE_OF_ROUTE: Record<string, string> = { sources: "source", concepts: "co
 function TopBar({ hash, unreviewed, onCapture, onSearch }: { hash: string; unreviewed: number; onCapture: () => void; onSearch: () => void }) {
   const [open, setOpen] = useState(false);
   const [appearance, setAppearanceState] = useState<Appearance>(getAppearance());
+  const [backup] = useBackup(open ? 1 : 0);
   const box = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!open) return;
@@ -84,6 +86,7 @@ function TopBar({ hash, unreviewed, onCapture, onSearch }: { hash: string; unrev
               <a className="menu-link" href="#/inbox" onClick={() => setOpen(false)}><span className="tick" />Daily Inbox</a>
               <a className="menu-link" href="#/questions" onClick={() => setOpen(false)}><span className="tick" />Questions</a>
               <a className="menu-link" href="#/bin" onClick={() => setOpen(false)}><span className="tick" />Bin</a>
+              <a className="menu-link" href="#/backup" onClick={() => setOpen(false)}><span className="tick" />Backup{backup ? <span className="quiet small"> · {backup.line}</span> : null}</a>
               <a className="menu-link" href="#/ai" onClick={() => setOpen(false)}><span className="tick" />AI</a>
               <a className="menu-link" href="#/bookmark" onClick={() => setOpen(false)}><span className="tick" />Save to Garden bookmark</a>
               <div className="menu-h">Appearance</div>
@@ -276,6 +279,8 @@ function App() {
     page = <QuestionsPageView version={version} />;
   } else if (parts[0] === "bin") {
     page = <BinPage types={types} onChanged={changed} />;
+  } else if (parts[0] === "backup") {
+    page = <BackupPage />;
   } else if (parts[0] === "ai") {
     page = <AiPage />;
   } else if (parts[0] === "bookmark") {
