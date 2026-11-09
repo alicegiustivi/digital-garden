@@ -18,9 +18,7 @@ export function Card({ o, types, onOpen }: { o: Summary; types: Types; onOpen: (
   const label = types.types.find((t) => t.key === o.type)!.label;
   return (
     <article className={`story t-${o.type}`} style={typeVar(o.type)} tabIndex={0} role="button" onClick={onOpen} onKeyDown={(e) => e.key === "Enter" && onOpen()}>
-      {o.type === "source" && (o.hasImage
-        ? <img className="story-img" src={`/api/images/${o.id}/thumb`} alt="" loading="lazy" />
-        : <span className="story-img ph"><Icon name="source" /></span>)}
+      {o.type === "source" && o.hasImage && <img className="story-img" src={`/api/images/${o.id}/thumb`} alt="" loading="lazy" />}
       {o.type === "person" && <Portrait stem={o.portrait} size={56} name={displayTitle(o)} />}
       <div className="story-text">
         <span className="kk"><Icon name={o.type} /> {label}{subOf(o) ? ` · ${subOf(o)}` : ""}</span>
@@ -93,10 +91,10 @@ export function ThisWeek({ types, version, unreviewed, onNew, onOpen }: { types:
       <div className="weekgrid">
       <div className="week-main">
       {rows && lead && (
-        <article className="lead" style={typeVar("source")} tabIndex={0} role="button" onClick={() => onOpen(lead.id, ids)} onKeyDown={(e) => e.key === "Enter" && onOpen(lead.id, ids)}>
+        <article className={`lead${lead.hasImage ? "" : " plain"}`} style={typeVar("source")} tabIndex={0} role="button" onClick={() => onOpen(lead.id, ids)} onKeyDown={(e) => e.key === "Enter" && onOpen(lead.id, ids)}>
           {lead.hasImage
             ? <img className="lead-img" src={`/api/images/${lead.id}/full`} alt="" />
-            : <div className="washbox"><span className="big"><Icon name="source" /></span></div>}
+            : null}
           <div className="story-lead">
             <span className="kk"><Icon name="source" /> Newest Source{subOf(lead) ? ` · ${subOf(lead)}` : ""}</span>
             <h3>{displayTitle(lead)}</h3>
