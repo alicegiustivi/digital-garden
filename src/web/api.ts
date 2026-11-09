@@ -42,7 +42,7 @@ export type Types = { types: TypeDef[]; fieldLabels: Record<string, FieldDef> };
 export type CaptureResult = { created: Obj[]; existing: Obj[]; thoughtId: string | null; openId: string };
 export type BinRow = Summary & { title: string; deletedAt: string; daysLeft: number };
 export type RemovedConnection = { fromId: string; toId: string; kind: string; note: string | null } & OriginInfo;
-export type RemovedTag = { tag: TagRow; objects: number; on: ({ objectId: string } & OriginInfo)[] };
+export type RemovedTag = { tag: TagRow; objects: number; turnedDown?: string[]; on: ({ objectId: string } & OriginInfo)[] };
 export type AiSummary = {
   keySet: boolean; keyProblem: boolean; left: number; low: boolean; researcherLeft: number; waiting: number;
   budgets: { archivist: { used: number; limit: number }; researcher: { used: number; limit: number } };

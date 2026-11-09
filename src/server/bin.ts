@@ -93,15 +93,19 @@ export function deleteTag(db: Db, tagId: number) {
   if (!tag) return null;
   const on = db.prepare("SELECT object_id, origin, ai_role, ai_model, ai_date FROM object_tags WHERE tag_id = ?").all(tagId) as any[];
   const live = (db.prepare("SELECT count(*) AS n FROM object_tags ot JOIN objects o ON o.id = ot.object_id AND o.deleted_at IS NULL WHERE ot.tag_id = ?").get(tagId) as any).n;
+  // Only an AI Tag counts as turned down (so the Archivist does not put it back); a Tag the owner made is simply gone.
+  const turnedDown: string[] = [];
   db.transaction(() => {
+    for (const r of on) if (r.origin === "ai" && db.prepare("INSERT OR IGNORE INTO ai_rejected (object_id, kind, value) VALUES (?, 'tag', ?)").run(r.object_id, tag.name).changes) turnedDown.push(r.object_id);
     db.prepare("DELETE FROM object_tags WHERE tag_id = ?").run(tagId);
     db.prepare("DELETE FROM tags WHERE id = ?").run(tagId);
   })();
-  return { tag, objects: live, on: on.map((r) => ({ objectId: r.object_id, origin: r.origin, aiRole: r.ai_role, aiModel: r.ai_model, aiDate: r.ai_date })) };
+  return { tag, objects: live, turnedDown, on: on.map((r) => ({ objectId: r.object_id, origin: r.origin, aiRole: r.ai_role, aiModel: r.ai_model, aiDate: r.ai_date })) };
 }
 
 export function restoreTag(db: Db, input: any) {
   const { tag, on } = input ?? {};
+  const turnedDown: unknown[] = Array.isArray(input?.turnedDown) ? input.turnedDown : [];
   if (!tag || typeof tag.name !== "string" || !Array.isArray(on)) throw new BadRequest("nothing to restore");
   if (db.prepare("SELECT 1 FROM tags WHERE name = ?").get(tag.name)) throw new BadRequest("A Tag with that name exists again");
   db.transaction(() => {
@@ -110,6 +114,8 @@ export function restoreTag(db: Db, input: any) {
       if (!db.prepare("SELECT 1 FROM objects WHERE id = ?").get(r.objectId)) continue;
       db.prepare("INSERT OR IGNORE INTO object_tags (object_id, tag_id, origin, ai_role, ai_model, ai_date) VALUES (?, ?, ?, ?, ?, ?)").run(r.objectId, tag.id, ...originCols(r));
     }
+    // Undo also forgets the "turned down" note that the removal made.
+    for (const id of turnedDown) if (typeof id === "string") db.prepare("DELETE FROM ai_rejected WHERE object_id = ? AND kind = 'tag' AND value = ?").run(id, tag.name);
   })();
   return { restored: true };
 }
