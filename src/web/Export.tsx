@@ -31,8 +31,8 @@ export function ExportPage() {
   const start = async () => { setError(""); try { setS(await exportApi.start(folder, leaveOut)); } catch (e: any) { setError(e.message); } };
   const running = s?.state === "running";
   return (
-    <main className="wrap page backup-page">
-      <h2>Export my Garden</h2>
+    <main className="wrap text-page backup-page">
+      <header className="vol"><h2>Export</h2></header>
       <p>Saves a copy of your whole Garden that you can read without the Garden: one readable file for each Object, plus one complete data file, your images and a “Read me first”. It works offline and uses no AI. It goes in a new dated folder, such as <em>Garden export {new Date().toISOString().slice(0, 10)}</em>.</p>
       <p className="inbox-warn" role="note"><strong>This Export is not encrypted.</strong> Anyone who can open the folder can read everything in it{leaveOut ? "." : ", including your Private Objects (they are marked Private)."} Keep it somewhere safe. An Export is not a Backup: it can’t put the Garden back.</p>
       <label className="field"><span>Save it in</span>

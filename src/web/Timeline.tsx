@@ -2,7 +2,7 @@
 // "Asked" (Inquiries) will join when the Researcher exists.
 import { useEffect, useState } from "react";
 import { api, type TimelineEvent, type Types } from "./api";
-import { Icon, typeVar } from "./ui";
+import { Hint, Icon, typeVar } from "./ui";
 
 const dayKey = (iso: string) => { const d = new Date(iso); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
 const dayName = (iso: string) => {
@@ -46,7 +46,7 @@ export function TimelinePage({ onOpen, version }: { types: Types; onOpen: (id: s
   return (
     <main className="contents wrap timeline">
       <header className="vol"><h2>Timeline</h2></header>
-      <p className="quiet small">What was captured, written and connected, day by day. Questions you ask the Researcher will join it when that arrives.</p>
+      <Hint short="What was captured, written and connected, day by day." />
       {events && !events.length && <p className="quiet">Nothing yet. Capture or write something and it will appear here.</p>}
       {days.map((d) => (
         <section key={d.key} className="tday">

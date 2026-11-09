@@ -2,7 +2,7 @@
 // Connections; no AI, no counts, nothing overdue.
 import { useEffect, useState } from "react";
 import { api, type GardenItem, type QuestionsPage } from "./api";
-import { Icon, formatDay, typeVar } from "./ui";
+import { Hint, Icon, formatDay, typeVar } from "./ui";
 
 const HIDE_KEY = "garden-strip-hidden";
 const today = () => new Date().toLocaleDateString("en-CA");
@@ -55,7 +55,9 @@ export function QuestionsPageView({ version }: { version: number }) {
   return (
     <main className="wrap contents questions-page">
       <header className="vol"><h2>Questions <em>you mean to keep returning to</em></h2></header>
-      <p className="quiet small">A Thought becomes an Open Question only when you mark it. There are no due dates and nothing is overdue.</p>
+      <Hint short="Thoughts you mean to keep returning to.">
+        <p>A Thought becomes an Open Question only when you mark it. There are no due dates and nothing is overdue.</p>
+      </Hint>
       <section className="ugroup">
         <div className="ugroup-h"><h3>Open</h3></div>
         {!data.open.length && <p className="quiet">No open questions. On any Thought, “+ Open Question” marks one.</p>}

@@ -301,12 +301,12 @@ function WholeMap({ t }: { t: Tools }) {
         <label>Tag<select value={tag} onChange={(e) => setTag(e.target.value)}><option value="">Any</option>{allTags.map((x) => <option key={x}>{x}</option>)}</select></label>
         <label>Changed<select value={when} onChange={(e) => setWhen(Number(e.target.value))}><option value={0}>Any time</option><option value={30}>Last 30 days</option><option value={90}>Last 90 days</option><option value={365}>Last year</option></select></label>
         <label className="row"><input type="checkbox" checked={hideLoose} onChange={(e) => setHideLoose(e.target.checked)} /> Fade Objects with no Connections</label>
-        <p className="quiet small">{ok.size} of {nodes.length} Objects lit{filtering ? "" : " (no filter)"}. Everything else fades but keeps its place, so you never lose your bearings.</p>
+        <p className="quiet small">{ok.size} of {nodes.length} Objects lit{filtering ? "" : " (no filter)"}</p>
         {filtering ? <button className="pill action" onClick={() => { setTypeOff(new Set()); setConcept(""); setTag(""); setWhen(0); setHideLoose(false); }}>Clear filters</button> : null}
         <h4>Concepts</h4>
         <ul className="gx-clist">{t.concepts.map((c) => <li key={c.id}><button style={typeVar("concept")} className={concept === c.id ? "on" : ""} onClick={() => setConcept(concept === c.id ? "" : c.id)}>{c.title} <span className="quiet small">{home.members.get(c.id)?.size ?? 0}</span></button></li>)}</ul>
         <PickObject t={t} label="Draw around" placeholder="an Object's name" />
-        <p className="quiet small">Zoom in and more names appear. Point at an Object to see what it touches; double-click one to draw around it. Objects in no Concept sit in the outer ring.</p>
+        <details className="how small"><summary>How this works</summary><div className="how-body"><p>Anything that does not match fades but keeps its place, so you never lose your bearings.</p><p>Zoom in and more names appear. Point at an Object to see what it touches; double-click one to draw around it. Objects in no Concept sit in the outer ring.</p></div></details>
       </aside>
       <div className="gx-main">
         <Canvas sim={sim} items={items} links={links} edgeLabels="zoom" labelBudget={(k) => Math.round(12 + Math.max(0, (k - .5)) * 60)} onReheat={reheat}
