@@ -14,7 +14,7 @@
   --sf: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", system-ui, sans-serif;
   /* One spacing scale and one set of page widths, used by every screen (issue #72). */
   --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px; --s-5: 24px; --s-6: 32px; --s-7: 48px;
-  --w-side: 248px; --w-list: 1080px; --w-object: 860px; --w-split: 1240px; --w-read: 760px;
+  --w-side: 248px; --w-list: none; --w-object: none; --w-split: none; --w-read: 760px;
   color-scheme: light;
 }
 /* Dark: Espresso. A warm brown-black, never pure black. */
@@ -173,7 +173,8 @@ select.edit { font-size: 13.5px; }
 .story-lead { display: grid; align-content: center; gap: var(--s-3); }
 .lead h3 { font-size: clamp(1.7rem, 3.4vw, 2.4rem); letter-spacing: -.035em; overflow-wrap: anywhere; }
 .lead p { font-size: 1.2rem; letter-spacing: -.01em; color: color-mix(in srgb, var(--ink) 78%, var(--ground)); margin: 0; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
-.tag-cloud { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 24px; }
+.tag-cloud { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: var(--s-3); margin-bottom: 24px; }
+.tag-cloud .tag.lg { justify-content: space-between; }
 .swatches { display: flex; align-items: center; gap: 8px; margin-bottom: 22px; flex-wrap: wrap; }
 .swatch { width: 22px; height: 22px; border-radius: 50%; background: var(--c); }
 .swatch.on { box-shadow: 0 0 0 2px var(--ground), 0 0 0 4px var(--ink); }
@@ -205,7 +206,7 @@ select.edit { font-size: 13.5px; }
 .cover p.small { margin: 0; }
 
 .art { padding: var(--s-6) var(--s-7) 0; display: flex; justify-content: flex-start; }
-.body { width: 100%; max-width: 40rem; font-size: 17px; line-height: 1.72; color: color-mix(in srgb, var(--ink) 92%, var(--ground)); }
+.body { width: 100%; max-width: 52rem; font-size: 17px; line-height: 1.72; color: color-mix(in srgb, var(--ink) 92%, var(--ground)); }
 .body-editor .ProseMirror { outline: none; min-height: 8rem; }
 .body-editor .ProseMirror p { margin: 0 0 1em; }
 /* the drop cap, in the type's colour */
@@ -217,7 +218,7 @@ select.edit { font-size: 13.5px; }
 
 /* ---------- peek window ---------- */
 .scrim { position: fixed; inset: 0; z-index: 30; background: var(--scrim); display: grid; place-items: start center; padding: 5vh 16px; overflow-y: auto; }
-.peek { width: min(var(--w-object), 100%); background: var(--sheet); border-radius: 28px; box-shadow: var(--shadow-up); overflow: hidden; }
+.peek { width: min(960px, 100%); background: var(--sheet); border-radius: 28px; box-shadow: var(--shadow-up); overflow: hidden; }
 .peek-bar { display: flex; align-items: center; gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--line); background: var(--sheet); position: sticky; top: 0; z-index: 2; }
 .peek-bar > button:not(.pill) { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 50%; }
 .peek-bar > button:not(.pill):hover:not(:disabled) { background: var(--wash); }
@@ -395,7 +396,11 @@ select.edit { font-size: 13.5px; }
 .ai-status p { margin: 2px 0; }
 .ai-mark, .o-ai-mark { font-size: .8em; }
 .link-btn { background: none; border: 0; padding: 0; font: inherit; color: inherit; text-decoration: underline; cursor: pointer; }
-.ai-page, .text-page, .timeline, .inbox-page, .questions-page, .inquiries-page { max-width: var(--w-read); }
+/* Text pages (AI, Backup, Export, Bookmark) flow into columns that fill the window instead of one narrow strip. */
+.ai-page, .text-page { column-width: 440px; column-gap: var(--s-7); }
+.ai-page > header, .text-page > header, .ai-page > .hint, .text-page > .hint { column-span: all; }
+.ai-page h3 { break-after: avoid; }
+.ai-page .steps, .ai-page .key-form, .text-page form, .text-page p { break-inside: avoid; }
 .ai-page h3 { margin: 28px 0 8px; font-size: 15px; }
 .ai-page .steps { padding-left: 20px; line-height: 1.6; }
 .ai-page .key-form { display: flex; gap: 8px; align-items: center; margin: 12px 0; }
@@ -464,8 +469,8 @@ mark { background: color-mix(in srgb, var(--t-thought) 28%, transparent); color:
 .transcript .view { display: block; font-style: italic; }
 
 /* Overview (issue #34): Concepts as islands */
-.islands { display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-start; margin-bottom: 28px; }
-.island { --d: 150px; position: relative; width: max(var(--d), 220px); display: grid; gap: 8px; align-content: start; background: var(--card); border-radius: 28px; padding: 16px 18px; box-shadow: var(--shadow); cursor: pointer; border: 2px solid transparent; }
+.islands { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--s-5); align-items: start; margin-bottom: 28px; }
+.island { --d: 150px; position: relative; width: auto; display: grid; gap: 8px; align-content: start; background: var(--card); border-radius: 28px; padding: 16px 18px; box-shadow: var(--shadow); cursor: pointer; border: 2px solid transparent; }
 .island:hover { box-shadow: 0 6px 18px rgba(30, 40, 60, .1); }
 .island .blob { width: var(--d); height: calc(var(--d) * .62); border-radius: 58% 42% 55% 45% / 52% 58% 42% 48%; background: color-mix(in srgb, var(--t-concept) 22%, transparent); display: grid; place-items: center; font-size: 1.6rem; font-weight: 600; color: var(--t-concept); }
 .island h4 { font-size: 1.2rem; overflow-wrap: anywhere; }
@@ -585,7 +590,7 @@ mark { background: color-mix(in srgb, var(--t-thought) 28%, transparent); color:
 .inq-list summary { cursor: pointer; font-size: 14.5px; }
 .inq-rows li { display: grid; gap: 2px; padding: 8px 0; border-bottom: 1px solid color-mix(in srgb, var(--ink) 8%, transparent); }
 .inquiry { display: grid; gap: 14px; padding: 10px 0 4px; }
-.inquiries-page .dcard { max-width: 42rem; margin: 14px 0 22px; }
+.inquiries-page .dcard { margin: 14px 0 22px; }
 .turn { display: grid; gap: 8px; }
 .turn-q { margin: 0; font-size: 16px; }
 .turn-status { margin: 0; font-size: 14px; }
@@ -677,7 +682,7 @@ p.inbox-warn { margin: 10px 0; padding: 8px 14px; border-radius: 10px; backgroun
 .gx-side h4 { margin: 4px 0 0; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--mute); }
 .gx-side label { display: grid; gap: 3px; } .gx-side label.row, .gx-bar label.row { display: flex; gap: 6px; align-items: center; }
 .gx-side select { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 4px 6px; }
-.gx-clist { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; max-height: 260px; overflow: auto; } .gx-clist button { width: 100%; text-align: left; color: var(--c); }
+.gx-clist { list-style: none; margin: -3px; padding: 3px; display: grid; gap: 4px; max-height: 260px; overflow: auto; } /* the padding leaves room for each button's outline, which the scrolling box would otherwise cut off */ .gx-clist button { width: 100%; text-align: left; color: var(--c); }
 .gx-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--mute); align-items: center; }
 .gx-legend span { display: inline-flex; align-items: center; gap: 5px; } .gx-legend .sep { width: 1px; height: 12px; background: var(--line); }
 .gx-legend .gx-edge { stroke-width: 1.5; }
