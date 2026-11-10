@@ -93,7 +93,8 @@ select.edit { font-size: 13.5px; }
 .main { min-width: 0; }
 .side { position: sticky; top: 0; height: 100vh; overflow-y: auto; display: flex; flex-direction: column; gap: var(--s-3); padding: var(--s-5) var(--s-3) var(--s-4); border-right: 1px solid var(--line); background: var(--ground); }
 .side-top { display: flex; align-items: center; justify-content: space-between; padding-inline: var(--s-2); }
-.wm { font-size: 24px; font-weight: 600; letter-spacing: -.02em; }
+.wm { display: inline-flex; align-items: center; gap: 8px; font-size: 24px; font-weight: 600; letter-spacing: -.02em; }
+.wm .ic { font-size: .95em; }
 .side-fold { display: none; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; color: var(--mute); }
 .side-acts { display: grid; gap: var(--s-2); }
 .cap { display: flex; align-items: center; gap: var(--s-2); padding: 8px 12px; border-radius: 12px; background: var(--card); box-shadow: var(--shadow); color: var(--ink); font-weight: 500; }
