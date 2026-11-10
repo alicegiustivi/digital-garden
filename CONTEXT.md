@@ -13,10 +13,12 @@ A single item in the Garden with its own identity and an Object Type, such as a 
 _Avoid_: Note, entry, record, card, page
 
 **Object Type**:
-The kind an Object belongs to (Source, Concept, Thought, Person, …), which decides what fields it has.
+The kind an Object belongs to (Source, Concept, Thought, Person, or one the owner made), which decides what fields it has. The owner can make their own Object Types (a Book, a Place) with a name, a colour from the Garden's palette, an icon and properties of short text, long text or a choice, and can change the colour of any type. A type the owner made is a plain Object type: title, body, Tags, Connections and its own properties, none of the Core types' special rules. Only the owner makes or changes a type; the AI never does and never moves an Object into one. A type that still has Objects, the Bin included, can't be removed until they are moved.
 _Avoid_: Category, class, template
 
 ### Core Object Types
+
+The four Core Object Types keep every special behaviour described below. The owner can change their colour, nothing else; a type the owner makes has none of these behaviours.
 
 **Source**:
 An Object for something the owner reads, watches, listens to or looks at, such as a book, article, video, podcast, web page, post, image or document.
@@ -101,7 +103,7 @@ _Avoid_: Trash, archive, recycle bin
 ### AI
 
 **Archivist**:
-The AI role that works automatically in the background to give newly captured Objects a type, extracted information and Suggestions, and that describes a Person or Concept (description, years, links, definition) from what the Garden's Sources say.
+The AI role that works automatically in the background to give newly captured Objects a type, extracted information and Suggestions, and that describes a Person or Concept (description, years, links, definition) from what the Garden's Sources say. For an Object the owner put in a type of their own it adds Tags and Connections and fills that type's properties from the Object's own text, marked and undoable like any AI Contribution.
 _Avoid_: Auto-tagger, organizer bot
 
 **Researcher**:

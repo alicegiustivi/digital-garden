@@ -1,16 +1,18 @@
 // The Capture window (issues #21, #23, #27): one box for words, links and pictures, a "Will save as…" line,
 // and Private beside Save ⌘↩. Links and pictures are lifted out of the words into small cards.
 import { useEffect, useRef, useState } from "react";
-import { api, type CaptureResult } from "./api";
+import { api, type CaptureResult, type Types } from "./api";
 import { Icon, TypeChip } from "./ui";
 
 export type Attached = { file: File; src: string };
 export type CaptureDraft = {
   text: string; links: string[]; images: Attached[]; priv: boolean;
+  /** A type the owner made, chosen for these words (issue #107); null = Capture decides. */
+  type: string | null;
   saved: { openId: string; what: string } | null;
   from: string | null; // set when opened from the "Save to Garden" bookmark
 };
-export const emptyDraft: CaptureDraft = { text: "", links: [], images: [], priv: false, saved: null, from: null };
+export const emptyDraft: CaptureDraft = { text: "", links: [], images: [], priv: false, type: null, saved: null, from: null };
 
 /** ⌘N is kept by the browser for "new window" in an ordinary tab; an installed web-app window may let it through. */
 export const standalone = () => window.matchMedia("(display-mode: standalone)").matches;
@@ -38,24 +40,28 @@ export function liftLinks(d: CaptureDraft, all: boolean): CaptureDraft {
   return { ...d, text, links };
 }
 
-function willSave(d: CaptureDraft) {
+function willSave(d: CaptureDraft, types: Types) {
   const words = d.text.trim().length > 0, n = d.links.length + d.images.length;
   if (!words && !n) return null;
   const priv = d.priv && <span className="cw-priv"><Icon name="lock" /> Private</span>;
+  const own = types.types.find((t) => t.key === d.type && !t.core);
+  if (own && !n) return <>Will save as <TypeChip type={own.key} label={own.label} />{priv}</>;
   if (!n) return <>Will save as <TypeChip type="thought" label="Thought" />{priv}</>;
   if (n === 1) return <>Will save as <TypeChip type="source" label="Source" sub={d.images.length ? "Image" : "Link"} />{words && " with your words as its body"}{priv}</>;
   return <>Will save as {n}× <TypeChip type="source" label="Source" />{words && <> and <TypeChip type="thought" label="Thought" /> with your words, mentioning them all</>}{priv}</>;
 }
 
-function describe(r: CaptureResult, priv: boolean, words: boolean) {
+function describe(r: CaptureResult, priv: boolean, words: boolean, types: Types) {
+  const own = types.types.find((t) => !t.core && r.created.length === 1 && r.created[0].type === t.key);
+  if (own) return `a ${own.label}${priv ? " · Private" : ""}`;
   const sources = [...r.created, ...r.existing].filter((o) => o.type === "source").length;
   let what = !sources ? "a Thought" : sources === 1 ? `a Source${words && r.created.length ? " with your words" : ""}` : `${sources} Sources${r.thoughtId ? " and a Thought" : ""}`;
   if (r.existing.length && r.created.length) what += ` (${r.existing.length} already in your Garden)`;
   return what + (priv ? " · Private" : "");
 }
 
-export function Capture({ draft, setDraft, onClose, onSaved, onOpen }: {
-  draft: CaptureDraft; setDraft: (d: CaptureDraft) => void; onClose: () => void; onSaved: () => void; onOpen: (id: string) => void;
+export function Capture({ draft, setDraft, types, onClose, onSaved, onOpen }: {
+  draft: CaptureDraft; types: Types; setDraft: (d: CaptureDraft) => void; onClose: () => void; onSaved: () => void; onOpen: (id: string) => void;
 }) {
   const ta = useRef<HTMLTextAreaElement>(null);
   const [busy, setBusy] = useState(false);
@@ -82,12 +88,12 @@ export function Capture({ draft, setDraft, onClose, onSaved, onOpen }: {
     setBusy(true); setError(null);
     try {
       const words = draft.text.trim().length > 0;
-      const r = await api.capture({ text: draft.text, links: draft.links, images: draft.images.map((i) => i.file), private: draft.priv });
+      const r = await api.capture({ text: draft.text, links: draft.links, images: draft.images.map((i) => i.file), private: draft.priv, type: draft.links.length || draft.images.length ? null : draft.type });
       draft.images.forEach((i) => URL.revokeObjectURL(i.src));
       onSaved();
       if (!r.created.length) { setDraft({ ...emptyDraft }); onOpen(r.openId); return; } // already saved: open the existing Source
       // The box clears and Private switches itself off after every save.
-      setDraft({ ...emptyDraft, saved: { openId: r.openId, what: describe(r, draft.priv, words) } });
+      setDraft({ ...emptyDraft, saved: { openId: r.openId, what: describe(r, draft.priv, words, types) } });
       ta.current?.focus();
     } catch (e) {
       setError((e as Error).message || "Couldn't save. Everything is still here.");
@@ -157,7 +163,7 @@ export function Capture({ draft, setDraft, onClose, onSaved, onOpen }: {
             </div>
           )}
         </div>
-        <div className="cw-will" aria-live="polite">{willSave(draft)}</div>
+        <div className="cw-will" aria-live="polite">{willSave(draft, types)}</div>
         {draft.priv && <div className="cw-line">Private: no AI reads this, and nothing about it leaves your Mac.</div>}
         {error && <div className="cw-line cw-err" role="alert">{error}</div>}
         {draft.saved && (
@@ -167,6 +173,14 @@ export function Capture({ draft, setDraft, onClose, onSaved, onOpen }: {
         )}
         <div className="cw-foot">
           <span className="cw-hint">Goes to Unreviewed. The Archivist looks at it in about 2 minutes.</span>
+          {types.types.some((t) => !t.core) && !draft.links.length && !draft.images.length && (
+            <label className="cw-as">Save as
+              <select value={draft.type ?? ""} onChange={(e) => setDraft({ ...draft, type: e.target.value || null })}>
+                <option value="">Thought (automatic)</option>
+                {types.types.filter((t) => !t.core).map((t) => <option key={t.key} value={t.key}>{t.label}</option>)}
+              </select>
+            </label>
+          )}
           <button role="switch" aria-checked={draft.priv} className="cw-switch" onClick={() => setDraft({ ...draft, priv: !draft.priv })}>
             <Icon name="lock" /> Private <span className="tr" />
           </button>
