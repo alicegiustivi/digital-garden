@@ -17,7 +17,7 @@ type SuggestionBase = { id: number; origin: "ai"; aiRole: string; aiModel: strin
 export type Suggestion = SuggestionBase & (
   | { kind: "connection"; other: { id: string; type: string; title: string }; connectionKind: string; why?: string | null }
   | { kind: "type"; type: string; typeLabel: string }
-  | { kind: "object"; type: string; typeLabel: string; name: string }
+  | { kind: "object"; type: string; typeLabel: string; name: string; tag?: string; count?: number }
   | { kind: "title"; title: string }
 );
 export type Suggestions = { pending: Suggestion[]; rejected: number };

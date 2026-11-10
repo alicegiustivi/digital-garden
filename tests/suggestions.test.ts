@@ -438,3 +438,56 @@ describe("the Archivist reads the extract and works harder (extract, claims, Tag
     expect(JSON.stringify(archivistPrompt(sqlite, src.id)!.messages)).not.toContain("habits (9)"); // a broad Tag is not offered for reuse either
   });
 });
+
+describe("the Archivist suggests a Concept when a Tag keeps coming back", () => {
+  const tagged = async (n: number, name = "loss aversion") => {
+    const ids: string[] = [];
+    for (let i = 0; i < n; i++) { const o = await make("source", `Piece ${i}`); await call("POST", `/api/objects/${o.id}/tags`, { name }); ids.push(o.id); }
+    return ids;
+  };
+  const concepts = async () => (await call("GET", "/api/objects?type=concept")).json as any[];
+
+  it("does nothing below three Objects, and never makes the Concept by itself", async () => {
+    const [a] = await tagged(2);
+    await look(a, {});
+    expect((await sugg(a)).pending).toEqual([]);
+    const [c] = await tagged(1);
+    await look(c, {});
+    expect((await sugg(c)).pending).toMatchObject([{ kind: "object", type: "concept", name: "loss-aversion", count: 3 }]);
+    expect(await concepts()).toHaveLength(0);
+  });
+  it("approving makes the Concept (AI Origin, approved), connects every Object with the Tag, and keeps the Tag", async () => {
+    const ids = await tagged(3);
+    const secret = await make("source", "Secret", { private: true });
+    await call("POST", `/api/objects/${secret.id}/tags`, { name: "loss aversion" });
+    await look(ids[2], {});
+    const [s] = (await sugg(ids[2])).pending;
+    expect(s.count).toBe(3); // a Private Object is not counted
+    await call("POST", `/api/suggestions/${s.id}/approve`);
+    const [concept] = await concepts();
+    expect((sqlite.prepare("SELECT title FROM objects WHERE id = ?").get(concept.id) as any).title).toBe("loss-aversion");
+    const joined = ((await call("GET", `/api/objects/${concept.id}/connections`)).json as any[]).map((c) => c.other.id).sort();
+    expect(joined).toEqual([...ids].sort());
+    expect(joined).not.toContain(secret.id);
+    expect(((await call("GET", `/api/objects/${ids[0]}`)).json.tags as any[]).map((t) => t.name)).toContain("loss-aversion");
+    // with the Concept made, the same Tag is not offered again
+    await look(ids[0], {});
+    expect((await sugg(ids[0])).pending).toEqual([]);
+  });
+  it("remembers a rejection, on every Object", async () => {
+    const ids = await tagged(3);
+    await look(ids[0], {});
+    await call("POST", `/api/suggestions/${(await sugg(ids[0])).pending[0].id}/reject`);
+    await look(ids[0], {});
+    await look(ids[1], {});
+    expect((await sugg(ids[0])).pending).toEqual([]);
+    expect((await sugg(ids[1])).pending).toEqual([]);
+  });
+  it("offers it on one Object only, not on every Object that carries the Tag", async () => {
+    const ids = await tagged(3);
+    await look(ids[0], {});
+    await look(ids[1], {});
+    expect((await sugg(ids[0])).pending).toHaveLength(1);
+    expect((await sugg(ids[1])).pending).toEqual([]);
+  });
+});

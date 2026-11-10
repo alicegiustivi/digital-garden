@@ -22,6 +22,8 @@ const wording = (s: Suggestion, types: Types, current: string): React.ReactNode 
   if (s.kind === "connection")
     return <>Connect to <a href={`#/o/${s.other.id}`} className="sg-obj" style={typeVar(s.other.type)}>{s.other.title}</a> <span className="quiet small">({label(s.other.type)}) as {s.connectionKind}</span>{s.why ? <span className="quiet small"> — {s.why}</span> : null}</>;
   if (s.kind === "type") return <>Change this from a {label(current)} to a {s.typeLabel}</>;
+  if (s.kind === "object" && s.type === "concept")
+    return <>Make a Concept, <b>{s.name}</b> <span className="quiet small">— #{s.tag} is on {s.count} Objects; they would all be connected to it (the Tag stays)</span></>;
   if (s.kind === "object") return <>Add a new {s.typeLabel}, <b>{s.name}</b>{current === "source" ? <span className="quiet small"> (authored by)</span> : null}</>;
   return <>Use “{s.title}” as the title</>;
 };
