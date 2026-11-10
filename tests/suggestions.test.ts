@@ -491,3 +491,72 @@ describe("the Archivist suggests a Concept when a Tag keeps coming back", () => 
     expect((await sugg(ids[1])).pending).toEqual([]);
   });
 });
+
+describe("the Archivist describes a Person or a Concept from the Garden's Sources", () => {
+  const extract = (id: string, text: string) => sqlite.prepare("INSERT INTO field_values (object_id, field, value, origin) VALUES (?, 'captured', ?, 'source') ON CONFLICT (object_id, field) DO UPDATE SET value = excluded.value").run(id, text);
+  const join = (a: string, b: string) => call("POST", "/api/connections", { a, b });
+  const fieldOf = async (id: string, key: string) => ((await call("GET", `/api/objects/${id}`)).json.fields as any[]).find((f) => f.key === key);
+  const ada = async () => {
+    const person = await make("person", "Ada Green");
+    const src = await make("source", "Soil weekly");
+    extract(src.id, "Opening paragraph about gardens.\nAda Green is a soil scientist, born in 1950, who studies carbon in soil.\nAn unrelated paragraph about weather.");
+    await join(src.id, person.id);
+    return { person, src };
+  };
+
+  it("reads only the passages that mention the subject, and fills the description, years and links the passages back", async () => {
+    const { person } = await ada();
+    await look(person.id, { description: "Ada Green is a soil scientist who studies carbon in soil.", years: "born 1950", links: "https://ada.example, https://elsewhere.example" });
+    const prompt = JSON.stringify(sent[0].body.messages);
+    expect(prompt).toContain("Ada Green is a soil scientist");
+    expect(prompt).not.toContain("unrelated paragraph");
+    expect(sent).toHaveLength(1); // one request, no connection round
+    expect(await fieldOf(person.id, "description")).toMatchObject({ value: "Ada Green is a soil scientist who studies carbon in soil.", origin: "ai", aiRole: "Archivist" });
+    expect(await fieldOf(person.id, "years")).toMatchObject({ value: "born 1950", origin: "ai" });
+    expect(await fieldOf(person.id, "links")).toBeUndefined(); // neither address is in the passages
+  });
+  it("drops a year the passages do not state", async () => {
+    const { person } = await ada();
+    await look(person.id, { description: "A soil scientist.", years: "1950–2031" });
+    expect(await fieldOf(person.id, "years")).toBeUndefined();
+    expect(await fieldOf(person.id, "description")).toMatchObject({ origin: "ai" });
+  });
+  it("never overwrites the owner's value, replaces an earlier AI value, and undoes in one click", async () => {
+    const { person } = await ada();
+    await setFields(person.id, { description: "My own words about Ada." });
+    await look(person.id, { description: "AI text.", years: "born 1950" });
+    expect(await fieldOf(person.id, "description")).toMatchObject({ value: "My own words about Ada.", origin: "owner" });
+    expect(await fieldOf(person.id, "years")).toMatchObject({ value: "born 1950", origin: "ai" });
+    const other = await make("person", "Ada Green Two");
+    const src = await make("source", "Ada Green Two in print");
+    extract(src.id, "Ada Green Two wrote a book about soil.");
+    await join(src.id, other.id);
+    await look(other.id, { description: "First version." });
+    await look(other.id, { description: "A better version, after more reading." });
+    expect(await fieldOf(other.id, "description")).toMatchObject({ value: "A better version, after more reading.", origin: "ai" });
+    await call("POST", `/api/objects/${other.id}/ai/undo`);
+    expect(await fieldOf(other.id, "description")).toMatchObject({ value: "First version.", origin: "ai" });
+  });
+  it("defines a Concept in its lead field, and sends no request when no connected Source has words about it", async () => {
+    const concept = await make("concept", "Soil carbon");
+    await look(concept.id, { definition: "Nothing to read." });
+    expect(sent).toHaveLength(0);
+    const src = await make("source", "Carbon farming");
+    extract(src.id, "Soil carbon is the carbon stored in soil organic matter.");
+    const hidden = await make("source", "Secret on soil carbon", { private: true });
+    extract(hidden.id, "Soil carbon private diary words.");
+    await join(src.id, concept.id);
+    await join(hidden.id, concept.id);
+    await look(concept.id, { definition: "Carbon stored in soil organic matter." });
+    expect(sent).toHaveLength(1);
+    expect(JSON.stringify(sent[0].body.messages)).not.toContain("private diary");
+    expect(await fieldOf(concept.id, "definition")).toMatchObject({ value: "Carbon stored in soil organic matter.", origin: "ai" });
+  });
+  it("is asked to describe a new Person as soon as the owner approves it, without a request of its own", async () => {
+    const src = await make("source", "Soil weekly");
+    await look(src.id, { people: [{ name: "Central Figure", central: true }] });
+    await call("POST", `/api/suggestions/${(await sugg(src.id)).pending[0].id}/approve`);
+    const [person] = (await call("GET", "/api/objects?type=person")).json as any[];
+    expect(sqlite.prepare("SELECT count(*) AS n FROM ai_jobs WHERE object_id = ? AND role = 'archivist' AND status <> 'cancelled'").get(person.id)).toEqual({ n: 1 });
+  });
+});

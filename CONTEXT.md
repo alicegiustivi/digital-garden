@@ -101,7 +101,7 @@ _Avoid_: Trash, archive, recycle bin
 ### AI
 
 **Archivist**:
-The AI role that works automatically in the background to give newly captured Objects a type, extracted information and Suggestions.
+The AI role that works automatically in the background to give newly captured Objects a type, extracted information and Suggestions, and that describes a Person or Concept (description, years, links, definition) from what the Garden's Sources say.
 _Avoid_: Auto-tagger, organizer bot
 
 **Researcher**:

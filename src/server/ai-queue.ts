@@ -13,6 +13,7 @@ import { applyConnections, applyProposals, parseConnections, parseProposals, pen
 import { titleOf } from "./objects.ts";
 import { imagesDir } from "./paths.ts";
 import { cancelJobs, researcherHandler } from "./researcher.ts";
+import { entityPrompt, parseEntity } from "./describe.ts";
 
 type Db = Database.Database;
 export type Lane = 0 | 1 | 2;
@@ -205,8 +206,34 @@ export function createAi(db: Db, opts: { gate: Gate; now?: () => Date; hasKey?: 
     }
   }
 
+  /** A Person or a Concept: described from what the Garden's Sources say about it. One request, and none when there is nothing to read or nothing left open. */
+  async function describeHandler(id: string, ctx: { gate: Gate; now: Date; countCall: () => void }): Promise<Outcome> {
+    const p = entityPrompt(db, id);
+    if (!p) return "skip"; // Private, or in the Bin: the AI never reads it
+    if (!p.messages) return "done"; // the owner has filled everything, or no connected Source has words about it yet
+    let sawBusy = false;
+    for (const model of AI_CONFIG.models) {
+      let text: string;
+      try { ctx.countCall(); text = await ctx.gate.chat(model, p.messages); }
+      catch (e) {
+        if (!(e instanceof GateError)) throw e;
+        if (e.kind === "daily") return { daily: true, resetAt: e.resetAt };
+        if (e.kind === "key" || e.kind === "missing") return { key: true };
+        if (e.kind === "busy") sawBusy = true;
+        continue;
+      }
+      const facts = parseEntity(text, p.type, p.evidence);
+      if (!facts) continue;
+      applyFindings(db, id, { tags: [], facts }, model, ctx.now);
+      return "done";
+    }
+    return sawBusy ? { busy: true } : { unusable: true };
+  }
+
   async function archivistHandler(job: JobRow, ctx: { gate: Gate; now: Date; countCall: () => void }): Promise<Outcome> {
     const id = job.object_id!;
+    const kind = (db.prepare("SELECT type FROM objects WHERE id = ?").get(id) as any)?.type;
+    if (kind === "person" || kind === "concept") return describeHandler(id, ctx);
     const photo = db.prepare("SELECT file FROM source_images WHERE object_id = ?").get(id) as any;
     let image: { dataUrl: string } | undefined;
     if (photo) {
