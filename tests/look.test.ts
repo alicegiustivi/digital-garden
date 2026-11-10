@@ -39,4 +39,9 @@ describe("the Issue look", () => {
     expect(main).toContain("Dark (Espresso)");
     expect(main).toContain("Same as Mac");
   });
+  it("the Types page keeps its own class names, so it cannot restyle the Tags colour picker or an Object's property rows (they did, twice)", () => {
+    const types = readFileSync("src/web/Types.tsx", "utf8");
+    for (const taken of ["swatches", "swatch", "prop", "props", "prop-main", "prop-new"]) expect(types).not.toMatch(new RegExp(`className="${taken}[ "]`));
+    expect(css.slice(css.indexOf("/* The Types page (issue #107)"))).not.toMatch(/(^|[ ,}])\.(swatches|swatch|props?)\b/m);
+  });
 });
