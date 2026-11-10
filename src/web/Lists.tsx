@@ -5,7 +5,7 @@ import { BackupNote } from "./Backup";
 import { api, inboxApi, displayTitle, TAG_COLORS, type Filters, type Summary, type TagRow, type Types } from "./api";
 import { FilterBar, noFilters, useFilterQuery, useSort, type FilterState } from "./Filters";
 import { showToast } from "./toast";
-import { Hint, Icon, Portrait, TagPill, TypeChip, formatDay, subOf, typeVar, tagVar } from "./ui";
+import { Hint, Icon, Stories, Portrait, TagPill, TypeChip, formatDay, subOf, typeVar, tagVar } from "./ui";
 
 export function useList(q: Filters, version: number) {
   const [rows, setRows] = useState<Summary[] | null>(null);
@@ -72,7 +72,7 @@ export function Grid({ rows, types, onOpen, empty }: { rows: Summary[] | null; t
   if (!rows) return <p className="quiet">Opening…</p>;
   if (!rows.length) return <p className="quiet">{empty}</p>;
   const ids = rows.map((r) => r.id);
-  return <div className="stories">{rows.map((o) => <Card key={o.id} o={o} types={types} onOpen={() => onOpen(o.id, ids)} />)}</div>;
+  return <Stories>{rows.map((o) => <Card key={o.id} o={o} types={types} onOpen={() => onOpen(o.id, ids)} />)}</Stories>;
 }
 
 export function ThisWeek({ types, version, unreviewed, onNew, onOpen }: { types: Types; version: number; unreviewed: number; onNew: (t: string) => void; onOpen: (id: string, ids: string[]) => void }) {
@@ -278,14 +278,14 @@ export function UnreviewedPage({ rows, types, onOpen, onReviewed }: {
             <h3>{g.name} <span className="quiet">{g.rows.length}</span></h3>
             <button className="pill action" onClick={() => onReviewed(g.rows.map((r) => r.id))}>Mark all reviewed</button>
           </div>
-          <div className="stories">
+          <Stories>
             {g.rows.map((o) => (
               <div key={o.id} className="ucard">
                 <Card o={o} types={types} onOpen={() => onOpen(o.id, ids)} />
                 <div className="ustatus quiet small"><CardStatus id={o.id} private={o.private} />{fromPhone[o.id] && <> · <a href={`#/inbox/${fromPhone[o.id]}`}>From your phone · Daily Inbox →</a></>}</div>
               </div>
             ))}
-          </div>
+          </Stories>
         </section>
       ))}
     </main>

@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { Children, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import type { Field, OriginInfo, Summary, Tag } from "./api";
 import { displayTitle, fieldOf } from "./api";
 
@@ -81,6 +81,29 @@ export function Hint({ short, children }: { short: ReactNode; children?: ReactNo
     <div className="hint">
       <p className="quiet">{short}</p>
       {children && <details className="how"><summary>How this works</summary><div className="how-body">{children}</div></details>}
+    </div>
+  );
+}
+
+/** Cards in newspaper columns: as many columns as fit, every column starts at the very top, and the next card goes under the shortest one. */
+export function Stories({ children }: { children: ReactNode }) {
+  const box = useRef<HTMLDivElement>(null);
+  const [cols, setCols] = useState(1);
+  useLayoutEffect(() => {
+    const el = box.current;
+    if (!el) return;
+    const fit = () => setCols(Math.max(1, Math.floor((el.clientWidth + 32) / (250 + 32))));
+    fit();
+    const ro = new ResizeObserver(fit);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  const items = Children.toArray(children);
+  const lanes: ReactNode[][] = Array.from({ length: cols }, () => []);
+  items.forEach((c, i) => lanes[i % cols].push(c));
+  return (
+    <div className="stories" ref={box}>
+      {lanes.map((l, i) => <div className="stories-col" key={i}>{l}</div>)}
     </div>
   );
 }
