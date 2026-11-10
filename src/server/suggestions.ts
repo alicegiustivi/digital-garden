@@ -243,13 +243,14 @@ const aiCols = (r: any) => [r.ai_role, r.ai_model, r.ai_date] as const;
 const touch = (db: Db, id: string) => db.prepare("UPDATE objects SET updated_at = datetime('now') WHERE id = ?").run(id);
 
 /** Approve: it takes effect and keeps AI Origin (marked ✧). Returns the Object the owner was looking at. */
-export function approve(db: Db, suggestionId: number) {
+export function approve(db: Db, suggestionId: number, onMade?: (id: string) => void) {
   const s = db.prepare("SELECT * FROM ai_suggestions WHERE id = ?").get(suggestionId) as any;
   if (!s) return null;
   const o = liveObj(db, s.object_id);
   if (!o || o.private) { db.prepare("DELETE FROM ai_suggestions WHERE id = ?").run(s.id); throw new BadRequest("That one is no longer available"); }
   const d = JSON.parse(s.data);
   const pairExists = (a: string, b: string) => db.prepare("SELECT 1 FROM connections WHERE (from_id = ? AND to_id = ?) OR (from_id = ? AND to_id = ?)").get(a, b, b, a);
+  let madeId: string | undefined; // a Person or Concept this approval made, so it can be described right away
   const link = (from: string, to: string, kind: string) =>
     db.prepare("INSERT INTO connections (from_id, to_id, kind, origin, ai_role, ai_model, ai_date, approved) VALUES (?, ?, ?, 'ai', ?, ?, ?, 1)").run(from, to, kind, ...aiCols(s));
   db.transaction(() => {
@@ -266,6 +267,7 @@ export function approve(db: Db, suggestionId: number) {
       let cid = existing?.id as string | undefined;
       if (!cid) {
         cid = randomUUID();
+        madeId = cid;
         db.prepare("INSERT INTO objects (id, type, updated_at) VALUES (?, 'concept', datetime('now'))").run(cid);
         db.prepare("INSERT INTO field_values (object_id, field, value, origin, ai_role, ai_model, ai_date, approved) VALUES (?, 'title', ?, 'ai', ?, ?, ?, 1)").run(cid, d.name, ...aiCols(s));
         db.prepare("UPDATE objects SET title = ? WHERE id = ?").run(d.name, cid);
@@ -277,6 +279,7 @@ export function approve(db: Db, suggestionId: number) {
       let pid = existing?.id as string | undefined;
       if (!pid) {
         pid = randomUUID();
+        madeId = pid;
         db.prepare("INSERT INTO objects (id, type, updated_at) VALUES (?, ?, datetime('now'))").run(pid, d.type);
         db.prepare("INSERT INTO field_values (object_id, field, value, origin, ai_role, ai_model, ai_date, approved) VALUES (?, 'title', ?, 'ai', ?, ?, ?, 1)").run(pid, d.name, ...aiCols(s));
         db.prepare("UPDATE objects SET title = ? WHERE id = ?").run(d.name, pid);
@@ -292,6 +295,7 @@ export function approve(db: Db, suggestionId: number) {
     db.prepare("DELETE FROM ai_suggestions WHERE id = ?").run(s.id);
     touch(db, s.object_id);
   })();
+  if (madeId) onMade?.(madeId);
   return s.object_id as string;
 }
 

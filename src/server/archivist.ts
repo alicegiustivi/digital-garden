@@ -6,12 +6,13 @@
 import type Database from "better-sqlite3";
 import { cleanTagName, tagIdFor } from "./objects.ts";
 import { broadTags, VAGUE_TAGS } from "./ai-prompt.ts";
+import { ENTITY_FIELDS } from "./describe.ts";
 
 type Db = Database.Database;
 export const ROLE = "Archivist";
 const FORMATS = ["book", "article", "video", "podcast", "web page", "image", "document"];
 
-export type Findings = { format?: string; title?: string; authors?: string; published?: string; tags: string[] };
+export type Findings = { format?: string; title?: string; authors?: string; published?: string; tags: string[]; /** For a Person or Concept: the fields written from the Garden's Sources (describe.ts). */ facts?: Record<string, string> };
 
 /** Reads the model's answer. Anything that isn't a clear JSON object is "unusable" (null), never guessed at. */
 export function jsonOf(text: string): any | null {
@@ -50,10 +51,12 @@ export function applyFindings(db: Db, id: string, f: Findings, model: string, no
   const date = now.toISOString().slice(0, 10);
   const changes: Change[] = [];
   const get = db.prepare("SELECT value, origin, ai_role, ai_model, ai_date FROM field_values WHERE object_id = ? AND field = ?");
-  const put = (field: string, value: string, replaceSource = false) => {
+  // The owner's value is never touched. An earlier AI value is only replaced when asked to (a description grows with the Garden).
+  const put = (field: string, value: string, how: { replaceSource?: boolean; replaceAi?: boolean } = {}) => {
     const cur = get.get(id, field) as any;
-    if (cur?.origin === "owner" || cur?.origin === "ai") return; // the owner's words, or an earlier AI value, stay
-    if (cur && !(replaceSource && cur.origin === "source" && cur.value !== value)) return;
+    if (cur?.origin === "owner") return;
+    if (cur?.origin === "ai" && !(how.replaceAi && cur.value !== value)) return;
+    if (cur?.origin === "source" && !(how.replaceSource && cur.value !== value)) return;
     db.prepare(
       `INSERT INTO field_values (object_id, field, value, origin, ai_role, ai_model, ai_date) VALUES (?, ?, ?, 'ai', ?, ?, ?)
        ON CONFLICT (object_id, field) DO UPDATE SET value = excluded.value, origin = 'ai', ai_role = excluded.ai_role, ai_model = excluded.ai_model, ai_date = excluded.ai_date`,
@@ -64,11 +67,12 @@ export function applyFindings(db: Db, id: string, f: Findings, model: string, no
 
   db.transaction(() => {
     if (obj.type === "source") { // facts about a Source; a Thought is the owner's and only ever gets Tags
-      if (f.format) put("format", f.format, true);
+      if (f.format) put("format", f.format, { replaceSource: true });
       if (f.title) put("title", f.title);
       if (f.authors) put("authors", f.authors);
       if (f.published) put("published", f.published);
     }
+    for (const [k, v] of Object.entries(f.facts ?? {})) if (ENTITY_FIELDS[obj.type]?.includes(k)) put(k, v, { replaceAi: true }); // a Person's or Concept's description, from the Sources
     const rejected = new Set((db.prepare("SELECT value FROM ai_rejected WHERE object_id = ? AND kind = 'tag'").all(id) as any[]).map((r) => r.value));
     const broad = broadTags(db); // a Tag already on a quarter of the Garden says too little to add again
     for (const name of f.tags) {

@@ -166,6 +166,7 @@ export function createApp(sqlite: Database.Database, opts: Options = {}) {
   app.get("/api/objects/:id/light-up", (c) => found(c, ov.lightUp(sqlite, c.req.param("id"))));
   app.post("/api/tags/:id/concept", async (c) => {
     const r = ov.turnIntoConcept(sqlite, Number(c.req.param("id")), await c.req.json().catch(() => ({})));
+    if (r) ai.request(r.concept.id); // the new Concept is defined from the Sources connected to it
     return r ? c.json(r, 201) : c.json({ error: "Not found" }, 404);
   });
   app.post("/api/concepts/undo", async (c) => c.json(ov.undoTurnIntoConcept(sqlite, await c.req.json().catch(() => ({})), bin.restoreTag)));
@@ -210,7 +211,7 @@ export function createApp(sqlite: Database.Database, opts: Options = {}) {
   // Suggestions and AI Notes (issue #32)
   app.get("/api/objects/:id/suggestions", (c) => found(c, sg.suggestionsOf(sqlite, c.req.param("id"))));
   app.post("/api/suggestions/:id/approve", (c) => {
-    const objectId = sg.approve(sqlite, Number(c.req.param("id")));
+    const objectId = sg.approve(sqlite, Number(c.req.param("id")), (made) => ai.request(made)); // a new Person or Concept is described from the Sources at once
     return objectId ? c.json(withMentions(o.getObject(sqlite, objectId))) : c.json({ error: "Not found" }, 404);
   });
   app.post("/api/suggestions/:id/reject", (c) => {
