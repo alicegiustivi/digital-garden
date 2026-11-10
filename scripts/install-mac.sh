@@ -64,11 +64,7 @@ cat > "$APP/Contents/MacOS/Garden" <<LAUNCHEOF
 URL="http://127.0.0.1:$PORT"
 launchctl kickstart "gui/\$(id -u)/$LABEL" 2>/dev/null || true
 for i in \$(seq 1 40); do curl -s -o /dev/null "\$URL/api/health" && break; sleep 0.25; done
-if [ -d "/Applications/Google Chrome.app" ]; then
-  open -na "Google Chrome" --args --app="\$URL"
-else
-  open "\$URL"
-fi
+exec bash "$REPO/scripts/open-browser.sh" "\$URL" "$GARDEN_HOME"   # which browser: see scripts/open-browser.sh
 LAUNCHEOF
 chmod +x "$APP/Contents/MacOS/Garden"
 [ -f "$REPO/mac/Garden.icns" ] && cp "$REPO/mac/Garden.icns" "$APP/Contents/Resources/Garden.icns"
