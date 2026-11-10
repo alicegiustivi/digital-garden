@@ -196,7 +196,9 @@ export function applyProposals(db: Db, id: string, p: Proposals, candidates: Can
     if (added.length) recordInRun(db, id, model, now, runId, added);
     // An AI Note: a short summary of a Source. A fresh one replaces the Archivist's earlier summary on this Object.
     if (obj.type === "source" && p.summary) {
-      const text = [p.summary, ...(p.claims.length ? ["Key claims", ...p.claims] : [])].join("\n\n"); // the claims sit in the same note, one paragraph each
+      // The claims sit in the same note as a Markdown list, each led by its mark (Reported / Interpretation).
+      const claims = p.claims.map((c) => `- ${c.replace(/^(Reported|Interpretation(?: \([^)]*\))?):/, "**$1:**")}`);
+      const text = [p.summary, ...(claims.length ? ["**Key claims**", claims.join("\n")] : [])].join("\n\n");
       db.prepare("DELETE FROM ai_notes WHERE object_id = ? AND kind = 'summary'").run(id);
       db.prepare("INSERT INTO ai_notes (object_id, kind, text, ai_role, ai_model, ai_date, created_at) VALUES (?, 'summary', ?, ?, ?, ?, ?)").run(id, text, ROLE, model, date, now.toISOString());
     }

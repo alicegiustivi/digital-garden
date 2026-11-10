@@ -27,6 +27,7 @@
     "drizzle-orm": "^0.45.4",
     "hono": "^4.13.16",
     "jsdom": "^31.0.0",
+    "marked": "^18.2.0",
     "metascraper": "^5.58.5",
     "metascraper-author": "^5.58.5",
     "metascraper-date": "^5.58.4",

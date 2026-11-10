@@ -1,4 +1,5 @@
 // Reading and writing Objects. Every value the owner types is saved with Origin "owner" (ADR 0001).
+import { plainOf } from "../shared/markdown-doc.ts";
 import { randomUUID } from "node:crypto";
 import type Database from "better-sqlite3";
 import { MENTION, syncMentions } from "./mentions.ts";
@@ -82,7 +83,7 @@ export function summarise(db: Db, rows: any[]) {
     createdAt: iso(r.created_at),
     updatedAt: iso(r.updated_at ?? r.created_at),
     fields: fields.filter((f) => f.object_id === r.id).map((f) => ({ key: f.field, value: f.value, ...originOf(f) })),
-    firstLine: (firstBlocks.find((b) => b.object_id === r.id)?.text ?? "").replace(MENTION, "").trim().slice(0, 200),
+    firstLine: plainOf((firstBlocks.find((b) => b.object_id === r.id)?.text ?? "").replace(MENTION, "")).slice(0, 200),
     tags: tags.get(r.id) ?? [],
     connectionCount: counts.find((c) => c.id === r.id)?.n ?? 0,
   }));

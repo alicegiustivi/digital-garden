@@ -7,6 +7,7 @@
 // How a query is read: every word must be found, anywhere in the same Object, and a word matches the start of a word
 // ("conc" finds "concept"). Typo tolerance (decided here): if a word finds nothing, it is swapped for the closest words
 // the Garden really contains (one slip for words of 4-7 letters, two for longer ones) and the page says so.
+import { plainOf } from "../shared/markdown-doc.ts";
 import type Database from "better-sqlite3";
 import { MENTION } from "./mentions.ts";
 import { allComments } from "./inbox-comments.ts";
@@ -24,7 +25,11 @@ const fold = (s: string) => s.normalize("NFD").replace(/\p{M}/gu, "").toLowerCas
 const wordsOf = (s: string) => fold(s).match(/[\p{L}\p{N}]+/gu) ?? [];
 
 /** The text of a block or field with Mentions written out as the title they point to. */
-const plain = (db: Db, text: string) => text.replace(MENTION, (_m, id) => titleOf(db, id));
+/** Words as they read, with a Mention shown as the Object's title and (for a body or an AI Note) the Markdown formatting taken away. */
+const plain = (db: Db, text: string, markdown = false) => {
+  const t = text.replace(MENTION, (_m, id) => titleOf(db, id));
+  return markdown ? plainOf(t) : t;
+};
 
 function distance(a: string, b: string, max: number): number {
   if (Math.abs(a.length - b.length) > max) return max + 1;
@@ -69,7 +74,7 @@ function piecesFor(db: Db, variants: string[], eligible: Set<string>): Piece[] {
     const rows = db.prepare("SELECT rowid AS rid, object_id, kind, text FROM search_index WHERE search_index MATCH ?").all(`"${v}"*`) as any[];
     for (const r of rows) {
       if (!eligible.has(r.object_id)) continue;
-      const text = plain(db, r.text as string);
+      const text = plain(db, r.text as string, r.kind !== "field");
       const words = wordsOf(text).filter((w) => w.startsWith(v));
       if (!words.length) continue; // the match was only inside a Mention reference
       if (r.kind === "block") {

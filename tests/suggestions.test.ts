@@ -427,7 +427,7 @@ describe("the Archivist reads the extract and works harder (extract, claims, Tag
     const src = await make("source", "Soil");
     await look(src.id, { summary: "A piece on soil.", claims: [{ claim: "Soil holds water.", kind: "reported" }, { claim: "Soil is undervalued.", kind: "interpretation", by: "Ada Green" }, { claim: "", kind: "reported" }] });
     const [n] = await notes(src.id);
-    expect(n.text).toBe("A piece on soil.\n\nKey claims\n\nReported: Soil holds water.\n\nInterpretation (Ada Green): Soil is undervalued.");
+    expect(n.text).toBe("A piece on soil.\n\n**Key claims**\n\n- **Reported:** Soil holds water.\n- **Interpretation (Ada Green):** Soil is undervalued.");
   });
   it("drops format words and vague Tags, and stops adding a Tag that is already on a quarter of the Garden", async () => {
     for (let i = 0; i < 9; i++) { const o = await make("source", `Item ${i}`); await call("POST", `/api/objects/${o.id}/tags`, { name: "habits" }); }
