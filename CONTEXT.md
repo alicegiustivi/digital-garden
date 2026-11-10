@@ -41,11 +41,11 @@ An Object for an individual who matters to the owner's Garden, either personally
 _Avoid_: Contact, author, people
 
 **Piece**:
-An Object for a piece of work the owner is writing for others to read, such as an essay or a post. It is always in the owner's words, never the AI's, though like any body it can hold Quotes and Mentions. It belongs to at most one Project, through a "part of" Connection, or stands alone. Everything else connected to it is its material. The AI never drafts a Piece, and does nothing on a Piece unless the owner asks.
+An Object for a piece of work the owner is writing for others to read, such as an essay or a post. It is always in the owner's words, never the AI's, though like any body it can hold Quotes and Mentions. It belongs to at most one Project, through a "part of" Connection, or stands alone. Everything else connected to it is its material. The AI never drafts a Piece, and does nothing on a Piece unless the owner asks. When asked, only the Researcher helps: it can find fitting material (offered as Suggestions), suggest an order, point out gaps, contradictions and claims nothing in the Garden supports, and suggest questions, all as AI Notes beside the Piece, never inside it. A Private Piece is never read.
 _Avoid_: Draft, article, post, document
 
 **Project**:
-An Object for something the owner is making or doing, such as an essay series, a trip or learning a skill. Its Pieces, if it has any, are connected to it by "part of", in an order the owner arranges, and that order is the Project's outline. Everything else connected straight to it is its material; its page also shows, marked with the Piece's name, the material of its Pieces, without connecting it twice. The AI does nothing on a Project unless the owner asks. A Project is never a list of tasks and has no due date.
+An Object for something the owner is making or doing, such as an essay series, a trip or learning a skill. Its Pieces, if it has any, are connected to it by "part of", in an order the owner arranges, and that order is the Project's outline. Everything else connected straight to it is its material; its page also shows, marked with the Piece's name, the material of its Pieces, without connecting it twice. The AI does nothing on a Project unless the owner asks, and the Archivist never connects an Object to a Project or Piece on its own. A Project with no Pieces, such as a trip or learning a skill, is the same page with its Pieces left out: Stage, the owner's words, its Open Questions, the Thoughts written along the way and its material. A Project is never a list of tasks and has no due date.
 _Avoid_: Goal, task list, folder, space
 
 **Stage**:
@@ -147,6 +147,10 @@ _Avoid_: Export, snapshot, sync
 **Export**:
 A complete copy of the Garden, made when the owner asks, that can be read without the Garden: readable files for people plus one complete data file. It keeps every Origin and everything the Garden remembers, includes Private Objects unless the owner leaves them out, and is not encrypted. It is never used to restore the Garden.
 _Avoid_: Backup, dump, download
+
+**Copy for publishing**:
+A clean copy of one Piece, made when the owner asks so they can publish it by hand: its title and body only, with Quotes as block quotes credited to their Source, and no Origin marks, AI Notes, Tags or Connections. The Garden never publishes anywhere. It is not an Export.
+_Avoid_: Publish, share, post
 
 ### CODE stages
 
