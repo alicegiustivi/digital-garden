@@ -30,16 +30,6 @@ npm run mac:uninstall
   Your data is not touched. Run `npm run mac:install` to turn it back on.
 - **Stop for now:** the Garden restarts itself if it is stopped. To really stop it, use the command above.
 
-## Which browser the Garden opens in
-
-The Garden icon opens a window in Chrome if you have it, otherwise your default browser. To choose another, in Terminal inside this folder:
-
-```bash
-npm run mac:browser -- arc
-```
-
-You can use `arc`, `safari`, `chrome` or `default`. It takes effect the next time you click the icon (no reinstall), and `npm run mac:browser` alone tells you what is set. Arc and Safari open the Garden as a normal tab or window, not as a window of its own like Chrome does. If the browser you chose is not installed, the Garden opens in your default browser. Chrome still needs to stay installed for reading some web links, even if you never look at it.
-
 ## Where your data is
 
 `~/Garden` holds `garden.db` (everything you keep) and an `images` folder. The log of what the server is doing is `~/Garden/server.log`.
