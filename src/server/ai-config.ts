@@ -28,6 +28,8 @@ export const AI_CONFIG = {
   candidateChars: 450,
   /** A Tag carried by at least this many Objects, and by more than a quarter of the Garden, is too broad for the AI to add again. */
   broadTagMin: 8,
+  /** A Tag on this many Objects (Private and Bin ones not counted) is a reason for the Archivist to suggest a Concept. A Suggestion only: the owner decides. */
+  conceptMinObjects: 3,
   /** A model that answers but gives nothing usable is tried this many times before "Couldn't read this". */
   maxUnusable: 3,
 };

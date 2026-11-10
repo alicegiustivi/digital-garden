@@ -112,6 +112,32 @@ function namedOnAnotherSource(db: Db, id: string, name: string): boolean {
   return rows.some((r) => String(r.value).split(/,|&|\band\b|;/i).some((part) => sameName(part, name)));
 }
 
+/** Live, non-Private Objects carrying this Tag (the Archivist may count and connect these; a Private Object is never part of it). */
+const carriersOf = (db: Db, tagName: string): string[] =>
+  (db.prepare(
+    `SELECT o.id FROM object_tags ot JOIN tags t ON t.id = ot.tag_id JOIN objects o ON o.id = ot.object_id
+     WHERE t.name = ? AND o.deleted_at IS NULL AND o.private = 0 ORDER BY o.rowid`,
+  ).all(tagName) as any[]).map((r) => r.id as string);
+
+/**
+ * A Tag that keeps coming back may deserve to be a Concept (Obsidian's "Topic" threshold). Offers at most one: a Tag on this Object that
+ * is on at least `conceptMinObjects` Objects, with no Concept of that name yet, not turned down on any Object, and not already offered.
+ */
+function conceptIdea(db: Db, id: string): { name: string; tag: string; count: number } | null {
+  const mine = db.prepare("SELECT t.name FROM object_tags ot JOIN tags t ON t.id = ot.tag_id WHERE ot.object_id = ?").all(id) as any[];
+  const concepts = (db.prepare("SELECT id FROM objects WHERE type = 'concept' AND deleted_at IS NULL").all() as any[]).map((r) => norm(titleOf(db, r.id)));
+  let best: { name: string; tag: string; count: number } | null = null;
+  for (const { name } of mine) {
+    const count = carriersOf(db, name).length;
+    if (count < AI_CONFIG.conceptMinObjects || concepts.includes(norm(name))) continue;
+    const key = `concept:${norm(name)}`;
+    if (db.prepare("SELECT 1 FROM ai_rejected WHERE kind = 'object' AND value = ?").get(key)) continue;
+    if (db.prepare("SELECT 1 FROM ai_suggestions WHERE kind = 'object' AND json_extract(data, '$.type') = 'concept' AND lower(json_extract(data, '$.name')) = ? AND object_id <> ?").get(norm(name), id)) continue;
+    if (!best || count > best.count) best = { name, tag: name, count };
+  }
+  return best;
+}
+
 type Stored = { kind: "connection" | "type" | "object" | "title"; data: Record<string, unknown> };
 
 /**
@@ -155,6 +181,8 @@ export function applyProposals(db: Db, id: string, p: Proposals, candidates: Can
       const c = shown.get(ref);
       if (c) connect(c.id, "related");
     }
+    const idea = conceptIdea(db, id);
+    if (idea) list.push({ kind: "object", data: { type: "concept", name: idea.name, tag: idea.tag } });
     // A change of Object Type, only between Source and Person (a Concept is made on purpose; a Thought is never changed).
     if (p.type && p.type !== obj.type && ["source", "person"].includes(p.type) && ["source", "person"].includes(obj.type) && !turnedDown("type", p.type))
       list.push({ kind: "type", data: { type: p.type } });
@@ -199,7 +227,7 @@ export function suggestionsOf(db: Db, id: string) {
       return [{ ...base, other: { id: d.otherId as string, type: other.type as string, title: titleOf(db, d.otherId) }, connectionKind: d.kind as string, why: (d.why as string | undefined) ?? null }];
     }
     if (r.kind === "type") return [{ ...base, type: d.type as string, typeLabel: TYPE_LABEL(db, d.type) }];
-    if (r.kind === "object") return [{ ...base, type: d.type as string, typeLabel: TYPE_LABEL(db, d.type), name: d.name as string }];
+    if (r.kind === "object") return [{ ...base, type: d.type as string, typeLabel: TYPE_LABEL(db, d.type), name: d.name as string, ...(d.type === "concept" ? { tag: d.tag as string, count: carriersOf(db, d.tag).length } : {}) }];
     return [{ ...base, title: d.title as string }];
   });
   return { pending, rejected };
@@ -230,6 +258,17 @@ export function approve(db: Db, suggestionId: number) {
       link(s.object_id, d.otherId, d.kind); // "authored by" reads from the Source to the Person
     } else if (s.kind === "type") {
       db.prepare("UPDATE objects SET type = ?, type_ai = ? WHERE id = ?").run(d.type, JSON.stringify({ aiRole: s.ai_role, aiModel: s.ai_model, aiDate: s.ai_date }), s.object_id);
+    } else if (s.kind === "object" && d.type === "concept") {
+      // A Concept from a recurring Tag: made, titled and connected as the AI's (approved), with every Object that carries the Tag. The Tag stays.
+      const existing = (db.prepare("SELECT id FROM objects WHERE type = 'concept' AND deleted_at IS NULL").all() as any[]).find((r) => sameName(titleOf(db, r.id), d.name));
+      let cid = existing?.id as string | undefined;
+      if (!cid) {
+        cid = randomUUID();
+        db.prepare("INSERT INTO objects (id, type, updated_at) VALUES (?, 'concept', datetime('now'))").run(cid);
+        db.prepare("INSERT INTO field_values (object_id, field, value, origin, ai_role, ai_model, ai_date, approved) VALUES (?, 'title', ?, 'ai', ?, ?, ?, 1)").run(cid, d.name, ...aiCols(s));
+        db.prepare("UPDATE objects SET title = ? WHERE id = ?").run(d.name, cid);
+      }
+      for (const other of [...new Set([s.object_id as string, ...carriersOf(db, d.tag ?? d.name)])]) if (other !== cid && !pairExists(cid, other)) link(cid, other, "related");
     } else if (s.kind === "object") {
       // A Person already in the Garden under that name is used rather than made twice.
       const existing = (db.prepare("SELECT id FROM objects WHERE type = ? AND deleted_at IS NULL").all(d.type) as any[]).find((r) => sameName(titleOf(db, r.id), d.name));

@@ -113,7 +113,7 @@ Anything with AI Origin. It takes one of three forms: applied directly but marke
 _Avoid_: AI output, AI content, generated content
 
 **Suggestion**:
-An AI Contribution that only takes effect once the owner approves it, such as a specific kind of Connection, a Connection from a Researcher answer, a change of Object Type, a new Object, or a title for a Thought. Anything rejected, including a removed AI Tag or an undone AI Connection, is remembered and not proposed again unless the owner asks.
+An AI Contribution that only takes effect once the owner approves it, such as a specific kind of Connection, a Connection from a Researcher answer, a change of Object Type, a new Object (including a Concept offered when a Tag is on three or more Objects), or a title for a Thought. Anything rejected, including a removed AI Tag or an undone AI Connection, is remembered and not proposed again unless the owner asks.
 _Avoid_: Recommendation, auto-link
 
 **Approve**:
