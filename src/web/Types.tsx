@@ -17,7 +17,7 @@ export function Swatches({ value, onPick, label }: { value: string; onPick: (key
     <div className="swatches" role="radiogroup" aria-label={label}>
       {PALETTE.map((c) => (
         <button key={c.key} type="button" role="radio" aria-checked={value === c.key} className={value === c.key ? "on" : ""} title={c.label} aria-label={c.label}
-          style={{ ["--sw-f" as string]: c.fill, ["--sw-i" as string]: c.ink, ["--sw-df" as string]: c.darkFill, ["--sw-di" as string]: c.darkInk }} onClick={() => onPick(c.key)}>
+          style={{ ["--sw-f" as string]: c.fill, ["--sw-i" as string]: c.ink, ["--sw-t" as string]: c.text, ["--sw-df" as string]: c.darkFill, ["--sw-di" as string]: c.darkInk }} onClick={() => onPick(c.key)}>
           {value === c.key && <Icon name="check" />}
         </button>
       ))}
