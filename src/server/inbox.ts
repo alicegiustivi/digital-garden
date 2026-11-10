@@ -100,7 +100,6 @@ export function readWords(raw: string, extraTags: string[] = []) {
 // ---------------------------------------------------------------- one capture folder
 
 type Outcome = "done" | "duplicate" | "failed" | "waiting" | "none";
-class Refuse extends Error {}
 
 function remember(db: Db, row: { key: string; messageId: string | null; folder: string; sentAt: string; status: "done" | "failed"; reason: string | null; refused: boolean; comment: string | null; priv: boolean }) {
   // A failed folder first remembered by its name is now known by its message id: it is the same row.

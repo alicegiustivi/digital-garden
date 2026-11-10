@@ -1,6 +1,6 @@
 import { InboxCommentLine } from "./Inbox";
 import { useEffect, useRef, useState } from "react";
-import { api, fieldOf, type PortraitBack, type FieldDef, type Obj, type TagRow, type TypeDef, type Types } from "./api";
+import { api, fieldOf, type PortraitBack, type FieldDef, type Obj, type TagRow, type Types } from "./api";
 import { BodyEditor } from "./BodyEditor";
 import { Editable } from "./Editable";
 import { AiStatusLine } from "./Ai";

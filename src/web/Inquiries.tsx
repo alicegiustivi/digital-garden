@@ -1,7 +1,7 @@
 // The Researcher on screen (issue #36): asking a question about one Object (the Ask tab, the Concept's Ask card) or the
 // whole Garden, watching the real steps, coming back later, keeping an answer on Objects, and the Inquiries list.
 // An answer is an AI Note: always marked, never editable, and it reaches an Object only through "Keep on…".
-import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { api, type Brief3, type Found, type InquiryRow, type Thread, type Turn } from "./api";
 import { aiChanged, useAi } from "./Ai";
 import { refresh } from "./refresh";
@@ -10,7 +10,6 @@ import { showToast } from "./toast";
 import { Icon, formatDay, typeVar } from "./ui";
 
 const clock = (iso: string) => new Date(iso).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
-const MENTION = /\[\[o:([0-9a-f-]{36})\]\]/g;
 
 /** Buttons that depend on where the owner is. */
 export const STARTERS: Record<string, string[]> = {

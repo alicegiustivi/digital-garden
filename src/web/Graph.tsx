@@ -311,7 +311,7 @@ function ModeSwitch({ t, focus }: { t: Tools; focus?: string }) {
 function AroundOne({ t, focus }: { t: Tools; focus: string }) {
   const [depth, setDepth] = useState(2);
   const adj = useMemo(() => adjacency(t.data.edges), [t]);
-  const { ring, total, cut } = useMemo(() => neighbourhood(adj, t.deg, focus, depth), [focus, depth, adj, t]);
+  const { ring } = useMemo(() => neighbourhood(adj, t.deg, focus, depth), [focus, depth, adj, t]);
   const edges = useMemo(() => t.data.edges.filter((e) => ring.has(e.from) && ring.has(e.to)), [ring, t]);
   const n1 = [...ring.values()].filter((d) => d === 1).length;
   const R = (d: number) => (d === 0 ? 0 : Math.max(150, n1 * 11) + (d - 1) * 200);
