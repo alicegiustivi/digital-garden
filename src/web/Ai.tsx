@@ -76,8 +76,8 @@ export function AiStatusLine({ id, onChanged }: { id: string; onChanged: (o: Obj
   else if (st.state !== "done") line = statusText(st);
   const again = st.state === "done" && st.canRun;
   return (
-    <div className="ai-status small quiet" role="status">
-      {line && st.state !== "none" && <p><span className="o-ai-mark">✦</span> Archivist: {line}</p>}
+    <div className={`ai-status small quiet${st.state === "working" ? " working" : ""}`} role="status">
+      {line && st.state !== "none" && <p><span className="o-ai-mark spark">✦</span> Archivist: {line}</p>}
       {again && <p><button className="link-btn" onClick={retry} title="Uses one or two of today’s calls. Anything you rejected stays rejected.">Ask the Archivist again</button></p>}
       {st.run && (st.run.facts.length > 0 || st.run.tags.length > 0 || st.run.connections > 0) && (
         <p>
