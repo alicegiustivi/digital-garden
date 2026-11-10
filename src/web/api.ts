@@ -15,7 +15,7 @@ export type Obj = Summary & {
 };
 type SuggestionBase = { id: number; origin: "ai"; aiRole: string; aiModel: string; aiDate: string; approved: false };
 export type Suggestion = SuggestionBase & (
-  | { kind: "connection"; other: { id: string; type: string; title: string }; connectionKind: string }
+  | { kind: "connection"; other: { id: string; type: string; title: string }; connectionKind: string; why?: string | null }
   | { kind: "type"; type: string; typeLabel: string }
   | { kind: "object"; type: string; typeLabel: string; name: string }
   | { kind: "title"; title: string }

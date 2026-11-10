@@ -7,9 +7,10 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { AI_CONFIG, type AiRole } from "./ai-config.ts";
 import { GateError, readKey, type Gate } from "./ai-gate.ts";
-import { archivistPrompt, readable } from "./ai-prompt.ts";
+import { archivistPrompt, connectPrompt, readable } from "./ai-prompt.ts";
 import { applyFindings, jsonOf, lastRun, parseFindings, undoRun } from "./archivist.ts";
-import { applyProposals, parseProposals, pendingCount } from "./suggestions.ts";
+import { applyConnections, applyProposals, parseConnections, parseProposals, pendingCount } from "./suggestions.ts";
+import { titleOf } from "./objects.ts";
 import { imagesDir } from "./paths.ts";
 import { cancelJobs, researcherHandler } from "./researcher.ts";
 
@@ -215,6 +216,7 @@ export function createAi(db: Db, opts: { gate: Gate; now?: () => Date; hasKey?: 
     if (!prompt) return "skip"; // Private, or in the Bin: the AI never reads it
     const models = photo ? AI_CONFIG.visionModels : AI_CONFIG.models; // photos wait for a model that can see them
     let sawBusy = false;
+    // Request 1: READ the item (its whole extract) and describe it. Request 2: judge Connections against what the candidates say.
     for (const model of models) {
       let text: string;
       try { ctx.countCall(); text = await ctx.gate.chat(model, prompt.messages); }
@@ -228,10 +230,26 @@ export function createAi(db: Db, opts: { gate: Gate; now?: () => Date; hasKey?: 
       const findings = parseFindings(text);
       if (!findings) continue;
       const runId = applyFindings(db, id, findings, model, ctx.now);
-      applyProposals(db, id, parseProposals(jsonOf(text)), prompt.candidates, model, ctx.now, runId); // Connections (applied), Suggestions and the AI Note, from the same call
+      const proposals = parseProposals(jsonOf(text));
+      applyProposals(db, id, proposals, prompt.candidates, model, ctx.now, runId); // facts, Tags, people, summary and claims are saved now
+      if (prompt.type !== "thought" && prompt.candidates.length)
+        await connect(id, { title: findings.title ?? titleOf(db, id), summary: proposals.summary, claims: proposals.claims, tags: findings.tags }, prompt.candidates, models, runId, ctx);
       return "done";
     }
     return sawBusy ? { busy: true } : { unusable: true };
+  }
+
+  /** The second request. Best effort: if it cannot be answered, what the first request saved stays and "Ask the Archivist" can run it again. */
+  async function connect(id: string, read: { title: string; summary?: string; claims: string[]; tags: string[] }, candidates: any[], models: string[], runId: number | null, ctx: { gate: Gate; now: Date; countCall: () => void }) {
+    const messages = connectPrompt(db, id, read, candidates);
+    for (const model of models) {
+      let text: string;
+      try { ctx.countCall(); text = await ctx.gate.chat(model, messages); } catch { continue; }
+      const j = jsonOf(text);
+      if (!j) continue;
+      applyConnections(db, id, parseConnections(j), candidates, model, ctx.now, runId);
+      return;
+    }
   }
   return api;
 }

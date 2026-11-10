@@ -20,7 +20,7 @@ function useLive(load: () => void, deps: unknown[], every = 5000) {
 const wording = (s: Suggestion, types: Types, current: string): React.ReactNode => {
   const label = (key: string) => types.types.find((t) => t.key === key)?.label ?? key;
   if (s.kind === "connection")
-    return <>Connect to <a href={`#/o/${s.other.id}`} className="sg-obj" style={typeVar(s.other.type)}>{s.other.title}</a> <span className="quiet small">({label(s.other.type)}) as {s.connectionKind}</span></>;
+    return <>Connect to <a href={`#/o/${s.other.id}`} className="sg-obj" style={typeVar(s.other.type)}>{s.other.title}</a> <span className="quiet small">({label(s.other.type)}) as {s.connectionKind}</span>{s.why ? <span className="quiet small"> — {s.why}</span> : null}</>;
   if (s.kind === "type") return <>Change this from a {label(current)} to a {s.typeLabel}</>;
   if (s.kind === "object") return <>Add a new {s.typeLabel}, <b>{s.name}</b>{current === "source" ? <span className="quiet small"> (authored by)</span> : null}</>;
   return <>Use “{s.title}” as the title</>;

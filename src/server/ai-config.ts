@@ -22,6 +22,12 @@ export const AI_CONFIG = {
   lowCallsWarning: 100,
   /** The most Connections the Archivist adds to one Object in one go (issue #66). Applied directly, marked and undoable. */
   maxConnections: 10,
+  /** How much of a Source's extract (the words read from the page) the Archivist reads: the start and the end, when it is longer. */
+  readChars: 24000,
+  /** How much of each candidate Object's own words the Archivist is shown when judging a Connection. */
+  candidateChars: 450,
+  /** A Tag carried by at least this many Objects, and by more than a quarter of the Garden, is too broad for the AI to add again. */
+  broadTagMin: 8,
   /** A model that answers but gives nothing usable is tried this many times before "Couldn't read this". */
   maxUnusable: 3,
 };

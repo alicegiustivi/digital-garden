@@ -293,3 +293,29 @@ describe("Ask about one Object", () => {
     expect((await call("GET", "/api/inquiries")).json).toHaveLength(1);
   });
 });
+
+describe("the Researcher reads the extract", () => {
+  const extractOf = (id: string, text: string) => sqlite.prepare("INSERT INTO field_values (object_id, field, value, origin) VALUES (?, 'captured', ?, 'source')").run(id, text);
+  it("shows the start of the extract on the index card and the long extract (start and end) when it reads the Source", async () => {
+    const src = await make("source", "Soil Article");
+    extractOf(src, `OPENING-WORDS ${"Soil holds water and carbon. ".repeat(500)} FINAL-WORDS`); // about 15,000 characters
+    const inq = await ask("What does the soil article claim?");
+    replies.push(json({ read: ["o1"] }));
+    replies.push(json({ answer: "It says [o1].", connections: [] }));
+    await run();
+    expect(promptOf(0)).toContain("OPENING-WORDS"); // the card's gist is the extract, not just the title
+    expect(promptOf(1)).toContain("OPENING-WORDS");
+    expect(promptOf(1)).toContain("FINAL-WORDS"); // the old 3,000-character cap lost most of it
+    expect(promptOf(1)).toContain("the extract");
+    expect((await thread(inq.id)).turns[0].state).toBe("done");
+  });
+  it("asks for the big picture, the tension and what the Garden does not establish", async () => {
+    await make("source", "Soil Article", "Soil.", { origin: "source" });
+    await ask("What is going on with soil?");
+    replies.push(json({ read: ["o1"] }));
+    replies.push(json({ answer: "A.", connections: [] }));
+    await run();
+    const system = String(sent[1].body.messages[0].content);
+    for (const part of ["big picture", "Tension", "does not establish", "A question to take further"]) expect(system).toContain(part);
+  });
+});

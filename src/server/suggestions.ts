@@ -21,20 +21,81 @@ export const MAX_CONNECTIONS = AI_CONFIG.maxConnections; // one setting (ai-conf
 const MAX_NEW_OBJECTS = 3;
 
 /** What the model said beyond the facts and Tags. Anything unclear is left out, never guessed at. */
-export type Proposals = { summary?: string; related: string[]; people: { name: string; central: boolean }[]; type?: string; thoughtTitle?: string };
+export type Proposals = { summary?: string; claims: string[]; related: string[]; people: { name: string; central: boolean }[]; type?: string; thoughtTitle?: string };
 
 export function parseProposals(j: any): Proposals {
   const str = (v: unknown, max: number) => (typeof v === "string" && v.trim() && v.trim().length <= max ? v.trim() : undefined);
   const summary = typeof j?.summary === "string" ? j.summary.replace(/\s+/g, " ").trim() : "";
+  // The Source's main claims, each marked as something the text reports or an interpretation held by someone (the Garden's Origin rule, Schema: Reported / Interpretation).
+  const claims = Array.isArray(j?.claims)
+    ? (j.claims as any[]).flatMap((c) => {
+        const text = str(c?.claim, 400);
+        if (!text) return [];
+        const by = str(c?.by, 80);
+        return [c?.kind === "interpretation" ? `Interpretation${by ? ` (${by})` : ""}: ${text}` : `Reported: ${text}`];
+      }).slice(0, 6)
+    : [];
   return {
-    summary: summary && summary.length <= 1200 ? summary : undefined,
-    related: Array.isArray(j?.related) ? [...new Set((j.related as unknown[]).filter((r): r is string => typeof r === "string").map((r) => r.trim()))].slice(0, MAX_CONNECTIONS) : [],
+    summary: summary && summary.length <= 1500 ? summary : undefined,
+    claims,
+    related: [], // judged in the Archivist's second request, with the candidates' content (parseConnections)
     people: Array.isArray(j?.people)
       ? (j.people as any[]).flatMap((p) => (str(p?.name, 80) ? [{ name: str(p.name, 80)!, central: p.central === true }] : [])).slice(0, 6)
       : [],
     type: typeof j?.type === "string" ? j.type.trim().toLowerCase() : undefined,
     thoughtTitle: str(j?.thoughtTitle, 120),
   };
+}
+
+const SPECIFIC = ["supports", "contradicts", "builds on", "inspired by"];
+export type Judged = { related: { ref: string; why?: string }[]; specific: { ref: string; kind: string; why?: string }[] };
+/** The second request's answer: plain "related" Connections, and specific kinds that wait as Suggestions. Anything unclear is left out. */
+export function parseConnections(j: any): Judged {
+  const why = (v: unknown) => (typeof v === "string" && v.trim() ? v.replace(/\s+/g, " ").trim().slice(0, 300) : undefined);
+  const ref = (v: unknown) => (typeof v === "string" ? v.trim() : typeof (v as any)?.ref === "string" ? (v as any).ref.trim() : "");
+  const related = (Array.isArray(j?.related) ? (j.related as any[]) : []).flatMap((r) => (ref(r) ? [{ ref: ref(r), why: why(r?.why) }] : []));
+  const specific = (Array.isArray(j?.specific) ? (j.specific as any[]) : []).flatMap((r) => {
+    const kind = typeof r?.kind === "string" ? r.kind.trim().toLowerCase() : "";
+    return ref(r) && SPECIFIC.includes(kind) ? [{ ref: ref(r), kind, why: why(r?.why) }] : [];
+  });
+  return { related: related.slice(0, MAX_CONNECTIONS), specific: specific.slice(0, 3) };
+}
+
+/**
+ * The second request's result. "related" Connections are applied at once, marked and undoable (ADR 0003); a specific kind
+ * (supports, contradicts, builds on, inspired by) only ever waits as a Suggestion, with the reason the model gave. Never a Thought,
+ * never a Private Object, never a pair already connected or turned down.
+ */
+export function applyConnections(db: Db, id: string, judged: Judged, candidates: Candidate[], model: string, now: Date, runId: number | null): number {
+  const obj = db.prepare("SELECT type FROM objects WHERE id = ? AND deleted_at IS NULL AND private = 0").get(id) as any;
+  if (!obj || obj.type === "thought") return 0;
+  const date = now.toISOString().slice(0, 10);
+  const shown = new Map(candidates.map((c) => [c.ref, c]));
+  const turnedDown = (otherId: string) => !!db.prepare("SELECT 1 FROM ai_rejected WHERE object_id = ? AND kind = 'connection' AND value = ?").get(id, otherId);
+  const joined = (otherId: string) => db.prepare("SELECT 1 FROM connections WHERE (from_id = ? AND to_id = ?) OR (from_id = ? AND to_id = ?)").get(id, otherId, otherId, id);
+  const waiting = (otherId: string) => db.prepare("SELECT 1 FROM ai_suggestions WHERE kind = 'connection' AND object_id = ? AND json_extract(data, '$.otherId') = ?").get(id, otherId);
+  const taken = new Set<string>();
+  const direct: string[] = [];
+  const specific: { otherId: string; kind: string; why?: string }[] = [];
+  for (const s of judged.specific) { // first, so a meaningful kind is not pre-empted by a plain "related"
+    const c = shown.get(s.ref);
+    if (!c || taken.has(c.id) || !readable(db, c.id) || turnedDown(c.id) || joined(c.id) || waiting(c.id)) continue;
+    taken.add(c.id);
+    specific.push({ otherId: c.id, kind: s.kind, why: s.why });
+  }
+  for (const r of judged.related) {
+    const c = shown.get(r.ref);
+    if (!c || taken.has(c.id) || taken.size >= MAX_CONNECTIONS + specific.length || !readable(db, c.id) || turnedDown(c.id) || joined(c.id)) continue;
+    taken.add(c.id);
+    direct.push(c.id);
+  }
+  db.transaction(() => {
+    const ins = db.prepare("INSERT INTO ai_suggestions (object_id, kind, data, ai_role, ai_model, ai_date, created_at) VALUES (?, 'connection', ?, ?, ?, ?, ?)");
+    for (const s of specific) ins.run(id, JSON.stringify({ otherId: s.otherId, kind: s.kind, ...(s.why ? { why: s.why } : {}) }), ROLE, model, date, now.toISOString());
+    const added = direct.flatMap((otherId) => { const cid = addDirectConnection(db, id, otherId, "related", model, date); return cid ? [{ kind: "connection" as const, connectionId: cid, otherId, connKind: "related" }] : []; });
+    if (added.length) recordInRun(db, id, model, now, runId, added);
+  })();
+  return direct.length + specific.length;
 }
 
 const norm = (s: string) => s.trim().toLowerCase().replace(/\s+/g, " ");
@@ -107,8 +168,9 @@ export function applyProposals(db: Db, id: string, p: Proposals, candidates: Can
     if (added.length) recordInRun(db, id, model, now, runId, added);
     // An AI Note: a short summary of a Source. A fresh one replaces the Archivist's earlier summary on this Object.
     if (obj.type === "source" && p.summary) {
+      const text = [p.summary, ...(p.claims.length ? ["Key claims", ...p.claims] : [])].join("\n\n"); // the claims sit in the same note, one paragraph each
       db.prepare("DELETE FROM ai_notes WHERE object_id = ? AND kind = 'summary'").run(id);
-      db.prepare("INSERT INTO ai_notes (object_id, kind, text, ai_role, ai_model, ai_date, created_at) VALUES (?, 'summary', ?, ?, ?, ?, ?)").run(id, p.summary, ROLE, model, date, now.toISOString());
+      db.prepare("INSERT INTO ai_notes (object_id, kind, text, ai_role, ai_model, ai_date, created_at) VALUES (?, 'summary', ?, ?, ?, ?, ?)").run(id, text, ROLE, model, date, now.toISOString());
     }
   })();
   return list.length;
@@ -134,7 +196,7 @@ export function suggestionsOf(db: Db, id: string) {
     if (r.kind === "connection") {
       const other = liveObj(db, d.otherId);
       if (!other || other.private) return []; // gone or Private: never shown
-      return [{ ...base, other: { id: d.otherId as string, type: other.type as string, title: titleOf(db, d.otherId) }, connectionKind: d.kind as string }];
+      return [{ ...base, other: { id: d.otherId as string, type: other.type as string, title: titleOf(db, d.otherId) }, connectionKind: d.kind as string, why: (d.why as string | undefined) ?? null }];
     }
     if (r.kind === "type") return [{ ...base, type: d.type as string, typeLabel: TYPE_LABEL(db, d.type) }];
     if (r.kind === "object") return [{ ...base, type: d.type as string, typeLabel: TYPE_LABEL(db, d.type), name: d.name as string }];
