@@ -25,7 +25,7 @@ export function applyTypes(t: Types) {
   el.textContent = typeColourCss(t.types);
 }
 
-export const typeVar = (type: string) => ({ ["--c" as string]: `var(--t-${type})` }) as React.CSSProperties;
+export const typeVar = (type: string) => ({ ["--c" as string]: `var(--t-${type})`, ["--cf" as string]: `var(--tf-${type})` }) as React.CSSProperties;
 export const tagVar = (color: string) => ({ ["--c" as string]: `var(--g-${color})` }) as React.CSSProperties;
 
 export function TypeChip({ type, label, sub }: { type: string; label: string; sub?: string }) {
