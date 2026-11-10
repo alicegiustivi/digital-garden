@@ -59,4 +59,20 @@ describe("bring back one Object", () => {
     expect((bringBack(spare, live, "d", A, d) as any).images).toBe(2);
     expect(existsSync(join(d.liveImages, `${A}.jpg`))).toBe(true);
   });
+  it("brings back an Object of a type the owner made, and the type with its properties if it was removed since (issue #107)", () => {
+    const { spare, live } = world();
+    for (const db of [spare]) {
+      db.prepare("INSERT INTO object_types (key, label, plural, position, color, icon, core) VALUES ('x-book','Book','Books',5,'rose','book',0)").run();
+      db.prepare("INSERT INTO field_definitions (key, label, input, options) VALUES ('c-1','Author','text',NULL)").run();
+      db.prepare("INSERT INTO type_fields (type, field, position, lead) VALUES ('x-book','c-1',0,1)").run();
+    }
+    spare.prepare("UPDATE objects SET type = 'x-book' WHERE id = ?").run(C);
+    spare.prepare("INSERT INTO field_values (object_id,field,value,origin) VALUES (?,'c-1','Frank','owner')").run(C);
+    const r: any = bringBack(spare, live, "2026-11-10", C, { ...dirs() });
+    expect(r.status).toBe("brought-back");
+    expect(live.prepare("SELECT type FROM objects WHERE id = ?").get(C)).toEqual({ type: "x-book" });
+    expect(live.prepare("SELECT label, color, icon, core FROM object_types WHERE key = 'x-book'").get()).toEqual({ label: "Book", color: "rose", icon: "book", core: 0 });
+    expect(live.prepare("SELECT field, lead FROM type_fields WHERE type = 'x-book'").get()).toEqual({ field: "c-1", lead: 1 });
+    expect(live.prepare("SELECT value FROM field_values WHERE object_id = ? AND field = 'c-1'").get(C)).toEqual({ value: "Frank" });
+  });
 });

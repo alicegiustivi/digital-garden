@@ -16,7 +16,7 @@ import { join } from "node:path";
 
 type Db = Database.Database;
 export type Upload = { name: string; bytes: Buffer };
-export type CaptureInput = { text?: unknown; links?: unknown; private?: unknown; images?: Upload[] };
+export type CaptureInput = { text?: unknown; links?: unknown; private?: unknown; images?: Upload[]; /** The owner chose a type of their own for these words (issue #107). Absent: Capture decides (a Thought or Sources) as always. */ type?: unknown };
 
 export const field = (db: Db, id: string, key: string, value: string) =>
   db.prepare("INSERT INTO field_values (object_id, field, value, origin) VALUES (?, ?, ?, 'source')").run(id, key, value);
@@ -46,6 +46,15 @@ export async function capture(db: Db, input: CaptureInput, readLater: (id: strin
   const images = input.images ?? [];
   const priv = input.private === true;
   if (!text && !links.length && !images.length) throw new BadRequest("There is nothing to save yet");
+
+  // The owner chose one of their own types for these words: a plain Object of that type, the words as its body. Nothing is read from a link.
+  if (typeof input.type === "string" && input.type) {
+    const t = db.prepare("SELECT core FROM object_types WHERE key = ?").get(input.type) as any;
+    if (!t || t.core) throw new BadRequest("Choose one of your own types");
+    if (links.length || images.length) throw new BadRequest("A type of your own takes words only. Save links and images as Sources.");
+    const id = db.transaction(() => { const i = newObject(db, input.type as string, priv); addBody(db, i, text); return i; })();
+    return { created: [getObject(db, id)!], existing: [] as ReturnType<typeof getObject>[], thoughtId: null as string | null, openId: id };
+  }
 
   // Shrink pictures first: if one can't be read nothing is saved, and the box keeps everything.
   const shrunk: { id: string; name: string; width: number | null; height: number | null }[] = [];

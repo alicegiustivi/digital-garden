@@ -38,8 +38,9 @@ export type KindChoice = { kind: string; subject: boolean; label: string };
 export type Shares = Brief & { shared: string[]; sharedTags: string[] };
 export type MergeAsk = { otherId: string; other: Brief; keep: { kind: string; label: string; note: string }; drop: { kind: string; label: string; note: string } };
 export type FieldDef = { key: string; label: string; input: "text" | "longtext" | "select"; options: string[] | null; lead?: boolean };
-export type TypeDef = { key: string; label: string; plural: string; fields: FieldDef[] };
+export type TypeDef = { key: string; label: string; plural: string; /** A palette colour key (src/shared/palette.ts). */ color: string; /** An icon key (src/web/icons.ts). */ icon: string; /** One of the four types that keep every special behaviour. */ core: boolean; /** Objects of this type, and how many more are in the Bin. */ count: number; inBin: number; fields: FieldDef[] };
 export type Types = { types: TypeDef[]; fieldLabels: Record<string, FieldDef> };
+export type TypesAnswer = Types & { key?: string; field?: string; moved?: number; removed?: { values: number; inBin: number } };
 export type CaptureResult = { created: Obj[]; existing: Obj[]; thoughtId: string | null; openId: string };
 export type BinRow = Summary & { title: string; deletedAt: string; daysLeft: number };
 export type RemovedConnection = { fromId: string; toId: string; kind: string; note: string | null } & OriginInfo;
@@ -132,6 +133,17 @@ export const api = {
   restoreAiNote: (n: RemovedNote) => call<unknown>("POST", "/api/ai-notes/restore", n),
   thoughtFromNote: (nid: number) => call<Obj>("POST", `/api/ai-notes/${nid}/thought`),
   types: () => call<Types>("GET", "/api/types"),
+  // The owner shaping Object Types (issue #107). Each answer is the whole list again.
+  createType: (b: { label: string; plural?: string; color: string; icon: string }) => call<TypesAnswer>("POST", "/api/types", b),
+  updateType: (key: string, b: { label?: string; plural?: string; color?: string; icon?: string }) => call<TypesAnswer>("PATCH", `/api/types/${key}`, b),
+  orderTypes: (keys: string[]) => call<TypesAnswer>("PUT", "/api/types/order", { keys }),
+  moveTypeObjects: (key: string, to: string) => call<TypesAnswer>("POST", `/api/types/${key}/move`, { to }),
+  deleteType: (key: string) => call<TypesAnswer>("DELETE", `/api/types/${key}`),
+  addTypeField: (key: string, b: { label: string; input: string; options?: string[]; lead?: boolean }) => call<TypesAnswer>("POST", `/api/types/${key}/fields`, b),
+  updateTypeField: (key: string, field: string, b: { label?: string; options?: string[]; lead?: boolean }) => call<TypesAnswer>("PATCH", `/api/types/${key}/fields/${field}`, b),
+  orderTypeFields: (key: string, keys: string[]) => call<TypesAnswer>("PUT", `/api/types/${key}/fields/order`, { keys }),
+  typeFieldRemoval: (key: string, field: string) => call<{ values: number; inBin: number }>("GET", `/api/types/${key}/fields/${field}/removal`),
+  removeTypeField: (key: string, field: string) => call<TypesAnswer>("DELETE", `/api/types/${key}/fields/${field}`),
   list: (q: Filters = {}) => call<Summary[]>("GET", "/api/objects?" + params(q)),
   find: (q: Filters & { q?: string; limit?: number }) => call<FindResult>("GET", "/api/find?" + params(q)),
   recent: (ids: string[]) => call<Hit[]>("GET", "/api/recent?ids=" + ids.join(",")),
@@ -140,8 +152,8 @@ export const api = {
   undoRename: (id: number, was: RenamedTag["was"]) => call<TagRow[]>("POST", `/api/tags/${id}/rename/undo`, was),
   mergeTag: (id: number, into: number) => call<MergedTag>("POST", `/api/tags/${id}/merge`, { into }),
   undoMerge: (m: MergedTag["merged"]) => call<TagRow[]>("POST", "/api/tags/unmerge", m),
-  capture: async (c: { text: string; links: string[]; images: File[]; private: boolean }): Promise<CaptureResult> => {
-    const payload = JSON.stringify({ text: c.text, links: c.links, private: c.private });
+  capture: async (c: { text: string; links: string[]; images: File[]; private: boolean; type?: string | null }): Promise<CaptureResult> => {
+    const payload = JSON.stringify({ text: c.text, links: c.links, private: c.private, type: c.type || undefined });
     if (!c.images.length) return call("POST", "/api/capture", JSON.parse(payload));
     const form = new FormData();
     form.set("payload", payload);

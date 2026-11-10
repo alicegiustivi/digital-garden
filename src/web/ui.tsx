@@ -1,12 +1,28 @@
 import { Children, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import type { Field, OriginInfo, Summary, Tag } from "./api";
-import { displayTitle, fieldOf } from "./api";
+import { displayTitle, fieldOf, type Types } from "./api";
+import { typeColourCss } from "../shared/palette";
 
 import { ICON } from "./icons";
 
+// Each Object Type's icon, set from the data whenever the types load (applyTypes), so <Icon name={o.type} /> works for a type the owner made.
+let typeIcons: Record<string, string> = {};
+
 /** One icon family for the whole Garden (see icons.ts). Decorative: the button or link around it carries the name. */
 export function Icon({ name }: { name: string }) {
-  return <svg className="ic" viewBox="0 0 24 24" aria-hidden="true" dangerouslySetInnerHTML={{ __html: ICON[name] ?? "" }} />;
+  return <svg className="ic" viewBox="0 0 24 24" aria-hidden="true" dangerouslySetInnerHTML={{ __html: ICON[typeIcons[name] ?? name] ?? "" }} />;
+}
+
+/**
+ * Makes the types on screen match the data (issue #107): each type's colour, light and dark, becomes `--t-<key>` in a style
+ * element (so typeVar() needs no CSS edit for a new type), and each type's icon is remembered for <Icon>. The colours in
+ * style.css are only what shows for a moment before the first answer.
+ */
+export function applyTypes(t: Types) {
+  typeIcons = Object.fromEntries(t.types.map((x) => [x.key, x.icon]));
+  let el = document.getElementById("type-colours");
+  if (!el) { el = document.createElement("style"); el.id = "type-colours"; document.head.appendChild(el); }
+  el.textContent = typeColourCss(t.types);
 }
 
 export const typeVar = (type: string) => ({ ["--c" as string]: `var(--t-${type})` }) as React.CSSProperties;

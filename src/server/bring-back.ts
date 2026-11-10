@@ -62,6 +62,13 @@ export function bringBack(spare: Db, live: Db, day: string, query: string, opts:
   let images = 0, connectionsSkipped = 0;
   live.transaction(() => {
     // The Object comes back as it was. It is not "Unreviewed" again and is not in the Bin, even if it was when the Backup was made.
+    // An Object of a type the owner made needs that type (and its properties) to be here: bring them back if the type was removed since.
+    if (!live.prepare("SELECT 1 FROM object_types WHERE key = ?").get(m.type)) {
+      copyRows(spare, live, "object_types", "key = ?", m.type);
+      const fields = (spare.prepare("SELECT field FROM type_fields WHERE type = ?").all(m.type) as any[]).map((r) => r.field as string);
+      for (const f of fields) copyRows(spare, live, "field_definitions", "key = ?", f);
+      copyRows(spare, live, "type_fields", "type = ?", m.type);
+    }
     tables.objects = copyRows(spare, live, "objects", "id = ?", m.id, false, { deleted_at: null });
     for (const t of ["field_values", "blocks", "ai_notes", "open_questions", "concept_versions", "source_images", "person_portraits"]) {
       tables[t] = copyRows(spare, live, t, "object_id = ?", m.id, t === "field_values" || t === "blocks" || t === "ai_notes");

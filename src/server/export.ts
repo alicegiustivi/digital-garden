@@ -19,6 +19,7 @@ import { homedir } from "node:os";
 import { join } from "node:path";
 import { execFile } from "node:child_process";
 import type Database from "better-sqlite3";
+import { PALETTE } from "../shared/palette.ts";
 import { BadRequest, titleOf } from "./objects.ts";
 import { gardenDir, imagesDir } from "./paths.ts";
 import { localDay } from "./inbox.ts";
@@ -153,7 +154,7 @@ export function gatherGarden(db: Db, opts: ExportOptions = {}, now = new Date())
     format: "digital-garden-export", version: EXPORT_VERSION, exportedAt: now.toISOString(), leftOutPrivateObjects: out,
     note: "Not encrypted. This is a readable copy, not a Backup: it can't restore the Garden. If the readable files and this file disagree, this file wins.",
     origins: { owner: "the owner's own words", ai: "written by the AI (aiRole, aiModel, aiDate say which); approved:true means the owner approved it, it stays AI", source: "came from outside the Garden" },
-    objectTypes: types.map((t) => ({ key: t.key as string, label: t.label as string, plural: t.plural as string, fields: typeFields.filter((f) => f.type === t.key).map((f) => ({ key: f.field as string, label: defs.get(f.field)?.label as string, input: defs.get(f.field)?.input as string, options: json<string[] | null>(defs.get(f.field)?.options, null), lead: !!f.lead })) })),
+    objectTypes: types.map((t) => ({ key: t.key as string, label: t.label as string, plural: t.plural as string, core: !!t.core, color: t.color as string, colorLight: (PALETTE.find((c) => c.key === t.color) ?? PALETTE[0]).light, colorDark: (PALETTE.find((c) => c.key === t.color) ?? PALETTE[0]).dark, icon: t.icon as string, fields: typeFields.filter((f) => f.type === t.key).map((f) => ({ key: f.field as string, label: defs.get(f.field)?.label as string, input: defs.get(f.field)?.input as string, options: json<string[] | null>(defs.get(f.field)?.options, null), lead: !!f.lead })) })),
     objects, connections, tags, inquiries, dailyInbox: captures,
   };
 }
