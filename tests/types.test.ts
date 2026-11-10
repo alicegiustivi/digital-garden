@@ -285,7 +285,7 @@ describe("Export and restore carry custom types", () => {
     await call("DELETE", `/api/objects/${gone}`);
     const g = ex.gatherGarden(sqlite, {}, new Date("2026-11-10T10:00:00"));
     const t = g.objectTypes.find((x) => x.key === k)!;
-    expect(t).toMatchObject({ label: "Book", plural: "Books", core: false, color: "teal", icon: "book", colorFill: "#ccfbf1", colorInk: "#0f766e", colorInkDark: "#5eead4" });
+    expect(t).toMatchObject({ label: "Book", plural: "Books", core: false, color: "teal", icon: "book", colorFill: "#ccfbf1", colorInk: "#10a392", colorInkDark: "#5eead4" });
     expect(t.fields).toEqual([{ key: a, label: "Author", input: "text", options: null, lead: true }]);
     expect(g.objects.map((o) => o.id)).toContain(id);
     expect(g.objects.map((o) => o.id)).not.toContain(gone);

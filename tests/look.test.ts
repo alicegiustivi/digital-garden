@@ -30,7 +30,7 @@ describe("the Issue look", () => {
     expect(css).not.toMatch(/Playfair|Fraunces|Georgia|Newsreader|Bricolage/);
   });
   it("the drop cap takes the type's colour", () => {
-    expect(css).toMatch(/first-letter[^}]*color: var\(--c\)/);
+    expect(css).toMatch(/first-letter[^}]*color: var\(--ct, var\(--c\)\)/);
   });
   it("the top bar has the listed pages and More, and no sidebar", () => {
     for (const label of ["This week", "Tags", "More", "Types"]) expect(main).toContain(label);

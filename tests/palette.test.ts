@@ -16,13 +16,13 @@ const surface = (name: string, scheme: "light" | "dark") => {
 describe("the type colour palette (issue #107)", () => {
   it("has eighteen soft colours, each with its own name, fill and ink", () => {
     expect(PALETTE).toHaveLength(18);
-    for (const f of ["key", "label", "fill", "ink", "darkFill", "darkInk"] as const) expect(new Set(PALETTE.map((c) => c[f])).size, f).toBe(18);
+    for (const f of ["key", "label", "fill", "ink", "text", "darkFill", "darkInk"] as const) expect(new Set(PALETTE.map((c) => c[f])).size, f).toBe(18);
   });
   for (const c of PALETTE) {
-    it(`${c.label}: the ink is readable as text (4.5:1) on every surface and on its own fill, and as an outline (3:1), in light and dark`, () => {
+    it(`${c.label}: the text shade reads as text (4.5:1) on every surface and on its own fill, the ink shows as an outline (3:1), in light and dark`, () => {
       const lightSurfaces = ["#ffffff", surface("sheet", "light"), surface("wash", "light"), c.fill];
       const darkSurfaces = [surface("ground", "dark"), surface("sheet", "dark"), surface("card", "dark"), surface("wash", "dark"), c.darkFill];
-      for (const s of lightSurfaces) expect(ratio(c.ink, s), `${c.key} light on ${s}`).toBeGreaterThanOrEqual(4.5);
+      for (const s of lightSurfaces) expect(ratio(c.text, s), `${c.key} text on ${s}`).toBeGreaterThanOrEqual(4.5);
       for (const s of darkSurfaces) expect(ratio(c.darkInk, s), `${c.key} dark on ${s}`).toBeGreaterThanOrEqual(4.5);
       expect(ratio(c.ink, "#ffffff")).toBeGreaterThanOrEqual(3);
       expect(ratio(c.darkInk, surface("card", "dark"))).toBeGreaterThanOrEqual(3);
@@ -33,7 +33,7 @@ describe("the type colour palette (issue #107)", () => {
   });
   it("writes one ink and one fill per type, light and dark, from the data", () => {
     const out = typeColourCss([{ key: "x-book", color: "teal" }, { key: "source", color: "ocean" }]);
-    expect(out).toContain("--t-x-book:#0f766e;--tf-x-book:#ccfbf1");
+    expect(out).toContain("--t-x-book:#10a392;--tt-x-book:#10786c;--tf-x-book:#ccfbf1");
     expect(out).toContain("--t-x-book:#5eead4");
     expect(out).toContain(':root[data-scheme="dark"]{');
   });
