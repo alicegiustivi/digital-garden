@@ -822,3 +822,10 @@ button:not(:disabled):active, .pill:active, .cap:active, .side-link:active { tra
 .err { border-left: 3px solid var(--ink); padding-left: 10px; }
 .cw-as { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--mute); }
 .cw-as select { font: inherit; padding: 3px 8px; border-radius: 8px; border: 1px solid var(--line); background: var(--sheet); color: var(--ink); }
+/* The Types page: the list on the left, the form for the chosen type (or a new one) on the right. */
+.types-page .types-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(320px, 400px); gap: var(--s-6); align-items: start; }
+.types-page .types-panel { position: sticky; top: var(--s-5); max-height: calc(100vh - 2 * var(--s-5)); overflow: auto; }
+.types-page .type-rows { margin-top: 0; }
+.type-row.open { box-shadow: 0 0 0 2px var(--c); }
+.types-page .type-edit { border-top: 0; padding-top: 0; }
+@media (max-width: 900px) { .types-page .types-grid { grid-template-columns: minmax(0, 1fr); } .types-page .types-panel { position: static; max-height: none; } }

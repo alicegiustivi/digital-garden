@@ -100,7 +100,7 @@ function TypeEditor({ t, types, run, go }: { t: TypeDef; types: Types; run: (job
   return (
     <div className="type-edit">
       {t.core ? (
-        <p className="quiet small">A core type keeps its name, icon and fields, and every special thing it does. You can change its colour above.</p>
+        <p className="quiet small">A core type keeps its name, icon and fields, and every special thing it does. You can change its colour in its row.</p>
       ) : (
         <>
           <div className="row-fields">
@@ -165,13 +165,15 @@ export function TypesPage({ types, onTypes, go }: Props) {
   const run = async (job: () => Promise<TypesAnswer>) => {
     try { setError(null); onTypes(await job()); } catch (e) { setError((e as Error).message); }
   };
+  const editing = types.types.find((t) => t.key === open) ?? null;
   const keys = types.types.map((t) => t.key);
   const move = (key: string, by: number) => { const k = [...keys]; const i = k.indexOf(key); [k[i], k[i + by]] = [k[i + by], k[i]]; return run(() => api.orderTypes(k)); };
   return (
-    <main className="wrap text-page types-page">
+    <main className="wrap contents types-page">
       <header className="vol"><h2>Object Types</h2></header>
       <p className="quiet">Every Object has a type. Source, Concept, Thought and Person are the core types: you can change their colour. Make your own for anything else (a Book, a Place, a Recipe). A type of your own is a plain Object with the properties you choose. The Archivist never makes a type and never moves an Object into one.</p>
       {error && <p className="err" role="alert">{error}</p>}
+      <div className="types-grid">
       <ul className="type-rows">
         {types.types.map((t, i) => (
           <li key={t.key} className={`type-row${open === t.key ? " open" : ""}`} style={typeVar(t.key)}>
@@ -184,14 +186,22 @@ export function TypesPage({ types, onTypes, go }: Props) {
               <span className="grow" />
               <button type="button" aria-label={`Move ${t.label} up`} disabled={i === 0} onClick={() => move(t.key, -1)}>↑</button>
               <button type="button" aria-label={`Move ${t.label} down`} disabled={i === types.types.length - 1} onClick={() => move(t.key, 1)}>↓</button>
-              <button type="button" className="pill" aria-expanded={open === t.key} onClick={() => setOpen(open === t.key ? null : t.key)}>{open === t.key ? "Done" : "Edit"}</button>
+              <button type="button" className="pill" aria-expanded={open === t.key} onClick={() => setOpen(open === t.key ? null : t.key)}>{open === t.key ? "Editing" : "Edit"}</button>
             </div>
             <Swatches value={t.color} label={`Colour of ${t.label}`} onPick={(color) => run(() => api.updateType(t.key, { color }))} />
-            {open === t.key && <TypeEditor t={t} types={types} run={run} go={go} />}
           </li>
         ))}
       </ul>
-      <NewType run={run} onMade={(k) => setOpen(k)} />
+      <aside className="types-panel" aria-label={editing ? `Edit ${editing.label}` : "Make a type"}>
+        {editing ? (
+          <section className="type-new" style={typeVar(editing.key)}>
+            <h3>{editing.label}{editing.core && <span className="core-tag"> Core</span>}</h3>
+            <TypeEditor key={editing.key} t={editing} types={types} run={run} go={go} />
+            <p><button type="button" className="pill" onClick={() => setOpen(null)}>Done, make a new type instead</button></p>
+          </section>
+        ) : <NewType run={run} onMade={(k) => setOpen(k)} />}
+      </aside>
+      </div>
     </main>
   );
 }
