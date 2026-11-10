@@ -1,6 +1,6 @@
 # Export my Garden
 
-An **Export** is a readable copy of the Garden, made when you ask (More ▸ **Export my Garden…**). It is **not a Backup**: a Backup is encrypted and is the only way the Garden is put back; an Export is **not encrypted**, can be read without the Garden, and is never used to restore it. It works offline and uses no AI.
+An **Export** is a readable copy of the Garden, made when you ask (More ▸ **Export**). It is **not a Backup**: a Backup is encrypted and is the only way the Garden is put back; an Export is **not encrypted**, can be read without the Garden, and is never used to restore it. It works offline and uses no AI.
 
 You choose where it goes (Documents by default) and it makes a new folder there, `Garden export 2026-11-09` (a second one the same day gets `(2)`; an earlier Export is never overwritten). **"Leave out Private Objects"** (off by default) leaves out Private Objects, their Connections and their Mentions (Mentions read "[a Private Object]"). The screen says plainly that the folder is not encrypted. When it ends it says **Done** with **Show in Finder**. If it is stopped (disk full, Garden quit, Mac asleep), the half-written folder is deleted and the Garden says **Export didn't finish**.
 
