@@ -743,6 +743,8 @@ p.inbox-warn { margin: 10px 0; padding: 8px 14px; border-radius: 10px; backgroun
 .prop dt { color: var(--mute); font-size: 13.5px; }
 .prop dd { margin: 0; min-width: 0; }
 .prop .view { margin-inline: -6px; padding-inline: 6px; }
+/* On an Object's coloured cover the property rows are plain white (the card colour), so they read clearly on any type colour. */
+.cover .prop { background: var(--card); border-radius: 12px; padding: 9px 14px; }
 .prop .ph { color: var(--mute); }
 .prop-tags dd .tags { gap: var(--s-1); }
 .tag-input { border: 0; background: transparent; padding: 2px 6px; margin-left: -4px; }
@@ -810,14 +812,14 @@ button:not(:disabled):active, .pill:active, .cap:active, .side-link:active { tra
 .row-fields { display: flex; gap: var(--s-4); flex-wrap: wrap; }
 .row-fields label { display: grid; gap: 4px; font-size: 13px; color: var(--mute); flex: 1 1 200px; }
 .type-edit input[type="text"], .type-edit input:not([type]), .type-new input:not([type]), .type-edit select, .prop-new select { font: inherit; padding: 7px 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--sheet); color: var(--ink); min-width: 0; }
-.props { list-style: none; padding: 0; margin: 0; display: grid; gap: var(--s-2); }
-.prop { display: grid; gap: 6px; padding: 8px 10px; border-radius: 12px; background: var(--wash); }
-.prop-main { display: flex; align-items: center; gap: var(--s-3); flex-wrap: wrap; }
-.prop-main input:not([type]) { flex: 1 1 160px; }
-.prop-opts { display: grid; gap: 4px; color: var(--mute); }
-.prop-ask { margin: 0; font-size: 13.5px; }
-.prop-new { display: flex; gap: var(--s-2); flex-wrap: wrap; align-items: center; }
-.prop-new input { flex: 1 1 160px; }
+.tprops { list-style: none; padding: 0; margin: 0; display: grid; gap: var(--s-2); }
+.tprop { display: grid; gap: 6px; padding: 8px 10px; border-radius: 12px; background: var(--wash); }
+.tprop-main { display: flex; align-items: center; gap: var(--s-3); flex-wrap: wrap; }
+.tprop-main input:not([type]) { flex: 1 1 160px; }
+.tprop-opts { display: grid; gap: 4px; color: var(--mute); }
+.tprop-ask { margin: 0; font-size: 13.5px; }
+.tprop-new { display: flex; gap: var(--s-2); flex-wrap: wrap; align-items: center; }
+.tprop-new input { flex: 1 1 160px; }
 .move-row { display: inline-flex; gap: var(--s-2); margin-left: var(--s-3); align-items: center; }
 .type-new { background: var(--wash); border-radius: 18px; padding: var(--s-4) var(--s-5); display: grid; gap: var(--s-3); }
 .type-new h3 { margin: 0; }

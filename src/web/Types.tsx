@@ -45,8 +45,8 @@ function PropertyRow({ type, f, first, last, run }: { type: TypeDef; f: FieldDef
   const keys = type.fields.map((x) => x.key);
   const move = (by: number) => { const k = [...keys]; const i = k.indexOf(f.key); [k[i], k[i + by]] = [k[i + by], k[i]]; return run(() => api.orderTypeFields(type.key, k)); };
   return (
-    <li className="prop">
-      <div className="prop-main">
+    <li className="tprop">
+      <div className="tprop-main">
         <input aria-label="Property name" value={name} maxLength={40} onChange={(e) => setName(e.target.value)} onBlur={() => name.trim() !== f.label && run(() => api.updateTypeField(type.key, f.key, { label: name }))} />
         <span className="quiet small">{KIND[f.input]}</span>
         <label className="small"><input type="checkbox" checked={!!f.lead} onChange={(e) => run(() => api.updateTypeField(type.key, f.key, { lead: e.target.checked }))} /> Show under the title</label>
@@ -56,12 +56,12 @@ function PropertyRow({ type, f, first, last, run }: { type: TypeDef; f: FieldDef
         <button type="button" className="pill" onClick={async () => setAsk(await api.typeFieldRemoval(type.key, f.key))}>Remove</button>
       </div>
       {f.input === "select" && (
-        <label className="prop-opts small">Choices, separated by commas
+        <label className="tprop-opts small">Choices, separated by commas
           <input value={options} onChange={(e) => setOptions(e.target.value)} onBlur={() => run(() => api.updateTypeField(type.key, f.key, { options: options.split(",").map((o) => o.trim()).filter(Boolean) }))} />
         </label>
       )}
       {ask && (
-        <p className="prop-ask" role="alert">
+        <p className="tprop-ask" role="alert">
           {ask.values === 0 ? "No Object has a value here yet." : `${ask.values} ${ask.values === 1 ? "Object has" : "Objects have"} a value in “${f.label}”${ask.inBin ? ` (${ask.inBin} in the Bin)` : ""}. Removing the property deletes ${ask.values === 1 ? "that value" : "those values"}. A Backup still has them.`}
           {" "}<button type="button" className="pill action" onClick={() => run(() => api.removeTypeField(type.key, f.key))}>Remove “{f.label}”</button>
           {" "}<button type="button" className="pill" onClick={() => setAsk(null)}>Keep it</button>
@@ -80,7 +80,7 @@ function NewProperty({ type, run }: { type: TypeDef; run: (job: () => Promise<Ty
     setLabel(""); setOptions("");
   };
   return (
-    <form className="prop-new" onSubmit={(e) => { e.preventDefault(); void submit(); }}>
+    <form className="tprop-new" onSubmit={(e) => { e.preventDefault(); void submit(); }}>
       <input aria-label="New property name" placeholder="New property, e.g. Author" value={label} maxLength={40} onChange={(e) => setLabel(e.target.value)} />
       <select aria-label="Kind of property" value={input} onChange={(e) => setInput(e.target.value)}>
         <option value="text">Short text</option><option value="longtext">Long text</option><option value="select">Choice from a list</option>
@@ -112,7 +112,7 @@ function TypeEditor({ t, types, run, go }: { t: TypeDef; types: Types; run: (job
           <h4 className="small-h">Properties</h4>
           <p className="quiet small">Every {t.label} also has a title, a body, Tags and Connections. These are the extra things it carries.</p>
           {t.fields.length > 0 && (
-            <ul className="props">{t.fields.map((f, i) => <PropertyRow key={f.key} type={t} f={f} first={i === 0} last={i === t.fields.length - 1} run={run} />)}</ul>
+            <ul className="tprops">{t.fields.map((f, i) => <PropertyRow key={f.key} type={t} f={f} first={i === 0} last={i === t.fields.length - 1} run={run} />)}</ul>
           )}
           <NewProperty type={t} run={run} />
           <h4 className="small-h">Removing this type</h4>
