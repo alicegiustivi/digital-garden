@@ -17,7 +17,7 @@ export function Swatches({ value, onPick, label }: { value: string; onPick: (key
     <div className="swatches" role="radiogroup" aria-label={label}>
       {PALETTE.map((c) => (
         <button key={c.key} type="button" role="radio" aria-checked={value === c.key} className={value === c.key ? "on" : ""} title={c.label} aria-label={c.label}
-          style={{ ["--sw-l" as string]: c.light, ["--sw-d" as string]: c.dark }} onClick={() => onPick(c.key)}>
+          style={{ ["--sw-f" as string]: c.fill, ["--sw-i" as string]: c.ink, ["--sw-df" as string]: c.darkFill, ["--sw-di" as string]: c.darkInk }} onClick={() => onPick(c.key)}>
           {value === c.key && <Icon name="check" />}
         </button>
       ))}
@@ -136,7 +136,7 @@ function TypeEditor({ t, types, run, go }: { t: TypeDef; types: Types; run: (job
 function NewType({ run, onMade }: { run: (job: () => Promise<TypesAnswer>) => Promise<void>; onMade: (key: string) => void }) {
   const [label, setLabel] = useState("");
   const [plural, setPlural] = useState("");
-  const [color, setColor] = useState("teal");
+  const [color, setColor] = useState("mint");
   const [icon, setIcon] = useState("book");
   const submit = () => run(async () => {
     const r = await api.createType({ label, plural: plural || undefined, color, icon });
