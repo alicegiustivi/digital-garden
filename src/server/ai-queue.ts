@@ -7,6 +7,7 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { AI_CONFIG, type AiRole } from "./ai-config.ts";
 import { GateError, readKey, type Gate } from "./ai-gate.ts";
+import { createWebGate, type WebGate } from "./web-gate.ts";
 import { archivistPrompt, connectPrompt, readable } from "./ai-prompt.ts";
 import { applyFindings, jsonOf, lastRun, parseFindings, undoRun } from "./archivist.ts";
 import { applyConnections, applyProposals, parseConnections, parseProposals, pendingCount } from "./suggestions.ts";
@@ -19,7 +20,7 @@ type Db = Database.Database;
 export type Lane = 0 | 1 | 2;
 type JobRow = { id: number; role: AiRole; object_id: string | null; turn_id?: number | null; lane: Lane; status: string; run_after: string; attempts: number; fails: number; created_at: string };
 export type Outcome = "done" | "skip" | { busy: true } | { unusable: true } | { daily: true; resetAt?: number } | { key: true };
-export type Handler = (job: JobRow, ctx: { gate: Gate; now: Date; countCall: () => void }) => Promise<Outcome>;
+export type Handler = (job: JobRow, ctx: { gate: Gate; web: WebGate; now: Date; countCall: () => void }) => Promise<Outcome>;
 
 const iso = (d: Date) => d.toISOString();
 const dayOf = (d: Date) => d.toISOString().slice(0, 10);
@@ -28,8 +29,9 @@ const addMin = (d: Date, m: number) => new Date(d.getTime() + m * 60_000);
 /** After a busy answer: 1, 5, 15, 30 minutes, then every hour. `attempts` counts this one. */
 export const retryDelayMinutes = (attempts: number) => AI_CONFIG.retryMinutes[Math.min(Math.max(attempts, 1), AI_CONFIG.retryMinutes.length) - 1];
 
-export function createAi(db: Db, opts: { gate: Gate; now?: () => Date; hasKey?: () => boolean; handlers?: Partial<Record<AiRole, Handler>> }) {
+export function createAi(db: Db, opts: { gate: Gate; /** Where the Researcher looks things up when the owner turns the web on for a question (ADR 0009). Tests give a pretend one. */ web?: WebGate; now?: () => Date; hasKey?: () => boolean; handlers?: Partial<Record<AiRole, Handler>> }) {
   const now = opts.now ?? (() => new Date());
+  const web = opts.web ?? createWebGate();
   const hasKey = opts.hasKey ?? (() => !!readKey());
   const meta = {
     get: (k: string) => (db.prepare("SELECT value FROM ai_meta WHERE key = ?").get(k) as any)?.value as string | undefined,
@@ -160,7 +162,7 @@ export function createAi(db: Db, opts: { gate: Gate; now?: () => Date; hasKey?: 
           db.prepare("UPDATE ai_jobs SET status = 'working', updated_at = ? WHERE id = ?").run(iso(t), job.id);
           lastCall = t.getTime();
           let out: Outcome;
-          try { out = await handler(job, { gate: opts.gate, now: t, countCall: () => countCall(job.role) }); }
+          try { out = await handler(job, { gate: opts.gate, web, now: t, countCall: () => countCall(job.role) }); }
           catch { out = { unusable: true }; } // whatever went wrong, the content is untouched and the step can be retried
           settle(job, out, t);
         } finally { busy = false; }

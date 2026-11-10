@@ -833,3 +833,11 @@ button:not(:disabled):active, .pill:active, .cap:active, .side-link:active { tra
 .type-row.open { box-shadow: 0 0 0 2px var(--c); }
 .types-page .type-edit { border-top: 0; padding-top: 0; }
 @media (max-width: 900px) { .types-page .types-grid { grid-template-columns: minmax(0, 1fr); } .types-page .types-panel { position: static; max-height: none; } }
+
+/* Looking things up on the web (issue #108) */
+.src-link { margin-left: .4em; text-decoration: underline dotted; text-underline-offset: 2px; white-space: nowrap; }
+.web-lookup { margin-top: 10px; }
+.web-lookup li > span:first-child { min-width: 0; overflow-wrap: anywhere; }
+.web-switch { display: inline-flex; gap: 6px; align-items: center; margin: 6px 0 0; }
+.web-sources ol { margin: 2px 0 6px; padding-left: 1.4em; }
+.web-sources p { margin: 2px 0; }

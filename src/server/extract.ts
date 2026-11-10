@@ -102,7 +102,7 @@ const put = (db: Db, id: string, field: string, value: string) =>
   db
     .prepare(
       `INSERT INTO field_values (object_id, field, value, origin) VALUES (?, ?, ?, 'source')
-       ON CONFLICT (object_id, field) DO UPDATE SET value = excluded.value, origin = 'source', ai_role = NULL, ai_model = NULL, ai_date = NULL`,
+       ON CONFLICT (object_id, field) DO UPDATE SET value = excluded.value, origin = 'source', ai_role = NULL, ai_model = NULL, ai_date = NULL, source_url = NULL, source_name = NULL, source_date = NULL`,
     )
     .run(id, field, value);
 

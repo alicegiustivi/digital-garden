@@ -10,6 +10,15 @@ type Db = Database.Database;
 const MAX_TYPES = 40;
 const MAX_FIELDS = 12;
 const INPUTS = ["text", "longtext", "select"] as const;
+const LOOKUPS = ["summary", "year", "link"] as const;
+/** "May be looked up" (issue #108): which fact from the web a property of a type the owner made may take. Only a short or long text can. */
+const lookupOf = (input: unknown, lookup: unknown): string | null => {
+  if (lookup === undefined || lookup === null || lookup === "") return null;
+  if (!LOOKUPS.includes(lookup as any)) throw new BadRequest("Choose a short description, a year or a link");
+  if (input === "select") throw new BadRequest("A choice can’t be filled from the web");
+  if (input === "text" || input === "longtext") return lookup as string;
+  throw new BadRequest("A choice can’t be filled from the web");
+};
 
 const name = (v: unknown, what: string) => {
   const s = typeof v === "string" ? v.trim().replace(/\s+/g, " ") : "";
@@ -107,7 +116,7 @@ const optionsOf = (input: unknown, options: unknown) => {
   return JSON.stringify(list);
 };
 
-export function addField(db: Db, type: string, input: { label?: unknown; input?: unknown; options?: unknown; lead?: unknown }) {
+export function addField(db: Db, type: string, input: { label?: unknown; input?: unknown; options?: unknown; lead?: unknown; lookup?: unknown }) {
   custom(db, type);
   const label = name(input.label, "property");
   if (!INPUTS.includes(input.input as any)) throw new BadRequest("A property is short text, long text or a choice");
@@ -115,10 +124,11 @@ export function addField(db: Db, type: string, input: { label?: unknown; input?:
   const taken = db.prepare("SELECT 1 FROM type_fields tf JOIN field_definitions fd ON fd.key = tf.field WHERE tf.type = ? AND lower(fd.label) = lower(?)").get(type, label);
   if (taken) throw new BadRequest("This type already has a property with that name");
   const options = optionsOf(input.input, input.options);
+  const lookup = lookupOf(input.input, input.lookup);
   const key = `c-${randomBytes(5).toString("hex")}`; // properties are keyed by their own id, so renaming never loses a value
   const position = (db.prepare("SELECT coalesce(max(position), -1) + 1 AS p FROM type_fields WHERE type = ?").get(type) as any).p;
   db.transaction(() => {
-    db.prepare("INSERT INTO field_definitions (key, label, input, options) VALUES (?, ?, ?, ?)").run(key, label, input.input, options);
+    db.prepare("INSERT INTO field_definitions (key, label, input, options, lookup) VALUES (?, ?, ?, ?, ?)").run(key, label, input.input, options, lookup);
     db.prepare("INSERT INTO type_fields (type, field, position, lead) VALUES (?, ?, ?, 0)").run(type, key, position);
     if (input.lead) setLead(db, type, key);
   })();
@@ -129,7 +139,7 @@ function setLead(db: Db, type: string, field: string) {
   db.prepare("UPDATE type_fields SET lead = (field = ?) WHERE type = ?").run(field, type); // only one is shown under the title
 }
 
-export function updateField(db: Db, type: string, field: string, patch: { label?: unknown; options?: unknown; lead?: unknown }) {
+export function updateField(db: Db, type: string, field: string, patch: { label?: unknown; options?: unknown; lead?: unknown; lookup?: unknown }) {
   custom(db, type);
   const f = db.prepare("SELECT fd.* FROM type_fields tf JOIN field_definitions fd ON fd.key = tf.field WHERE tf.type = ? AND tf.field = ?").get(type, field) as any;
   if (!f) throw new BadRequest("That property does not exist");
@@ -144,6 +154,7 @@ export function updateField(db: Db, type: string, field: string, patch: { label?
       if (f.input !== "select") throw new BadRequest("Only a choice has options");
       db.prepare("UPDATE field_definitions SET options = ? WHERE key = ?").run(optionsOf("select", patch.options), field);
     }
+    if (patch.lookup !== undefined) db.prepare("UPDATE field_definitions SET lookup = ? WHERE key = ?").run(lookupOf(f.input, patch.lookup), field);
     if (patch.lead === true) setLead(db, type, field);
     if (patch.lead === false) db.prepare("UPDATE type_fields SET lead = 0 WHERE type = ? AND field = ?").run(type, field);
   })();

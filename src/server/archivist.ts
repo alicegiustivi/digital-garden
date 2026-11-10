@@ -94,7 +94,7 @@ export function applyFindings(db: Db, id: string, f: Findings, model: string, no
     if (cur?.origin === "source" && !(how.replaceSource && cur.value !== value)) return;
     db.prepare(
       `INSERT INTO field_values (object_id, field, value, origin, ai_role, ai_model, ai_date) VALUES (?, ?, ?, 'ai', ?, ?, ?)
-       ON CONFLICT (object_id, field) DO UPDATE SET value = excluded.value, origin = 'ai', ai_role = excluded.ai_role, ai_model = excluded.ai_model, ai_date = excluded.ai_date`,
+       ON CONFLICT (object_id, field) DO UPDATE SET value = excluded.value, origin = 'ai', ai_role = excluded.ai_role, ai_model = excluded.ai_model, ai_date = excluded.ai_date, source_url = NULL, source_name = NULL, source_date = NULL`,
     ).run(id, field, value, ROLE, model, date);
     if (field === "title") db.prepare("UPDATE objects SET title = ? WHERE id = ?").run(value, id);
     changes.push({ kind: "field", field, before: cur ? { value: cur.value, origin: cur.origin, aiRole: cur.ai_role, aiModel: cur.ai_model, aiDate: cur.ai_date } : null });

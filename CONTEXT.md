@@ -83,7 +83,7 @@ _Avoid_: Excerpt, citation, highlight
 ### Authorship
 
 **Origin**:
-Who put a piece of content into the Garden: **Source** (it came from outside, such as captured text, page metadata or an image), **AI** (the Archivist or the Researcher produced it), or **Owner** (the owner wrote or chose it). Every field value, Tag, Connection and block of text has one. The owner's words are shown plain; Source and AI content are always marked.
+Who put a piece of content into the Garden: **Source** (it came from outside, such as captured text, page metadata, an image, or a fact looked up on the web, which always keeps the link it came from), **AI** (the Archivist or the Researcher produced it), or **Owner** (the owner wrote or chose it). Every field value, Tag, Connection and block of text has one. The owner's words are shown plain; Source and AI content are always marked.
 _Avoid_: Author, provenance, source (for the Origin, as opposed to the Object Type)
 
 **AI Note**:
@@ -115,19 +115,19 @@ _Avoid_: Trash, archive, recycle bin
 ### AI
 
 **Archivist**:
-The AI role that works automatically in the background to give newly captured Objects a type, extracted information and Suggestions, and that describes a Person or Concept (description, years, links, definition) from what the Garden's Sources say. For an Object the owner put in a type of their own it adds Tags and Connections and fills that type's properties from the Object's own text, marked and undoable like any AI Contribution.
+The AI role that works automatically in the background to give newly captured Objects a type, extracted information and Suggestions, and that describes a Person or Concept (description, years, links, definition) from what the Garden's Sources say. For an Object the owner put in a type of their own it adds Tags and Connections and fills that type's properties from the Object's own text, marked and undoable like any AI Contribution. When the owner presses "Look up on the web" on a Person, Concept, book Source or an Object of a type with properties marked "may be looked up", it searches Wikipedia, Wikidata or Open Library by the Object's title and offers the facts it finds as Suggestions.
 _Avoid_: Auto-tagger, organizer bot
 
 **Researcher**:
-The AI role the owner starts on purpose to explore, question and analyze what is in the Garden.
+The AI role the owner starts on purpose to explore, question and analyze what is in the Garden. For one Inquiry the owner can switch on "look on the web" (off by default); the answer then keeps what comes from the Garden apart from what comes from the web, with links, and only the titles of Objects it reads are sent out.
 _Avoid_: Chatbot, assistant, copilot
 
 **AI Contribution**:
-Anything with AI Origin. It takes one of three forms: applied directly but marked and undone in one click (Tags, extracted facts about a Source such as its title, authors' names, date and format, and the Archivist's Connections of kind related and authored by, up to about 10 per Object); a Suggestion; or an AI Note. A new Object, a change of Object Type, a specific Connection Kind (supports, contradicts, builds on, inspired by), a change of kind on an existing Connection, a Connection found in a Researcher answer, and anything that touches a Thought are always Suggestions.
+Anything with AI Origin. It takes one of three forms: applied directly but marked and undone in one click (Tags, extracted facts about a Source such as its title, authors' names, date and format, and the Archivist's Connections of kind related and authored by, up to about 10 per Object); a Suggestion; or an AI Note. A fact looked up on the web (Source Origin, with its link), a new Object, a change of Object Type, a specific Connection Kind (supports, contradicts, builds on, inspired by), a change of kind on an existing Connection, a Connection found in a Researcher answer, and anything that touches a Thought are always Suggestions.
 _Avoid_: AI output, AI content, generated content
 
 **Suggestion**:
-An AI Contribution that only takes effect once the owner approves it, such as a specific kind of Connection, a Connection from a Researcher answer, a change of Object Type, a new Object (including a Concept offered when a Tag is on three or more Objects), or a title for a Thought. Anything rejected, including a removed AI Tag or an undone AI Connection, is remembered and not proposed again unless the owner asks.
+An AI Contribution that only takes effect once the owner approves it, such as a specific kind of Connection, a Connection from a Researcher answer, a fact looked up on the web (it keeps Source Origin and its link when approved), a change of Object Type, a new Object (including a Concept offered when a Tag is on three or more Objects), or a title for a Thought. Anything rejected, including a removed AI Tag or an undone AI Connection, is remembered and not proposed again unless the owner asks.
 _Avoid_: Recommendation, auto-link
 
 **Approve**:
@@ -135,7 +135,7 @@ The owner accepting a Suggestion as it is. It takes effect and joins the Garden'
 _Avoid_: Endorse, accept, confirm
 
 **Private**:
-Marks an Object that no AI role may ever read, and whose content the Garden itself never sends to any outside service. Content the owner sends into the Garden through an outside route, such as a message to the phone Capture bot, has already passed through that route; Private protects it from the moment it arrives. The AI does not learn a Private Object exists, even where another Object mentions it. Private belongs to one Object only and is never inherited through Connections. The owner's own search and linking still work on Private Objects.
+Marks an Object that no AI role may ever read, and whose content the Garden itself never sends to any outside service. Its title is never looked up on the web either, and the same goes for an Object in the Bin. Content the owner sends into the Garden through an outside route, such as a message to the phone Capture bot, has already passed through that route; Private protects it from the moment it arrives. The AI does not learn a Private Object exists, even where another Object mentions it. Private belongs to one Object only and is never inherited through Connections. The owner's own search and linking still work on Private Objects.
 _Avoid_: Hidden, locked, secret
 
 ### Keeping the Garden

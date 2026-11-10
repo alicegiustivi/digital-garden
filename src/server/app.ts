@@ -26,13 +26,16 @@ import * as ib from "./inbox.ts";
 import { phoneSetup, renewCode } from "./phone-setup.ts";
 import * as bk from "./backup.ts";
 import * as ex from "./export.ts";
+import { createWebGate, type WebGate } from "./web-gate.ts";
+import * as lk from "./lookup.ts";
 import { createGate, forgetKey, GateError, looksLikeKey, saveKey } from "./ai-gate.ts";
 
-type Options = { /** Reads a saved link in the background. Tests replace it. */ readLink?: (id: string, url: string) => void; /** The AI queue. Tests give it a pretend OpenRouter. */ ai?: Ai; /** How often (ms) to look in the Drive inbox for phone captures. 0 = only when asked. */ inboxEvery?: number; /** Shows a folder in Finder. Tests replace it. */ reveal?: (path: string) => void; /** Daily Backup (issue #39). `every` = how often (ms) to check whether one is due; 0 = only when asked. Tests give their own password. */ backup?: { every?: number; password?: bk.PasswordSource }; /** Export my Garden (issue #40). Tests replace the Finder pieces and can stop an Export part-way. */ exporter?: { choose?: () => Promise<string | null>; reveal?: (path: string) => void; deps?: ex.ExportDeps } };
+type Options = { /** Where facts are looked up on the web (ADR 0009). Tests give a pretend one. */ web?: WebGate; /** Reads a saved link in the background. Tests replace it. */ readLink?: (id: string, url: string) => void; /** The AI queue. Tests give it a pretend OpenRouter. */ ai?: Ai; /** How often (ms) to look in the Drive inbox for phone captures. 0 = only when asked. */ inboxEvery?: number; /** Shows a folder in Finder. Tests replace it. */ reveal?: (path: string) => void; /** Daily Backup (issue #39). `every` = how often (ms) to check whether one is due; 0 = only when asked. Tests give their own password. */ backup?: { every?: number; password?: bk.PasswordSource }; /** Export my Garden (issue #40). Tests replace the Finder pieces and can stop an Export part-way. */ exporter?: { choose?: () => Promise<string | null>; reveal?: (path: string) => void; deps?: ex.ExportDeps } };
 
 export function createApp(sqlite: Database.Database, opts: Options = {}) {
   const readLink = opts.readLink ?? ((id: string, url: string) => void extractInto(sqlite, id, url));
-  const ai = opts.ai ?? createAi(sqlite, { gate: createGate() });
+  const web = opts.web ?? createWebGate();
+  const ai = opts.ai ?? createAi(sqlite, { gate: createGate(), web });
   const app = new Hono();
 
   // ADR 0002: the Garden answers only this Mac. Binding to 127.0.0.1 keeps other devices out; this keeps out
@@ -241,6 +244,15 @@ export function createApp(sqlite: Database.Database, opts: Options = {}) {
   app.post("/api/objects/:id/ai/run", (c) => (ai.request(c.req.param("id")) ? c.json(ai.statusOf(c.req.param("id"))) : c.json({ error: "The Archivist can't read this one" }, 400)));
   app.post("/api/connections/:id/undo-ai", (c) => { const r = ar.undoConnection(sqlite, Number(c.req.param("id"))); return r ? c.json({ ...r, ok: true }) : c.json({ error: "That Connection is no longer the Archivist's to undo" }, 404); });
   app.post("/api/objects/:id/ai/undo", (c) => (ai.undo(c.req.param("id")) ? c.json(o.getObject(sqlite, c.req.param("id"))) : c.json({ error: "Nothing to undo" }, 404)));
+
+  // Looking facts up on the web (issue #108, ADR 0009). Only when the owner presses "Look up"; only the Object's title leaves this Mac.
+  app.get("/api/objects/:id/lookup", (c) => {
+    const t = lk.targetOf(sqlite, c.req.param("id"));
+    if (!t.ok) return c.json({ available: false, why: t.why });
+    const labels = (k: string) => (sqlite.prepare("SELECT label FROM field_definitions WHERE key = ?").get(k) as any)?.label ?? k;
+    return c.json({ available: true, name: t.name, site: t.route === "openlibrary" ? "Open Library" : "Wikipedia and Wikidata", fields: Object.keys(t.fields).map(labels) });
+  });
+  app.post("/api/objects/:id/lookup", async (c) => c.json(await lk.lookUp(sqlite, web, c.req.param("id"), (await c.req.json().catch(() => ({}))).pick)));
 
   // Suggestions and AI Notes (issue #32)
   app.get("/api/objects/:id/suggestions", (c) => found(c, sg.suggestionsOf(sqlite, c.req.param("id"))));

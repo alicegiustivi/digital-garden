@@ -137,6 +137,17 @@ function TurnView({ turn, thread, reload }: { turn: Turn; thread: Thread; reload
               Read: {a.reads.map((r, i) => <span key={r.id}>{i > 0 && " · "}<a href={`#/o/${r.id}`} style={typeVar(r.type)}>{r.title}</a>{r.private ? <> <Icon name="lock" /></> : null}</span>)}
             </p>
           )}
+          {a.web && (a.web.sources.length > 0 || a.web.notes.length > 0) && (
+            <div className="web-sources small">
+              {a.web.sources.length > 0 && <p className="quiet">From the web, outside your Garden:</p>}
+              {a.web.sources.length > 0 && (
+                <ol>
+                  {a.web.sources.map((w) => <li key={w.n} value={w.n}><span className="o-src">{w.title}</span> — <a href={w.url} target="_blank" rel="noreferrer noopener">{w.site}</a></li>)}
+                </ol>
+              )}
+              {a.web.notes.map((n, i) => <p key={i} className="quiet">{n}</p>)}
+            </div>
+          )}
           {a.privateNote && <p className="small quiet"><Icon name="lock" /> {a.privateNote}</p>}
           {a.kept.length > 0 && <p className="small quiet">Kept on: {a.kept.map((k, i) => <span key={k.id}>{i > 0 && ", "}<a href={`#/o/${k.id}`}>{k.title}</a></span>)}</p>}
           {keeping ? <KeepPicker turn={turn} thread={thread} onDone={() => { setKeeping(false); reload(); }} /> : (
@@ -170,7 +181,7 @@ export function InquiryThread({ id, onGone }: { id: string; onGone?: () => void 
   return (
     <div className="inquiry">
       <p className="quiet small">
-        {t.object ? <>About <a href={`#/o/${t.object.id}`} style={typeVar(t.object.type)}><Icon name={t.object.type} /> {t.object.title}</a></> : t.scopeGone ? "About an Object that is gone" : "Asked of the whole Garden"} · {formatDay(t.createdAt)}
+        {t.web ? "Web on · " : ""}{t.object ? <>About <a href={`#/o/${t.object.id}`} style={typeVar(t.object.type)}><Icon name={t.object.type} /> {t.object.title}</a></> : t.scopeGone ? "About an Object that is gone" : "Asked of the whole Garden"} · {formatDay(t.createdAt)}
       </p>
       {t.turns.map((turn) => <TurnView key={turn.id} turn={turn} thread={t} reload={reload} />)}
       <form className="follow" onSubmit={(e) => { e.preventDefault(); if (text.trim() && !busy) follow(); }}>
@@ -187,10 +198,11 @@ export function AskBox({ objectId, type, onAsked }: { objectId?: string; type: s
   const ai = useAi();
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
+  const [web, setWeb] = useState(false); // off unless turned on for this question (ADR 0009)
   const go = async (q: string) => {
     if (!q.trim() || busy) return;
     setBusy(true);
-    try { const t = await api.ask(q, objectId); setText(""); aiChanged(); onAsked(t.id); } catch (e) { showToast((e as Error).message); } finally { setBusy(false); }
+    try { const t = await api.ask(q, objectId, web); setText(""); aiChanged(); onAsked(t.id); } catch (e) { showToast((e as Error).message); } finally { setBusy(false); }
   };
   return (
     <div className="askbox">
@@ -203,6 +215,12 @@ export function AskBox({ objectId, type, onAsked }: { objectId?: string; type: s
       </form>
       {ai && !ai.keySet && <p className="small quiet">The Researcher needs your OpenRouter key. <a href="#/ai">Add it</a>; a question asked now is saved and starts once it’s there.</p>}
       {ai?.keySet && ai.low && <p className="small warn" role="status">Only {ai.left} free calls are left today (each question uses two). The count starts again at {new Date(ai.reset.at).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}.</p>}
+      <label className="small web-switch">
+        <input type="checkbox" checked={web} onChange={(e) => setWeb(e.target.checked)} /> Also look on the web for this question
+      </label>
+      <p className="small quiet">{web
+        ? "Only the titles of up to three Objects it reads (never their text, Tags or Connections, and never a Private one) are sent to Wikipedia and Wikidata. The answer keeps what comes from your Garden apart from what comes from the web."
+        : "Off: nothing leaves this Mac except the AI request."}</p>
       <p className="small quiet">Each question uses two of today’s free calls. It reads only what isn’t Private, and never treats an earlier answer as evidence.</p>
     </div>
   );

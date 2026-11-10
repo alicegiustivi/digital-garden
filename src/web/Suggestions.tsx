@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { api, type AiNote, type Obj, type Suggestion, type Suggestions, type Types } from "./api";
+import { api, type AiNote, type FactSuggestion, type LookupInfo, type LookupResult, type Obj, type Suggestion, type Suggestions, type Types } from "./api";
 import { refresh, useRefresh } from "./refresh";
 import { showToast } from "./toast";
 import { AnswerText } from "./Inquiries";
@@ -32,7 +32,8 @@ const wording = (s: Suggestion, types: Types, current: string): React.ReactNode 
  * approved (it keeps AI Origin, marked ✧) or rejected (remembered, not proposed again unless the owner asks).
  */
 export function ArchivistSuggestions({ obj, types, onChanged }: { obj: Obj; types: Types; onChanged: (o: Obj) => void }) {
-  const [s, setS] = useState<Suggestions | null>(null);
+  const [all, setS] = useState<Suggestions | null>(null);
+  const s = all ? { ...all, pending: all.pending.filter((x): x is Suggestion => x.kind !== "fact") } : null; // looked-up facts have their own place (WebLookup)
   const [added, setAdded] = useState(0); // Connections the Archivist added directly (issue #66)
   const load = () => { api.suggestions(obj.id).then(setS).catch(() => {}); api.aiStatus(obj.id).then((st) => setAdded(st.run?.connections ?? 0)).catch(() => {}); };
   useLive(load, [obj.id, obj.private]);
@@ -129,6 +130,82 @@ export function AiNotes({ obj }: { obj: Pick<Obj, "id" | "private"> }) {
           </span>
         </aside>
       ))}
+    </section>
+  );
+}
+
+
+/**
+ * "Look up on the web" (issue #108, ADR 0009). Pressed by the owner, never automatic. Says first what will be sent (the title, nothing
+ * else) and where, then shows what came back as Suggestions: each with its value, the page it came from, Approve and Not this.
+ */
+export function WebLookup({ obj, onChanged }: { obj: Obj; onChanged: (o: Obj) => void }) {
+  const [info, setInfo] = useState<LookupInfo | null>(null);
+  const [facts, setFacts] = useState<FactSuggestion[]>([]);
+  const [result, setResult] = useState<LookupResult | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string>();
+  const load = () => {
+    api.lookupInfo(obj.id).then(setInfo).catch(() => setInfo(null));
+    api.suggestions(obj.id).then((s) => setFacts(s.pending.filter((x): x is FactSuggestion => x.kind === "fact"))).catch(() => {});
+  };
+  useLive(load, [obj.id, obj.private, obj.type, obj.fields.length], 8000);
+  useEffect(() => { setResult(null); setError(undefined); }, [obj.id]);
+  if (obj.private || !info?.available) return null;
+
+  const go = async (pick?: string) => {
+    setBusy(true); setError(undefined);
+    try { setResult(await api.lookUp(obj.id, pick)); load(); } catch (e) { setError((e as Error).message); } finally { setBusy(false); }
+  };
+  const approve = async (x: FactSuggestion) => {
+    setError(undefined);
+    try { onChanged(await api.approve(x.id)); setResult(null); refresh(); load(); } catch (e) { setError((e as Error).message); load(); }
+  };
+  const notThis = async (x: FactSuggestion) => {
+    setError(undefined);
+    try { await api.reject(x.id); setResult(null); load(); showToast("Not this: the Garden won’t offer that value again."); } catch (e) { setError((e as Error).message); }
+  };
+
+  return (
+    <section className="archivist-block web-lookup" aria-label="Look up on the web">
+      <h3>From the web</h3>
+      {facts.length > 0 && (
+        <ul>
+          {facts.map((x) => (
+            <li key={x.id}>
+              <span>
+                <b>{x.label}:</b> <span className="o-src">{x.value}</span>
+                {x.current ? <span className="quiet small"> (now: {x.current})</span> : null}
+                <br /><span className="quiet small">From <a href={x.url} target="_blank" rel="noreferrer noopener">{x.site}</a>, for “{x.match}”</span>
+              </span>
+              <span className="acts">
+                <button className="pill action" onClick={() => approve(x)}>Approve</button>
+                <button className="pill toggle" onClick={() => notThis(x)}>Not this</button>
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+      {result?.status === "choose" && result.candidates && (
+        <div role="group" aria-label="Which one?">
+          <p className="small">{result.message}</p>
+          <ul>
+            {result.candidates.map((c) => (
+              <li key={c.id}>
+                <span><b>{c.label}</b>{c.description ? <span className="quiet small"> — {c.description}</span> : null} <a className="small" href={c.url} target="_blank" rel="noreferrer noopener">{c.site}</a></span>
+                <span className="acts"><button className="pill action" disabled={busy} onClick={() => go(c.id)}>This one</button></span>
+              </li>
+            ))}
+          </ul>
+          <p><button className="link-btn" onClick={() => setResult(null)}>None of these</button></p>
+        </div>
+      )}
+      {result && result.status !== "choose" && <p role="status" className="small">{result.message}</p>}
+      {error && <p role="alert" className="quiet small">{error}</p>}
+      <p>
+        <button className="pill action" disabled={busy} onClick={() => go()}>{busy ? "Looking…" : facts.length ? "Look up again" : "Look up on the web"}</button>
+        <span className="quiet small"> Sends only the title “{info.name}” to {info.site}. Fills: {info.fields.join(", ")}.</span>
+      </p>
     </section>
   );
 }

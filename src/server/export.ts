@@ -39,8 +39,9 @@ const day10 = (s: string | null | undefined) => (s ? String(s).slice(0, 10) : ""
 export const aiLine = (role: string | null, model: string | null, date: string | null) =>
   `AI · ${ROLE[role ?? ""] ?? role ?? "AI"} · ${model ?? "unknown model"} · ${day10(date)}`;
 
-type Origin = { origin: string; aiRole: string | null; aiModel: string | null; aiDate: string | null; approved?: boolean };
-const originOf = (r: any, approved?: boolean): Origin => ({ origin: r.origin, aiRole: r.ai_role ?? null, aiModel: r.ai_model ?? null, aiDate: r.ai_date ?? null, ...(approved === undefined ? {} : { approved: r.origin === "ai" && !!approved }) });
+type Origin = { origin: string; aiRole: string | null; aiModel: string | null; aiDate: string | null; approved?: boolean; sourceUrl?: string; sourceName?: string | null; sourceDate?: string | null };
+// A fact looked up on the web (issue #108) keeps the page it came from, so it can still be checked without the Garden.
+const originOf = (r: any, approved?: boolean): Origin => ({ origin: r.origin, aiRole: r.ai_role ?? null, aiModel: r.ai_model ?? null, aiDate: r.ai_date ?? null, ...(approved === undefined ? {} : { approved: r.origin === "ai" && !!approved }), ...(r.origin === "source" && r.source_url ? { sourceUrl: r.source_url as string, sourceName: r.source_name ?? null, sourceDate: r.source_date ?? null } : {}) });
 /** ✦ AI, ✧ approved AI, ❝ Source, the owner's words plain. */
 const mark = (o: Origin) => (o.origin === "ai" ? (o.approved ? "✧" : "✦") : o.origin === "source" ? "❝" : "");
 const withMark = (o: Origin, text: string) => (mark(o) ? `${mark(o)} ${text}` : text);
@@ -214,8 +215,8 @@ function markdownFor(g: Garden, L: ReturnType<typeof layout>, privateIds: Set<st
     for (const k of order) {
       const f = o.fields.find((x) => x.field === k);
       if (!f) continue;
-      if (defs.find((d) => d.key === k)?.lead) { lead.push(`**${label(k)}**\n\n${withMark(f, f.value)}${aiTail(f) ? `\n\n_${aiTail(f).slice(3)}_` : ""}`); continue; }
-      lines.push(`- ${label(k)}: ${withMark(f, f.value)}${f.origin === "ai" ? ` _(${aiLine(f.aiRole, f.aiModel, f.aiDate)})_` : ""}`);
+      if (defs.find((d) => d.key === k)?.lead) { lead.push(`**${label(k)}**\n\n${withMark(f, f.value)}${aiTail(f) ? `\n\n_${aiTail(f).slice(3)}_` : f.sourceUrl ? `\n\n_From ${f.sourceName ?? "the web"}: ${f.sourceUrl}_` : ""}`); continue; }
+      lines.push(`- ${label(k)}: ${withMark(f, f.value)}${f.origin === "ai" ? ` _(${aiLine(f.aiRole, f.aiModel, f.aiDate)})_` : f.sourceUrl ? ` _(from ${f.sourceName ?? "the web"}, ${f.sourceUrl}${f.sourceDate ? `, looked up ${f.sourceDate}` : ""})_` : ""}`);
     }
     if (lines[lines.length - 1] !== "") lines.push("");
     for (const l of lead) lines.push(l, "");

@@ -15,6 +15,8 @@ import { clip, cleanText, readable } from "./ai-prompt.ts";
 import { commentForAi } from "./inbox-comments.ts";
 import type { Outcome } from "./ai-queue.ts";
 import { jsonOf } from "./archivist.ts";
+import { passageFor, type WebPassage } from "./lookup.ts";
+import { WebError, type WebGate } from "./web-gate.ts";
 import { sharesWords } from "./connections.ts";
 import { MENTION, mentionToken } from "./mentions.ts";
 import { BadRequest, createObject, titleOf } from "./objects.ts";
@@ -34,7 +36,7 @@ const labelOf = (r: any) => (r.origin === "owner" ? "the owner's words" : r.orig
 
 // ---------- Asking ----------
 
-export function createInquiry(db: Db, input: { objectId?: unknown; question?: unknown }) {
+export function createInquiry(db: Db, input: { objectId?: unknown; question?: unknown; web?: unknown }) {
   const question = typeof input.question === "string" ? input.question.trim() : "";
   if (!question) throw new BadRequest("Write a question first");
   if (question.length > MAX_QUESTION) throw new BadRequest("That question is too long; keep it under 1,000 characters");
@@ -47,7 +49,7 @@ export function createInquiry(db: Db, input: { objectId?: unknown; question?: un
   }
   const id = randomUUID();
   const t = new Date().toISOString();
-  db.prepare("INSERT INTO inquiries (id, object_id, created_at) VALUES (?, ?, ?)").run(id, objectId, t);
+  db.prepare("INSERT INTO inquiries (id, object_id, created_at, web) VALUES (?, ?, ?, ?)").run(id, objectId, t, input.web === true ? 1 : 0); // the web is off unless the owner turned it on for this question (ADR 0009)
   const turnId = addTurnRow(db, id, question);
   return { id, turnId };
 }
@@ -71,7 +73,7 @@ export function resetTurn(db: Db, turnId: number) {
   const t = db.prepare("SELECT * FROM inquiry_turns WHERE id = ? AND answer IS NULL").get(turnId) as any;
   if (!t) return false;
   cancelJobs(db, turnId);
-  db.prepare("UPDATE inquiry_turns SET steps = '[]', picked = NULL, error = NULL WHERE id = ?").run(turnId);
+  db.prepare("UPDATE inquiry_turns SET steps = '[]', picked = NULL, web = NULL, error = NULL WHERE id = ?").run(turnId);
   return true;
 }
 
@@ -205,9 +207,16 @@ Rules:
 - "connections" lists up to 3 pairs of Objects you read that clearly relate. "kind" is one of: related, supports, contradicts, builds on. Use [] if none.
 Answer with ONE JSON object and nothing else: {"answer": string, "connections": [{"a": "o1", "b": "o2", "kind": "supports"}]}`;
 
+/** Added only when the owner turned the web on and something was found: the answer keeps the Garden and the web apart. */
+const WEB_RULES = `
+The owner turned on "look on the web" for this question. Under "Web passages" are a few short passages from Wikipedia or Wikidata, looked up by the title of an Object you read. They come from OUTSIDE the Garden: they are not the owner's words, not the owner's view and not something the Garden holds. This is the one exception to the rule against outside knowledge: you may use what those passages say, and nothing else from outside.
+- Write the answer in two parts. The first starts with the bold lead-in **From your Garden.** and holds everything the Objects support (keep the five-part order above inside it, with the [o] refs). The second starts, on its own line, with the bold lead-in **From the web.** and holds only what a web passage says, each claim followed by its ref like [w1].
+- Never say "you wrote" or "your view" about a web passage, and never present a web claim as the owner's. If a passage does not bear on the question, say so in one sentence.
+- Use only refs shown under "Web passages" (like [w1]).`;
+
 // ---------- The two requests ----------
 
-type Ctx = { gate: Gate; now: Date; countCall: () => void };
+type Ctx = { gate: Gate; web?: WebGate; now: Date; countCall: () => void };
 type Called<T> = { value: T; model: string } | Outcome;
 const isOutcome = (x: any): x is Outcome => x === "done" || x === "skip" || (typeof x === "object" && x !== null && !("value" in x));
 
@@ -269,6 +278,16 @@ export async function researcherHandler(db: Db, job: { id: number; turn_id?: num
   let extra = cards.length;
   const refOf = new Map(toRead.map((id) => [id === inq.object_id ? "o0" : (cardRef.get(id) ?? `o${++extra}`), id]));
   setSteps(db, turn.id, labels, 2);
+  // The web, only when the owner turned it on for this Inquiry: the title of up to three of the Objects it read, nothing else (ADR 0009).
+  let web: WebFound | null = null;
+  if (inq.web) {
+    if (turn.web) web = JSON.parse(turn.web) as WebFound;
+    else {
+      web = ctx.web ? await gatherWeb(db, ctx.web, toRead) : { sources: [], notes: ["The web could not be reached from here."] };
+      db.prepare("UPDATE inquiry_turns SET web = ? WHERE id = ?").run(JSON.stringify(web), turn.id);
+    }
+  }
+  const sources = web?.sources ?? [];
   // The Object the owner is looking at counts double: it is what the question is about.
   const shares = toRead.reduce((n, id) => n + (id === inq.object_id ? 2 : 1), 0) || 1;
   const capOf = (id: string) => Math.floor((TEXT_BUDGET * (id === inq.object_id ? 2 : 1)) / shares);
@@ -277,14 +296,17 @@ export async function researcherHandler(db: Db, job: { id: number; turn_id?: num
   if (earlier.length)
     prompt += `Earlier in this Inquiry (context for a follow-up only, NOT evidence):\n${earlier.map((e) => `- The owner asked: ${e.question}${e.answer ? `\n  An earlier AI answer (not evidence): ${cleanRefs(e.answer).slice(0, 600)}` : ""}`).join("\n")}\n\n`;
   prompt += toRead.length ? `Objects you read:\n\n${[...refOf].map(([ref, id]) => fullObject(db, ref, id, capOf(id))).join("\n\n")}` : "Objects you read: none. Say that nothing in the Garden covers this.";
+  if (sources.length) prompt += `\n\nWeb passages (outside the Garden, not the owner's words):\n\n${sources.map((w, i) => `[w${i + 1}] "${w.title}" — ${w.site} (${w.url}):\n${w.text}`).join("\n\n")}`;
   setSteps(db, turn.id, labels, 3);
 
-  const r2 = await request(ctx, [{ role: "system", content: ANSWER_SYSTEM }, { role: "user", content: prompt }], (text) => {
+  const r2 = await request(ctx, [{ role: "system", content: sources.length ? ANSWER_SYSTEM + WEB_RULES : ANSWER_SYSTEM }, { role: "user", content: prompt }], (text) => {
     const j = jsonOf(text);
     const answer = typeof j?.answer === "string" ? j.answer.trim() : "";
     if (!answer || answer.length > 8000) return null;
     // The owner is only ever quoted when something the owner wrote was shown.
     if (!hasOwnerText(db, toRead) && /\byou (wrote|said|noted|argued|think|believe)\b|\byour (own )?(words|notes?|view)\b/i.test(answer)) return null;
+    // With web passages the two parts must both be there, so a web claim can never pass for the Garden's.
+    if (sources.length && !(/\*\*From your Garden\.?\*\*/i.test(answer) && /\*\*From the web\.?\*\*/i.test(answer))) return null;
     return { answer, connections: Array.isArray(j.connections) ? j.connections : [] };
   });
   if (isOutcome(r2)) return r2;
@@ -292,7 +314,7 @@ export async function researcherHandler(db: Db, job: { id: number; turn_id?: num
   // 3. Check the links: only refs of Objects it really read survive; every other link is dropped.
   setSteps(db, turn.id, labels, 4);
   const stillOk = (id: string) => readable(db, id);
-  const text = linkRefs(r2.value.answer, new Map([...refOf].filter(([, id]) => stillOk(id))));
+  const text = webRefs(linkRefs(r2.value.answer, new Map([...refOf].filter(([, id]) => stillOk(id)))), sources.length);
   const reads = toRead.filter(stillOk);
   const priv = privateMatches(db, inq.object_id, turn.question);
   const date = ctx.now.toISOString().slice(0, 10);
@@ -306,6 +328,39 @@ export async function researcherHandler(db: Db, job: { id: number; turn_id?: num
   })();
   return "done";
 }
+
+export type WebFound = { sources: WebPassage[]; notes: string[] };
+
+/**
+ * What the web gave for the Objects the Researcher read: one passage per Object whose title matches exactly one thing, at most three.
+ * A name is looked up only if the Object is still readable now. Every failure becomes a plain note; it never stops the answer.
+ */
+export async function gatherWeb(db: Db, web: WebGate, ids: string[]): Promise<WebFound> {
+  const found: WebFound = { sources: [], notes: [] };
+  const names = new Set<string>();
+  for (const id of ids) {
+    if (names.size >= 3) break;
+    if (!readable(db, id)) continue;
+    const name = String((db.prepare("SELECT title FROM objects WHERE id = ?").get(id) as any)?.title ?? "").replace(/\s+/g, " ").trim(); // its own title, never text from the body
+    if (!name || names.has(name.toLowerCase())) continue;
+    names.add(name.toLowerCase());
+    try {
+      const r = await passageFor(web, name);
+      if (r.passage) found.sources.push(r.passage);
+      else found.notes.push(`Nothing from the web for “${name}”: ${r.why}.`);
+    } catch (e) {
+      if (!(e instanceof WebError)) throw e;
+      found.notes.push(`Couldn’t look up “${name}” on ${e.site}: ${e.kind === "offline" ? "no connection" : e.kind === "slow" ? "no answer in time" : e.kind === "limit" ? "it asked for fewer requests" : "no usable answer"}.`);
+      if (e.kind === "offline" || e.kind === "limit") break; // the next one would fail the same way
+    }
+  }
+  if (!names.size && !found.notes.length) found.notes.push("Nothing was looked up on the web: none of the Objects it read has a title of its own to look up.");
+  return found;
+}
+
+/** [w1] becomes "[web 1]"; a web ref that was not shown is removed. */
+export const webRefs = (answer: string, count: number) =>
+  answer.replace(/\[(w\d+)\]/g, (_m, r: string) => { const n = Number(r.slice(1)); return n >= 1 && n <= count ? `[web ${n}]` : ""; }).replace(/[ \t]+([.,;:!?])/g, "$1");
 
 /** [o2] and [o1, o3] become Mentions of the real Objects they stand for; any other bracketed ref, or Mention, is removed. */
 export function linkRefs(answer: string, refs: Map<string, string>): string {
@@ -363,7 +418,8 @@ function turnOut(db: Db, t: any, hasKey: boolean) {
     const reads = (JSON.parse(t.read_ids ?? "[]") as string[]).flatMap((id) => { const b = brief(db, id); return b ? [b] : []; });
     const kept = (db.prepare("SELECT object_id FROM ai_notes WHERE inquiry_id = ? AND kind = 'answer' AND text = ?").all(t.inquiry_id, t.answer) as any[])
       .flatMap((n) => { const b = brief(db, n.object_id); return b ? [b] : []; });
-    answer = { text, links, reads, kept, model: t.ai_model as string, role: t.ai_role as string, date: t.ai_date as string, privateNote: privateLine(t.private_count ?? 0) };
+    const w = t.web ? (JSON.parse(t.web) as WebFound) : null;
+    answer = { text, links, reads, kept, model: t.ai_model as string, role: t.ai_role as string, date: t.ai_date as string, privateNote: privateLine(t.private_count ?? 0), web: w ? { sources: w.sources.map((x, i) => ({ n: i + 1, title: x.title, site: x.site, url: x.url, text: x.text })), notes: w.notes } : null };
   }
   return {
     id: t.id as number, question: t.question as string, state, steps, answer,
@@ -378,7 +434,7 @@ export function inquiryOf(db: Db, id: string, hasKey = true) {
   const i = db.prepare("SELECT * FROM inquiries WHERE id = ? AND deleted_at IS NULL").get(id) as any;
   if (!i) return null;
   const turns = (db.prepare("SELECT * FROM inquiry_turns WHERE inquiry_id = ? ORDER BY id").all(id) as any[]).map((t) => turnOut(db, t, hasKey));
-  return { id: i.id as string, object: i.object_id ? brief(db, i.object_id) : null, scopeGone: !!i.object_id && !live(db, i.object_id), createdAt: i.created_at as string, turns };
+  return { id: i.id as string, object: i.object_id ? brief(db, i.object_id) : null, scopeGone: !!i.object_id && !live(db, i.object_id), createdAt: i.created_at as string, web: !!i.web, turns };
 }
 
 /** Every Inquiry, newest first. `objectId` limits it to questions about one Object. */
