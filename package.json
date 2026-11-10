@@ -13,7 +13,8 @@
     "mac:uninstall": "bash scripts/uninstall-mac.sh",
     "backup": "tsx src/server/backup-cli.ts",
     "backup:password": "tsx src/server/backup-cli.ts password",
-    "mac:update": "bash scripts/update-mac.sh"
+    "mac:update": "bash scripts/update-mac.sh",
+    "mac:browser": "bash scripts/set-browser.sh"
   },
   "dependencies": {
     "@hono/node-server": "^2.1.6",
