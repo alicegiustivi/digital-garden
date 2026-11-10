@@ -189,7 +189,7 @@ export function applyProposals(db: Db, id: string, p: Proposals, candidates: Can
   }
 
   db.transaction(() => {
-    db.prepare("DELETE FROM ai_suggestions WHERE object_id = ? AND ai_role = ?").run(id, ROLE); // (the Researcher's are not the Archivist's to replace)
+    db.prepare("DELETE FROM ai_suggestions WHERE object_id = ? AND ai_role = ? AND kind <> 'fact'").run(id, ROLE); // (the Researcher's are not the Archivist's to replace, nor are looked-up facts: lookup.ts)
     const ins = db.prepare("INSERT INTO ai_suggestions (object_id, kind, data, ai_role, ai_model, ai_date, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)");
     for (const s of list) ins.run(id, s.kind, JSON.stringify(s.data), ROLE, model, date, now.toISOString());
     const added = direct.flatMap((d) => { const cid = addDirectConnection(db, id, d.otherId, d.kind, model, date); return cid ? [{ kind: "connection" as const, connectionId: cid, otherId: d.otherId, connKind: d.kind }] : []; });
@@ -228,6 +228,13 @@ export function suggestionsOf(db: Db, id: string) {
       if (!other || other.private) return []; // gone or Private: never shown
       return [{ ...base, other: { id: d.otherId as string, type: other.type as string, title: titleOf(db, d.otherId) }, connectionKind: d.kind as string, why: (d.why as string | undefined) ?? null }];
     }
+    if (r.kind === "fact") {
+      // A looked-up value (issue #108): Source Origin, with the link it came from. Never offered over a value the owner has written since.
+      const cur = db.prepare("SELECT value, origin FROM field_values WHERE object_id = ? AND field = ?").get(id, d.field) as any;
+      if (cur?.origin === "owner") return [];
+      const label = (db.prepare("SELECT label FROM field_definitions WHERE key = ?").get(d.field) as any)?.label ?? d.field;
+      return [{ id: r.id as number, kind: "fact", origin: "source" as const, aiRole: null, aiModel: null, aiDate: r.ai_date as string, approved: false, field: d.field as string, label: label as string, value: d.value as string, site: d.site as string, url: d.url as string, match: d.match as string, current: (cur?.value as string | undefined) ?? null }];
+    }
     if (r.kind === "type") return [{ ...base, type: d.type as string, typeLabel: TYPE_LABEL(db, d.type) }];
     if (r.kind === "object") return [{ ...base, type: d.type as string, typeLabel: TYPE_LABEL(db, d.type), name: d.name as string, ...(d.type === "concept" ? { tag: d.tag as string, count: carriersOf(db, d.tag).length } : {}) }];
     return [{ ...base, title: d.title as string }];
@@ -249,6 +256,11 @@ export function approve(db: Db, suggestionId: number, onMade?: (id: string) => v
   const o = liveObj(db, s.object_id);
   if (!o || o.private) { db.prepare("DELETE FROM ai_suggestions WHERE id = ?").run(s.id); throw new BadRequest("That one is no longer available"); }
   const d = JSON.parse(s.data);
+  if (s.kind === "fact") { // the owner may have written this value since: theirs is never replaced
+    const cur = db.prepare("SELECT origin FROM field_values WHERE object_id = ? AND field = ?").get(s.object_id, d.field) as any;
+    const has = db.prepare("SELECT 1 FROM type_fields WHERE type = ? AND field = ?").get(o.type, d.field);
+    if (cur?.origin === "owner" || !has) { db.prepare("DELETE FROM ai_suggestions WHERE id = ?").run(s.id); throw new BadRequest(cur?.origin === "owner" ? "You have written this yourself since, so it was left as it is" : "This type no longer has that property"); }
+  }
   const pairExists = (a: string, b: string) => db.prepare("SELECT 1 FROM connections WHERE (from_id = ? AND to_id = ?) OR (from_id = ? AND to_id = ?)").get(a, b, b, a);
   let madeId: string | undefined; // a Person or Concept this approval made, so it can be described right away
   const link = (from: string, to: string, kind: string) =>
@@ -285,6 +297,12 @@ export function approve(db: Db, suggestionId: number, onMade?: (id: string) => v
         db.prepare("UPDATE objects SET title = ? WHERE id = ?").run(d.name, pid);
       }
       if (!pairExists(s.object_id, pid)) link(s.object_id, pid, o.type === "source" ? "authored by" : "related");
+    } else if (s.kind === "fact") {
+      // Source Origin for good (it came from outside), with its link; approving changes nothing about where it came from.
+      db.prepare(
+        `INSERT INTO field_values (object_id, field, value, origin, source_url, source_name, source_date, approved) VALUES (?, ?, ?, 'source', ?, ?, ?, 1)
+         ON CONFLICT (object_id, field) DO UPDATE SET value = excluded.value, origin = 'source', ai_role = NULL, ai_model = NULL, ai_date = NULL, source_url = excluded.source_url, source_name = excluded.source_name, source_date = excluded.source_date, approved = 1`,
+      ).run(s.object_id, d.field, d.value, d.url, d.site, s.ai_date);
     } else if (s.kind === "title") {
       db.prepare(
         `INSERT INTO field_values (object_id, field, value, origin, ai_role, ai_model, ai_date, approved) VALUES (?, 'title', ?, 'ai', ?, ?, ?, 1)
@@ -305,6 +323,7 @@ function rememberable(s: any): { kind: string; value: string } {
   return s.kind === "connection" ? { kind: "connection", value: d.otherId }
     : s.kind === "type" ? { kind: "type", value: d.type }
     : s.kind === "object" ? { kind: "object", value: `${d.type}:${norm(d.name)}` }
+    : s.kind === "fact" ? { kind: "fact", value: `${d.field}:${norm(d.value)}` }
     : { kind: "title", value: norm(d.title) };
 }
 

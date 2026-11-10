@@ -49,6 +49,13 @@ function PropertyRow({ type, f, first, last, run }: { type: TypeDef; f: FieldDef
       <div className="tprop-main">
         <input aria-label="Property name" value={name} maxLength={40} onChange={(e) => setName(e.target.value)} onBlur={() => name.trim() !== f.label && run(() => api.updateTypeField(type.key, f.key, { label: name }))} />
         <span className="quiet small">{KIND[f.input]}</span>
+        {f.input !== "select" && (
+          <label className="small">May be looked up
+            <select aria-label={`Fill ${f.label} from the web`} value={f.lookup ?? ""} onChange={(e) => run(() => api.updateTypeField(type.key, f.key, { lookup: e.target.value }))}>
+              <option value="">No</option><option value="summary">A short description</option><option value="year">A year</option><option value="link">A link</option>
+            </select>
+          </label>
+        )}
         <label className="small"><input type="checkbox" checked={!!f.lead} onChange={(e) => run(() => api.updateTypeField(type.key, f.key, { lead: e.target.checked }))} /> Show under the title</label>
         <span className="grow" />
         <button type="button" aria-label={`Move ${f.label} up`} disabled={first} onClick={() => move(-1)}>↑</button>

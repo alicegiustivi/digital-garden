@@ -10,9 +10,9 @@ export const TAG_COLORS = ["blue", "rose", "olive", "amber", "sky", "lilac", "gr
 
 export class BadRequest extends Error {}
 
-type OriginInfo = { origin: "source" | "ai" | "owner"; aiRole: string | null; aiModel: string | null; aiDate: string | null; approved: boolean };
+type OriginInfo = { origin: "source" | "ai" | "owner"; aiRole: string | null; aiModel: string | null; aiDate: string | null; approved: boolean; /** A fact looked up on the web (issue #108): the page it came from. */ sourceUrl?: string; sourceName?: string | null; sourceDate?: string | null };
 // `approved` is only ever true for an AI piece the owner accepted as a Suggestion (it keeps AI Origin, shown ✧).
-const originOf = (r: any): OriginInfo => ({ origin: r.origin, aiRole: r.ai_role, aiModel: r.ai_model, aiDate: r.ai_date, approved: r.origin === "ai" && !!r.approved });
+const originOf = (r: any): OriginInfo => ({ origin: r.origin, aiRole: r.ai_role, aiModel: r.ai_model, aiDate: r.ai_date, approved: r.origin === "ai" && !!r.approved, ...(r.origin === "source" && r.source_url ? { sourceUrl: r.source_url as string, sourceName: (r.source_name ?? null) as string | null, sourceDate: (r.source_date ?? null) as string | null } : {}) });
 const iso = (s: string | null) => (s ? s.replace(" ", "T") + "Z" : null);
 
 export function listTypes(db: Db) {
@@ -20,7 +20,7 @@ export function listTypes(db: Db) {
   const used = new Map((db.prepare("SELECT type, count(*) AS total, coalesce(sum(deleted_at IS NOT NULL), 0) AS bin FROM objects GROUP BY type").all() as any[]).map((r) => [r.type as string, r]));
   const fields = db
     .prepare(
-      `SELECT tf.type, tf.lead, fd.key, fd.label, fd.input, fd.options
+      `SELECT tf.type, tf.lead, fd.key, fd.label, fd.input, fd.options, fd.lookup
        FROM type_fields tf JOIN field_definitions fd ON fd.key = tf.field ORDER BY tf.type, tf.position`,
     )
     .all() as any[];
@@ -33,7 +33,7 @@ export function listTypes(db: Db) {
       /** Objects of this type, and how many of those are in the Bin (a type with any cannot be removed). */
       count: (used.get(t.key)?.total ?? 0) - (used.get(t.key)?.bin ?? 0),
       inBin: used.get(t.key)?.bin ?? 0,
-      fields: fields.filter((f) => f.type === t.key).map((f) => ({ ...shape(f), lead: !!f.lead })),
+      fields: fields.filter((f) => f.type === t.key).map((f) => ({ ...shape(f), lead: !!f.lead, lookup: (f.lookup ?? null) as string | null })),
     })),
     fieldLabels: Object.fromEntries(all.map((f) => [f.key, shape(f)])),
   };
@@ -170,7 +170,7 @@ function setField(db: Db, id: string, key: string, value: string | null) {
     // Editing a value makes it the owner's (ADR 0001).
     db.prepare(
       `INSERT INTO field_values (object_id, field, value, origin) VALUES (?, ?, ?, 'owner')
-       ON CONFLICT (object_id, field) DO UPDATE SET value = excluded.value, origin = 'owner', ai_role = NULL, ai_model = NULL, ai_date = NULL, approved = 0`,
+       ON CONFLICT (object_id, field) DO UPDATE SET value = excluded.value, origin = 'owner', ai_role = NULL, ai_model = NULL, ai_date = NULL, approved = 0, source_url = NULL, source_name = NULL, source_date = NULL`,
     ).run(id, key, v);
   }
   if (key === "title") db.prepare("UPDATE objects SET title = ? WHERE id = ?").run(v || null, id);

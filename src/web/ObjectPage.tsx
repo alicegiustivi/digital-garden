@@ -4,7 +4,7 @@ import { api, fieldOf, type PortraitBack, type FieldDef, type Obj, type TagRow, 
 import { BodyEditor } from "./BodyEditor";
 import { Editable } from "./Editable";
 import { AiStatusLine } from "./Ai";
-import { AiNotes, ArchivistSuggestions } from "./Suggestions";
+import { AiNotes, ArchivistSuggestions, WebLookup } from "./Suggestions";
 import { ConnectionsPanel, MergeDialog } from "./Connections";
 import { AskPanel } from "./Inquiries";
 import { ConceptDesk, DeskSummary, OpenQuestionControl, useDesk } from "./Desk";
@@ -186,6 +186,7 @@ export function ObjectPage({ id, types, fresh, onChanged, beside, onDeleted }: P
           {obj.type === "concept" && <DeskSummary desk={desk} types={types} />}
 
           <ArchivistSuggestions obj={obj} types={types} onChanged={update} />
+          <WebLookup obj={obj} onChanged={update} />
           <AiStatusLine id={obj.id} onChanged={update} />
           {obj.type === "source" && <InboxCommentLine id={obj.id} />}
           {kept.length > 0 && (

@@ -64,14 +64,19 @@ export function Editable({ value, placeholder, origin, multiline, options, start
   }
   const shown = value ? (origin ? <Marked o={origin}>{value}</Marked> : value) : <span className="ph">{placeholder}</span>;
   return (
-    <span
-      role="button"
-      tabIndex={0}
-      className={`view ${value ? "" : "empty"} ${className}`}
-      onClick={() => setEditing(true)}
-      onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), setEditing(true))}
-    >
-      {shown}
-    </span>
+    <>
+      <span
+        role="button"
+        tabIndex={0}
+        className={`view ${value ? "" : "empty"} ${className}`}
+        onClick={() => setEditing(true)}
+        onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), setEditing(true))}
+      >
+        {shown}
+      </span>
+      {value && origin?.origin === "source" && origin.sourceUrl && (
+        <a className="src-link small" href={origin.sourceUrl} target="_blank" rel="noreferrer noopener" title={`Looked up${origin.sourceDate ? ` on ${origin.sourceDate}` : ""}. Edit the value and it becomes yours.`}>↗ {origin.sourceName ?? "source"}</a>
+      )}
+    </>
   );
 }

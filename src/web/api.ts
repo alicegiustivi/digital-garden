@@ -1,5 +1,5 @@
 export type Origin = "source" | "ai" | "owner";
-export type OriginInfo = { origin: Origin; aiRole: string | null; aiModel: string | null; aiDate: string | null; /** An AI Suggestion the owner approved: still AI Origin, marked ✧. */ approved?: boolean };
+export type OriginInfo = { origin: Origin; aiRole: string | null; aiModel: string | null; aiDate: string | null; /** An AI Suggestion the owner approved: still AI Origin, marked ✧. */ approved?: boolean; /** A fact looked up on the web (issue #108): the page it came from. */ sourceUrl?: string; sourceName?: string | null; sourceDate?: string | null };
 export type Field = { key: string; value: string } & OriginInfo;
 export type Tag = { id: number; name: string; color: string } & OriginInfo;
 export type Block = { id: number; text: string } & OriginInfo;
@@ -20,7 +20,12 @@ export type Suggestion = SuggestionBase & (
   | { kind: "object"; type: string; typeLabel: string; name: string; tag?: string; count?: number }
   | { kind: "title"; title: string }
 );
-export type Suggestions = { pending: Suggestion[]; rejected: number };
+/** A value looked up on the web: Source Origin, with the page it came from. It waits for Approve or Not this. */
+export type FactSuggestion = { id: number; kind: "fact"; origin: "source"; aiRole: null; aiModel: null; aiDate: string; approved: false; field: string; label: string; value: string; site: string; url: string; match: string; current: string | null };
+export type Suggestions = { pending: (Suggestion | FactSuggestion)[]; rejected: number };
+export type LookupInfo = { available: false; why: string } | { available: true; name: string; site: string; fields: string[] };
+export type LookupResult = { status: "ok" | "choose" | "none" | "nothing-new" | "unavailable" | "offline" | "slow" | "limit" | "error"; message: string; count?: number; candidates?: { id: string; label: string; description: string; url: string; site: string }[] };
+export type WebFound = { sources: { n: number; title: string; site: string; url: string; text: string }[]; notes: string[] };
 export type AiNote = {
   id: number; kind: "summary" | "prompt" | "answer"; text: string;
   /** Objects named by links in the text (links to Objects that are gone were already dropped). */
@@ -37,7 +42,7 @@ export type Connection = {
 export type KindChoice = { kind: string; subject: boolean; label: string };
 export type Shares = Brief & { shared: string[]; sharedTags: string[] };
 export type MergeAsk = { otherId: string; other: Brief; keep: { kind: string; label: string; note: string }; drop: { kind: string; label: string; note: string } };
-export type FieldDef = { key: string; label: string; input: "text" | "longtext" | "select"; options: string[] | null; lead?: boolean };
+export type FieldDef = { key: string; label: string; input: "text" | "longtext" | "select"; options: string[] | null; lead?: boolean; /** "May be looked up": which fact from the web this property takes (issue #108). */ lookup?: "summary" | "year" | "link" | null };
 export type TypeDef = { key: string; label: string; plural: string; /** A palette colour key (src/shared/palette.ts). */ color: string; /** An icon key (src/web/icons.ts). */ icon: string; /** One of the four types that keep every special behaviour. */ core: boolean; /** Objects of this type, and how many more are in the Bin. */ count: number; inBin: number; fields: FieldDef[] };
 export type Types = { types: TypeDef[]; fieldLabels: Record<string, FieldDef> };
 export type TypesAnswer = Types & { key?: string; field?: string; moved?: number; removed?: { values: number; inBin: number } };
@@ -85,10 +90,10 @@ export type Turn = {
   steps: { label: string; done: boolean }[]; error: string | null; nextTryAt?: string; tries?: number; maxTries: number; needsKey: boolean;
   answer: null | {
     text: string; links: Record<string, { type: string; title: string; private: boolean }>; reads: Brief3[]; kept: Brief3[];
-    model: string; role: string; date: string; privateNote: string | null;
+    model: string; role: string; date: string; privateNote: string | null; web: WebFound | null;
   };
 };
-export type Thread = { id: string; object: Brief3 | null; scopeGone: boolean; createdAt: string; turns: Turn[] };
+export type Thread = { id: string; object: Brief3 | null; scopeGone: boolean; createdAt: string; web: boolean; turns: Turn[] };
 export type InquiryRow = { id: string; question: string; turns: number; state: Turn["state"]; createdAt: string; object: Brief3 | null; scopeGone: boolean };
 export type BinInquiry = { id: string; question: string; deletedAt: string; daysLeft: number };
 export type TagRow = { id: number; name: string; color: string; count: number };
@@ -111,6 +116,8 @@ export const api = {
   undoAiConnection: (connId: number) => call<{ ok: true; objectIds: string[] }>("POST", `/api/connections/${connId}/undo-ai`),
   aiRun: (id: string) => call<AiStatus>("POST", `/api/objects/${id}/ai/run`),
   aiUndo: (id: string) => call<Obj>("POST", `/api/objects/${id}/ai/undo`),
+  lookupInfo: (id: string) => call<LookupInfo>("GET", `/api/objects/${id}/lookup`),
+  lookUp: (id: string, pick?: string) => call<LookupResult>("POST", `/api/objects/${id}/lookup`, pick ? { pick } : {}),
   suggestions: (id: string) => call<Suggestions>("GET", `/api/objects/${id}/suggestions`),
   approve: (sid: number) => call<Obj>("POST", `/api/suggestions/${sid}/approve`),
   reject: (sid: number) => call<unknown>("POST", `/api/suggestions/${sid}/reject`),
@@ -118,7 +125,7 @@ export const api = {
   inquiries: () => call<InquiryRow[]>("GET", "/api/inquiries"),
   inquiriesAbout: (id: string) => call<InquiryRow[]>("GET", `/api/objects/${id}/inquiries`),
   inquiry: (id: string) => call<Thread>("GET", `/api/inquiries/${id}`),
-  ask: (question: string, objectId?: string) => call<Thread>("POST", "/api/inquiries", { question, objectId }),
+  ask: (question: string, objectId?: string, web?: boolean) => call<Thread>("POST", "/api/inquiries", { question, objectId, web: web === true }),
   askAgain: (inquiryId: string, question: string) => call<Thread>("POST", `/api/inquiries/${inquiryId}/turns`, { question }),
   deleteInquiry: (id: string) => call<unknown>("DELETE", `/api/inquiries/${id}`),
   restoreInquiry: (id: string) => call<unknown>("POST", `/api/inquiries/${id}/restore`),
@@ -139,8 +146,8 @@ export const api = {
   orderTypes: (keys: string[]) => call<TypesAnswer>("PUT", "/api/types/order", { keys }),
   moveTypeObjects: (key: string, to: string) => call<TypesAnswer>("POST", `/api/types/${key}/move`, { to }),
   deleteType: (key: string) => call<TypesAnswer>("DELETE", `/api/types/${key}`),
-  addTypeField: (key: string, b: { label: string; input: string; options?: string[]; lead?: boolean }) => call<TypesAnswer>("POST", `/api/types/${key}/fields`, b),
-  updateTypeField: (key: string, field: string, b: { label?: string; options?: string[]; lead?: boolean }) => call<TypesAnswer>("PATCH", `/api/types/${key}/fields/${field}`, b),
+  addTypeField: (key: string, b: { label: string; input: string; options?: string[]; lead?: boolean; lookup?: string }) => call<TypesAnswer>("POST", `/api/types/${key}/fields`, b),
+  updateTypeField: (key: string, field: string, b: { label?: string; options?: string[]; lead?: boolean; lookup?: string }) => call<TypesAnswer>("PATCH", `/api/types/${key}/fields/${field}`, b),
   orderTypeFields: (key: string, keys: string[]) => call<TypesAnswer>("PUT", `/api/types/${key}/fields/order`, { keys }),
   typeFieldRemoval: (key: string, field: string) => call<{ values: number; inBin: number }>("GET", `/api/types/${key}/fields/${field}/removal`),
   removeTypeField: (key: string, field: string) => call<TypesAnswer>("DELETE", `/api/types/${key}/fields/${field}`),
