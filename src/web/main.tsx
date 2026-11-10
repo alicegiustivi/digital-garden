@@ -17,6 +17,7 @@ import { Icon, typeVar } from "./ui";
 import { Palette, SearchPage } from "./Search";
 import { TimelinePage } from "./Timeline";
 import { InboxPage } from "./Inbox";
+import { UpdateBar } from "./updates";
 import { OverviewPage } from "./Overview";
 import { MapPage } from "./Graph";
 import { QuestionsPageView } from "./Garden";
@@ -323,6 +324,7 @@ function App() {
         <div className="main">{page}</div>
       </div>
       <Toasts />
+      <UpdateBar />
       {capture && (
         <Capture
           draft={draft}

@@ -19,3 +19,14 @@ describe("local server", () => {
     expect(readFileSync("src/server/main.ts", "utf8")).toMatch(/HOST = "127\.0\.0\.1"/);
   });
 });
+
+describe("version (an open window asks which build is installed)", () => {
+  it("answers a version string, never cached, and obeys the local-only rule", async () => {
+    const app = createApp(openDb(":memory:").sqlite);
+    const res = await app.request("/api/version");
+    expect(res.status).toBe(200);
+    expect(res.headers.get("cache-control")).toBe("no-store");
+    expect(typeof (await res.json()).version).toBe("string");
+    expect((await app.request("/api/version", { headers: { host: "evil.example" } })).status).toBe(403);
+  });
+});

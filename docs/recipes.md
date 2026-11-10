@@ -51,7 +51,7 @@ Runs only when the owner asks. The Garden keeps running a fixed, tested version 
    3. fetches and installs the new version, rebuilds and restarts the Garden;
    4. checks the Garden answers and shows no fewer Objects than before.
 4. **If any step fails it switches back by itself:** puts the safety copy of the database back, returns the code to the previous version, restarts, and says so. Exit code 1 = switched back; 2 = it could not even start the old version (then tell the owner their data is safe in the Drive Backup and offer recipe 3).
-5. **Afterwards**, open the Garden with the owner and look at a few Objects. Tell them what changed.
+5. **Afterwards**, open the Garden with the owner and look at a few Objects. Tell them what changed. A Garden window that was already open notices the new version within about a minute: a window in the background reloads by itself, a window in front shows "A newer Garden is ready" with **Reload**, so nothing being typed is lost.
 
 The script refuses to run if the code folder has uncommitted changes of its own, and it never changes anything in `~/Garden` except putting the safety copy back after a failure.
 
