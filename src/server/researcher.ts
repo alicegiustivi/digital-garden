@@ -11,7 +11,7 @@ import { randomUUID } from "node:crypto";
 import type Database from "better-sqlite3";
 import { AI_CONFIG } from "./ai-config.ts";
 import { GateError, type Gate } from "./ai-gate.ts";
-import { cleanText, readable } from "./ai-prompt.ts";
+import { clip, cleanText, readable } from "./ai-prompt.ts";
 import { commentForAi } from "./inbox-comments.ts";
 import type { Outcome } from "./ai-queue.ts";
 import { jsonOf } from "./archivist.ts";
@@ -24,7 +24,7 @@ export const ROLE = "Researcher";
 const MAX_READ = 8; // Objects read in full for one answer
 const MAX_CARDS = 150; // index cards shown in the first request
 const MAX_QUESTION = 1000;
-const TEXT_BUDGET = 30_000; // characters of Objects shown in the second request
+const TEXT_BUDGET = 70_000; // characters of Objects shown in the second request (the extract of a Source is read, not just its title)
 const KINDS = ["related", "supports", "contradicts", "builds on"];
 
 const live = (db: Db, id: string) => db.prepare("SELECT * FROM objects WHERE id = ? AND deleted_at IS NULL").get(id) as any | undefined;
@@ -117,30 +117,48 @@ function rawText(db: Db, id: string): string {
 function cardLine(db: Db, c: Card): string {
   const o = live(db, c.id);
   const tags = (db.prepare("SELECT t.name FROM object_tags ot JOIN tags t ON t.id = ot.tag_id WHERE ot.object_id = ?").all(c.id) as any[]).map((r) => `#${r.name}`);
+  const field = (f: string) => db.prepare("SELECT * FROM field_values WHERE object_id = ? AND field = ?").get(c.id, f) as any | undefined;
   const block = db.prepare("SELECT * FROM blocks WHERE object_id = ? ORDER BY CASE origin WHEN 'owner' THEN 0 ELSE 1 END, position LIMIT 1").get(c.id) as any;
-  const field = block ? null : (db.prepare("SELECT * FROM field_values WHERE object_id = ? AND field NOT IN ('extraction', 'title') ORDER BY CASE origin WHEN 'ai' THEN 1 ELSE 0 END LIMIT 1").get(c.id) as any);
-  const piece = block ? { text: cleanText(db, block.text), origin: block.origin } : field ? { text: String(field.value), origin: field.origin } : null;
-  const gist = piece && piece.text ? ` — ${piece.origin === "owner" ? "owner" : piece.origin === "source" ? "source" : "AI"}: ${piece.text.replace(/\s+/g, " ").slice(0, 140)}` : "";
-  return `${c.ref} [${o.type}] "${titleOf(db, c.id).slice(0, 100)}"${tags.length ? ` ${tags.slice(0, 5).join(" ")}` : ""}${gist}`;
+  // The gist is what the Object itself says: the owner's words first, then the start of the extract (the item's own text), then anything else.
+  const extract = field("captured");
+  const other = block || extract ? null : (db.prepare("SELECT * FROM field_values WHERE object_id = ? AND field NOT IN ('extraction', 'title') ORDER BY CASE origin WHEN 'ai' THEN 1 ELSE 0 END LIMIT 1").get(c.id) as any);
+  const piece = block ? { text: cleanText(db, block.text), origin: block.origin } : extract ? { text: String(extract.value), origin: extract.origin } : other ? { text: String(other.value), origin: other.origin } : null;
+  const gist = piece && piece.text ? ` — ${piece.origin === "owner" ? "owner" : piece.origin === "source" ? "source" : "AI"}: ${piece.text.replace(/\s+/g, " ").slice(0, 260)}` : "";
+  const by = field("authors")?.value ? ` by ${String(field("authors").value).slice(0, 60)}` : "";
+  return `${c.ref} [${o.type}] "${titleOf(db, c.id).slice(0, 100)}"${by}${tags.length ? ` ${tags.slice(0, 6).join(" ")}` : ""}${gist}`;
 }
 
-/** One Object, in full, with every piece labelled by its Origin. AI Notes are never included: an earlier answer is not evidence. */
+/**
+ * One Object, in full, with every piece labelled by its Origin. AI Notes are never included: an earlier answer is not evidence.
+ * The short facts and Connections come first so a long extract never crowds them out; the extract then takes the largest share
+ * of what is left (the start and the end are kept when it is too long).
+ */
 export function fullObject(db: Db, ref: string, id: string, cap: number): string {
   const o = live(db, id)!;
-  const lines: string[] = [`[${ref}] ${o.type}: "${titleOf(db, id)}"`];
+  const head: string[] = [`[${ref}] ${o.type}: "${titleOf(db, id)}"`];
+  const long: { label: string; text: string; weight: number }[] = [];
   const fields = db.prepare("SELECT * FROM field_values WHERE object_id = ? AND field NOT IN ('extraction', 'title')").all(id) as any[];
-  for (const f of fields) lines.push(`${f.field} (${labelOf(f)}): ${String(f.value).slice(0, 3000)}`);
-  const blocks = (db.prepare("SELECT * FROM blocks WHERE object_id = ? ORDER BY position").all(id) as any[]).map((b) => ({ ...b, text: cleanText(db, b.text) })).filter((b) => b.text);
-  if (blocks.length) { lines.push("Text:"); for (const b of blocks) lines.push(`- (${labelOf(b)}) ${b.text.slice(0, 3000)}`); }
+  for (const f of fields) {
+    if (f.field === "captured") long.push({ label: `the extract, the item's own text (${labelOf(f)})`, text: String(f.value), weight: 3 });
+    else head.push(`${f.field} (${labelOf(f)}): ${String(f.value).slice(0, 800)}`);
+  }
   const comment = commentForAi(db, id); // the owner's phone-capture comment, only ever shown inside its Source (issue #63)
-  if (comment) lines.push(`Comment sent with it (the owner's words): ${cleanText(db, comment).slice(0, 3000)}`);
+  if (comment) head.push(`Comment sent with it (the owner's words): ${cleanText(db, comment).slice(0, 3000)}`);
   const tags = (db.prepare("SELECT t.name, ot.origin FROM object_tags ot JOIN tags t ON t.id = ot.tag_id WHERE ot.object_id = ?").all(id) as any[]);
-  if (tags.length) lines.push(`Tags: ${tags.map((t) => `${t.name}${t.origin === "ai" ? " (AI)" : ""}`).join(", ")}`);
+  if (tags.length) head.push(`Tags: ${tags.map((t) => `${t.name}${t.origin === "ai" ? " (AI)" : ""}`).join(", ")}`);
   // Connections to other readable Objects, by title and kind (never to a Private one).
   const conns = (db.prepare("SELECT * FROM connections WHERE from_id = ? OR to_id = ?").all(id, id) as any[])
     .flatMap((c) => { const other = c.from_id === id ? c.to_id : c.from_id; return readable(db, other) ? [`"${titleOf(db, other)}" (${c.kind})`] : []; }).slice(0, 12);
-  if (conns.length) lines.push(`Connected to: ${conns.join("; ")}`);
-  return lines.join("\n").slice(0, cap);
+  if (conns.length) head.push(`Connected to: ${conns.join("; ")}`);
+  for (const b of db.prepare("SELECT * FROM blocks WHERE object_id = ? ORDER BY position").all(id) as any[]) {
+    const text = cleanText(db, b.text);
+    if (text) long.push({ label: labelOf(b), text, weight: 1 });
+  }
+  const used = head.join("\n").length;
+  const room = Math.max(600, cap - used - 20 * (long.length + 1));
+  const total = long.reduce((n, p) => n + p.weight, 0) || 1;
+  const parts = long.map((p) => `- (${p.label}) ${clip(p.text, Math.max(300, Math.floor((room * p.weight) / total)))}`);
+  return [...head, ...(parts.length ? ["Text:", ...parts] : [])].join("\n");
 }
 
 const hasOwnerText = (db: Db, ids: string[]) =>
@@ -163,19 +181,26 @@ export const privateLine = (n: number) =>
 // ---------- Prompts ----------
 
 const PICK_SYSTEM = `You are the Researcher in a personal knowledge Garden. The owner asked a question. Below are short index cards of the Objects you may read.
-Choose the Objects you need to read in full to answer well. Answer with ONE JSON object and nothing else: {"read": ["o1", "o4"]}
+Choose the Objects you need to read in full to answer well. Each card shows the start of the item's own text, so judge by what it says, not only the title. Prefer the Objects whose content really bears on the question, including ones that disagree with each other. Answer with ONE JSON object and nothing else: {"read": ["o1", "o4"]}
 Rules:
 - Use only refs from the list (like "o3"). At most ${MAX_READ}. Use [] if none are needed. Never invent a ref.
 - Each card says where its one-line gist came from: owner (the owner's own words), source (captured from outside) or AI (written by AI, which is never evidence).`;
 
-const ANSWER_SYSTEM = `You are the Researcher in a personal knowledge Garden. Answer the owner's question using ONLY the Objects under "Objects you read".
+const ANSWER_SYSTEM = `You are the Researcher in a personal knowledge Garden: the owner's analytical sparring partner. Your job is to help them think better, not to summarise. Work ONLY from the Objects under "Objects you read". Read the extracts and the owner's words closely; do not rely on titles.
 Rules:
-- Every piece of text is labelled with its Origin. "The owner's words" are the owner's own. "From the Source" was captured from outside and is NOT the owner's view. "Written by AI" is never evidence.
+- Every piece of text is labelled with its Origin. "The owner's words" are the owner's own. "From the Source" was captured from outside and is NOT the owner's view. "Written by AI" is never evidence. The extract is the item's own text.
 - Say "you wrote", "you said" or "your view" ONLY about text labelled "the owner's words". For Source text say "the Source says". If nothing is the owner's, do not claim the owner thinks anything.
 - An earlier question or answer from this Inquiry (if shown) is only there so you understand a follow-up. It is NOT evidence: never cite it or build on it.
-- Put the ref in square brackets, like [o2], right after each claim it supports. Use only refs shown under "Objects you read".
-- If the Objects don't contain the answer, say so plainly and say what is missing. Never invent facts.
-- Keep it short: plain paragraphs, at most about 250 words, no headings.
+- Put the ref in square brackets, like [o2], right after each claim it supports. Use only refs shown under "Objects you read". Say clearly which statements come from the Garden and which are your own inference ("My inference:").
+- Structure the answer as short plain paragraphs, in this order, leaving out a paragraph only if it has nothing real to say:
+  1. The big picture: the direct answer in two or three sentences, where this sits and why it matters.
+  2. The thread: what connects the Objects you read, with the specifics (claims, figures, arguments) from their text, each with its ref.
+  3. Tension: where the Objects disagree, or where one Source's argument is weak, rests on an assumption, or the owner's own words pull against a Source. Name the kind of disagreement: a direct contradiction, a difference of context, time or method, or a different reading of the same evidence. Do not invent a disagreement.
+  4. What the Garden does not establish: the missing evidence or the gap, stated plainly. Never fill a gap with outside facts.
+  5. One question worth asking next, starting "A question to take further:".
+- If the owner is stating a view or testing an idea, challenge it: say what supports it in the Objects and what would count against it. Be direct, not contrarian.
+- If the Objects don't contain the answer, say so plainly and say what is missing. Never invent facts or use knowledge from outside the Objects.
+- Length: as long as the answer deserves, usually 250 to 500 words. No headings or bullet lists. Separate paragraphs with a blank line.
 - "connections" lists up to 3 pairs of Objects you read that clearly relate. "kind" is one of: related, supports, contradicts, builds on. Use [] if none.
 Answer with ONE JSON object and nothing else: {"answer": string, "connections": [{"a": "o1", "b": "o2", "kind": "supports"}]}`;
 
@@ -243,12 +268,14 @@ export async function researcherHandler(db: Db, job: { id: number; turn_id?: num
   let extra = cards.length;
   const refOf = new Map(toRead.map((id) => [id === inq.object_id ? "o0" : (cardRef.get(id) ?? `o${++extra}`), id]));
   setSteps(db, turn.id, labels, 2);
-  const cap = Math.floor(TEXT_BUDGET / Math.max(1, toRead.length));
+  // The Object the owner is looking at counts double: it is what the question is about.
+  const shares = toRead.reduce((n, id) => n + (id === inq.object_id ? 2 : 1), 0) || 1;
+  const capOf = (id: string) => Math.floor((TEXT_BUDGET * (id === inq.object_id ? 2 : 1)) / shares);
   const earlier = (db.prepare("SELECT question, answer FROM inquiry_turns WHERE inquiry_id = ? AND id < ? ORDER BY id").all(turn.inquiry_id, turn.id) as any[]);
   let prompt = `Question (the owner's words): ${turn.question}\n\n`;
   if (earlier.length)
     prompt += `Earlier in this Inquiry (context for a follow-up only, NOT evidence):\n${earlier.map((e) => `- The owner asked: ${e.question}${e.answer ? `\n  An earlier AI answer (not evidence): ${cleanRefs(e.answer).slice(0, 600)}` : ""}`).join("\n")}\n\n`;
-  prompt += toRead.length ? `Objects you read:\n\n${[...refOf].map(([ref, id]) => fullObject(db, ref, id, cap)).join("\n\n")}` : "Objects you read: none. Say that nothing in the Garden covers this.";
+  prompt += toRead.length ? `Objects you read:\n\n${[...refOf].map(([ref, id]) => fullObject(db, ref, id, capOf(id))).join("\n\n")}` : "Objects you read: none. Say that nothing in the Garden covers this.";
   setSteps(db, turn.id, labels, 3);
 
   const r2 = await request(ctx, [{ role: "system", content: ANSWER_SYSTEM }, { role: "user", content: prompt }], (text) => {

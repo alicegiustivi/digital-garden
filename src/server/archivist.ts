@@ -5,6 +5,7 @@
 // adds Connections of kind "related" and "authored by" directly (ADR 0003): marked ✦, undone in one click, remembered if undone.
 import type Database from "better-sqlite3";
 import { cleanTagName, tagIdFor } from "./objects.ts";
+import { broadTags, VAGUE_TAGS } from "./ai-prompt.ts";
 
 type Db = Database.Database;
 export const ROLE = "Archivist";
@@ -27,7 +28,7 @@ export function parseFindings(text: string): Findings | null {
   const str = (v: unknown, max: number) => (typeof v === "string" && v.trim() && v.trim().length <= max ? v.trim() : undefined);
   const format = typeof j.format === "string" && FORMATS.includes(j.format.trim().toLowerCase()) ? j.format.trim().toLowerCase() : undefined;
   const published = str(j.published, 10);
-  const tags = Array.isArray(j.tags) ? [...new Set((j.tags as unknown[]).map(cleanTagName).filter((t) => t && t.length <= 40))].slice(0, 5) : [];
+  const tags = Array.isArray(j.tags) ? [...new Set((j.tags as unknown[]).map(cleanTagName).filter((t) => t && t.length <= 40 && !VAGUE_TAGS.has(t)))].slice(0, 4) : [];
   return {
     format,
     title: str(j.title, 200),
@@ -69,8 +70,9 @@ export function applyFindings(db: Db, id: string, f: Findings, model: string, no
       if (f.published) put("published", f.published);
     }
     const rejected = new Set((db.prepare("SELECT value FROM ai_rejected WHERE object_id = ? AND kind = 'tag'").all(id) as any[]).map((r) => r.value));
+    const broad = broadTags(db); // a Tag already on a quarter of the Garden says too little to add again
     for (const name of f.tags) {
-      if (rejected.has(name)) continue;
+      if (rejected.has(name) || broad.has(name)) continue;
       const tagId = tagIdFor(db, name);
       const added = db
         .prepare("INSERT OR IGNORE INTO object_tags (object_id, tag_id, origin, ai_role, ai_model, ai_date) VALUES (?, ?, 'ai', ?, ?, ?)")

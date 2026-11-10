@@ -39,10 +39,12 @@ const notes = async (id: string) => (await call("GET", `/api/objects/${id}/ai-no
 const reply = (j: object) => replies.push(JSON.stringify(j));
 /** Make the Archivist look at one Object, with its scripted reply, and wait until it has. */
 const look = async (id: string, j: object) => {
-  reply(j);
+  reply(j); // request 1: reading the item
+  reply(j); // request 2: judging Connections (reads "related" / "specific" from the same scripted reply)
   await call("POST", `/api/objects/${id}/ai/run`);
   clock = new Date(clock.getTime() + 10_000);
   await ai.tick();
+  replies.length = 0; // request 2 is skipped when there is nothing to connect to: its scripted reply must not leak into the next run
 };
 const refOf = (id: string, title: string) => archivistPrompt(sqlite, id)!.candidates.find((c) => c.title === title)?.ref;
 
@@ -95,7 +97,8 @@ describe("Archivist Connections apply directly (issue #66)", () => {
   it("the cap lives in one setting", async () => {
     const { AI_CONFIG } = await import("../src/server/ai-config.ts");
     expect(AI_CONFIG.maxConnections).toBe(10);
-    expect(String(archivistPrompt(sqlite, (await make("source", "X")).id)!.messages[0].content)).toContain(`At most ${AI_CONFIG.maxConnections}.`);
+    const { connectPrompt } = await import("../src/server/ai-prompt.ts");
+    expect(String(connectPrompt(sqlite, (await make("source", "X")).id, { claims: [], tags: [] }, [])[0].content)).toContain(`At most ${AI_CONFIG.maxConnections}.`);
   });
   it("ignores a ref it was never shown, and a pair that is already connected", async () => {
     const a = await make("source", "Bees and gardens");
@@ -198,12 +201,12 @@ describe("Archivist Connections apply directly (issue #66)", () => {
     await call("PATCH", `/api/connections/${c.id}`, { kind: "supports", subject: a.id });
     expect((await conns(a.id))[0]).toMatchObject({ origin: "owner", approved: false, kind: "supports" });
   });
-  it("Ask again replaces what the Archivist left waiting (a specific kind) and uses one call", async () => {
+  it("Ask again replaces what the Archivist left waiting (a specific kind) and uses two calls: reading, then connecting", async () => {
     const a = await make("source", "Bees and gardens");
     const b = await make("source", "Bees gardens two");
     seedWaiting(a.id, b.id, "builds on");
     await look(a.id, { related: [] });
-    expect(sent).toHaveLength(1);
+    expect(sent).toHaveLength(2);
     expect((await sugg(a.id)).pending).toEqual([]);
   });
   it("Connections waiting from before (related / authored by) are applied once, marked and undoable; specific kinds and the Researcher's keep waiting", async () => {
@@ -386,5 +389,52 @@ describe("Making an Object Private", () => {
     await ai.tick();
     expect(sqlite.prepare("SELECT count(*) AS n FROM ai_notes").get()).toEqual({ n: 0 });
     expect(sqlite.prepare("SELECT count(*) AS n FROM ai_suggestions").get()).toEqual({ n: 0 });
+  });
+});
+
+describe("the Archivist reads the extract and works harder (extract, claims, Tags, reasons)", () => {
+  const longText = (mark: string) => `${"Soil holds water. ".repeat(900)}${mark}`; // about 16,000 characters
+  const setExtract = (id: string, text: string) => sqlite.prepare("INSERT INTO field_values (object_id, field, value, origin) VALUES (?, 'captured', ?, 'source') ON CONFLICT (object_id, field) DO UPDATE SET value = excluded.value").run(id, text);
+
+  it("is shown the whole extract (start and end), not only its first few thousand characters", async () => {
+    const src = await make("source", "Soil");
+    setExtract(src.id, `OPENING-MARK ${longText("CLOSING-MARK")}`);
+    const prompt = JSON.stringify(archivistPrompt(sqlite, src.id)!.messages);
+    expect(prompt).toContain("OPENING-MARK");
+    expect(prompt).toContain("CLOSING-MARK"); // the old 6,000-character cut lost the end
+    expect(prompt).toContain("the extract");
+  });
+  it("judges Connections in a second request that shows what each candidate says, not only its title", async () => {
+    const a = await make("source", "Bees and gardens");
+    const b = await make("source", "Bees gardens two");
+    setExtract(b.id, "Pollinators decline when hedgerows disappear.");
+    await look(a.id, { related: [{ ref: refOf(a.id, "Bees gardens two"), why: "both about bees" }] });
+    expect(sent).toHaveLength(2);
+    expect(JSON.stringify(sent[1].body.messages)).toContain("Pollinators decline when hedgerows disappear.");
+    expect(await conns(a.id)).toMatchObject([{ label: "related", origin: "ai", other: { id: b.id } }]);
+  });
+  it("keeps a specific kind as a Suggestion with its reason, and never as a plain related Connection too", async () => {
+    const a = await make("source", "Bees and gardens");
+    const b = await make("source", "Bees gardens two");
+    const ref = refOf(a.id, "Bees gardens two");
+    await look(a.id, { related: [{ ref, why: "same subject" }], specific: [{ ref, kind: "contradicts", why: "Direct contradiction: they report opposite trends." }] });
+    expect(await conns(a.id)).toEqual([]);
+    expect((await sugg(a.id)).pending).toMatchObject([{ kind: "connection", connectionKind: "contradicts", why: "Direct contradiction: they report opposite trends.", other: { id: b.id } }]);
+    await look(a.id, { specific: [{ ref, kind: "invents", why: "x" }] }); // Ask again replaces the old list, and an unknown kind adds nothing
+    expect((await sugg(a.id)).pending).toEqual([]);
+  });
+  it("keeps a Source's main claims, marked reported or interpretation, in its summary note", async () => {
+    const src = await make("source", "Soil");
+    await look(src.id, { summary: "A piece on soil.", claims: [{ claim: "Soil holds water.", kind: "reported" }, { claim: "Soil is undervalued.", kind: "interpretation", by: "Ada Green" }, { claim: "", kind: "reported" }] });
+    const [n] = await notes(src.id);
+    expect(n.text).toBe("A piece on soil.\n\nKey claims\n\nReported: Soil holds water.\n\nInterpretation (Ada Green): Soil is undervalued.");
+  });
+  it("drops format words and vague Tags, and stops adding a Tag that is already on a quarter of the Garden", async () => {
+    for (let i = 0; i < 9; i++) { const o = await make("source", `Item ${i}`); await call("POST", `/api/objects/${o.id}/tags`, { name: "habits" }); }
+    const src = await make("source", "New article");
+    await look(src.id, { tags: ["article", "ideas", "habits", "keystone habits", "loss aversion"] });
+    const tags = ((await call("GET", `/api/objects/${src.id}`)).json.tags as any[]).map((t) => t.name).sort();
+    expect(tags).toEqual(["keystone-habits", "loss-aversion"]);
+    expect(JSON.stringify(archivistPrompt(sqlite, src.id)!.messages)).not.toContain("habits (9)"); // a broad Tag is not offered for reuse either
   });
 });
