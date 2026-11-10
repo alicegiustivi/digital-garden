@@ -1,3 +1,4 @@
+import { PrototypeWritingSpace } from "./PrototypeWritingSpace";
 import { StrictMode, useCallback, useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import "./style.css";
@@ -269,6 +270,8 @@ function App() {
         {paneId && <SidePane paneId={paneId} mainId={mainId} types={types} onNavigate={beside} onClose={() => go(`#/o/${mainId}`)} onChanged={changed} />}
       </main>
     );
+  } else if (parts[0] === "prototype" && parts[1] === "writing-space") {
+    page = <PrototypeWritingSpace hash={hash} />;
   } else if (parts[0] === "types") {
     page = <TypesPage types={types} onTypes={(t) => { adoptTypes(t); changed(); }} go={go} />;
   } else if (typeOfRoute(types, parts)) {
