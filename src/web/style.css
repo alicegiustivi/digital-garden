@@ -147,8 +147,8 @@ select.edit { font-size: 13.5px; }
 .vol h2 { font-size: clamp(1.8rem, 4vw, 2.6rem); letter-spacing: -.035em; }
 .vol h2 em { font-style: normal; color: var(--mute); font-weight: 600; }
 .new-row { display: flex; gap: 8px; flex-wrap: wrap; }
-.stories { column-width: 250px; column-gap: var(--s-6); }
-.stories > * { break-inside: avoid; margin-bottom: var(--s-6); }
+.stories { display: flex; gap: var(--s-6); align-items: flex-start; }
+.stories-col { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: var(--s-6); }
 /* Type decides the card (issue #71). No white box: a Source leads with its picture, a Concept is a tinted block, a Thought is words under a thin rule, a Person leads with the portrait. */
 .story { display: grid; gap: var(--s-3); align-content: start; cursor: pointer; border-radius: 16px; --kc: color-mix(in srgb, var(--c) var(--kindtext), var(--ink)); }
 .story:hover h4 { text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--c) 55%, transparent); text-underline-offset: 4px; text-decoration-thickness: 1.5px; }

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { inboxApi, type InboxComment, type InboxEntry, type InboxStatus, type Types } from "./api";
 import { Card } from "./Lists";
-import { Hint, Icon } from "./ui";
+import { Hint, Icon, Stories } from "./ui";
 import { showToast } from "./toast";
 
 export const dayLabel = (day: string) => {
@@ -88,7 +88,7 @@ function Entry({ e, types, onOpen, onChanged }: { e: InboxEntry; types: Types; o
           </div>
         ) : (
           <>
-            <div className="stories">{e.objects.map((o) => <Card key={o.id} o={o} types={types} onOpen={() => onOpen(o.id, ids)} />)}</div>
+            <Stories>{e.objects.map((o) => <Card key={o.id} o={o} types={types} onOpen={() => onOpen(o.id, ids)} />)}</Stories>
             {e.objects.length === 0 && !e.thought && <p className="quiet small">Everything from this message is in the Bin.</p>}
             {e.thought ? (
               <div className="stories"><a className="inbox-thought" href={`#/o/${e.thought.id}`}><Icon name="thought" /> Your comment is now a Thought: {e.thought.title}</a></div>
