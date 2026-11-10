@@ -81,7 +81,7 @@ function SideColumn({ hash, unreviewed, version, onCapture, onSearch }: { hash: 
   return (
     <aside className={`side${menu ? " open" : ""}`} aria-label="Garden">
       <div className="side-top">
-        <a className="wm" href="#/">Garden</a>
+        <a className="wm" href="#/"><Icon name="plant" />The Garden</a>
         <button className="side-fold" aria-expanded={menu} aria-controls="side-nav" onClick={() => setMenu(!menu)}>Menu <Icon name="chevron" /></button>
       </div>
       <div className="side-acts">
