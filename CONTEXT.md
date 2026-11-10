@@ -40,6 +40,18 @@ _Avoid_: Task, to-do, prompt, research question
 An Object for an individual who matters to the owner's Garden, either personally or through their work.
 _Avoid_: Contact, author, people
 
+**Piece**:
+An Object for a piece of work the owner is writing for others to read, such as an essay or a post. It is always in the owner's words, never the AI's, though like any body it can hold Quotes and Mentions. It may belong to a Project or stand alone. The AI never drafts a Piece, and does nothing on a Piece unless the owner asks.
+_Avoid_: Draft, article, post, document
+
+**Project**:
+An Object for something the owner is making or doing, such as an essay series, a trip or learning a skill. Its Pieces, if it has any, and the material that feeds it are connected to it. The AI does nothing on a Project unless the owner asks. A Project is never a list of tasks and has no due date.
+_Avoid_: Goal, task list, folder, space
+
+**Stage**:
+Where a Piece or a Project stands, set only by the owner: Idea, Drafting or Finished for a Piece; Active, Paused or Finished for a Project. It carries no date and is never overdue.
+_Avoid_: Status, progress, deadline
+
 **Tag**:
 A light, global label any Object can carry, costing nothing to add. It means whatever the owner wants it to, a status such as "to do" included; the Garden gives no Tag special behaviour. A Tag can later be turned into a Concept.
 _Avoid_: Topic, label, category, keyword
