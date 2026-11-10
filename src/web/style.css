@@ -5,7 +5,7 @@
 :root {
   --ink: #1b1d21; --mute: #646973; --faint: #888d97; --line: #e3e6ec;
   --ground: #ffffff; --sheet: #ffffff; --card: #ffffff; --wash: #f1f3f6; --chipmix: #ffffff;
-  --t-source: #2d7a99; --t-concept: #7657c2; --t-thought: #c08414; --t-person: #cf5c45;
+  --t-source: #0369a1; --t-concept: #7c3aed; --t-thought: #9a5c06; --t-person: #cc2222;
   --g-blue: #3d7fb8; --g-rose: #c4567a; --g-olive: #7d8a2e; --g-amber: #b7791f; --g-sky: #2f95b5;
   --g-lilac: #8a6bc9; --g-green: #3f8f5b; --g-peach: #d07a4a; --g-indigo: #5560c4;
   --cover-mix: 10%; --chip-mix: 11%; --tagtext: 72%; --kindtext: 70%;
@@ -21,7 +21,7 @@
 :root[data-scheme="dark"] {
   --ink: #ede6db; --mute: #a59c90; --faint: #8c8376; --line: #352f29;
   --ground: #191613; --sheet: #1f1b17; --card: #26221d; --wash: #2c2722; --chipmix: #26221d;
-  --t-source: #72b2cb; --t-concept: #ab96e2; --t-thought: #dcae5c; --t-person: #e6907c;
+  --t-source: #38bdf8; --t-concept: #ab8ffa; --t-thought: #fbbf24; --t-person: #f87a7a;
   --g-blue: #82b2dc; --g-rose: #dc8ca8; --g-olive: #b2bc6c; --g-amber: #d9aa5e; --g-sky: #70c1d8;
   --g-lilac: #b69ee0; --g-green: #80bf95; --g-peach: #e6a481; --g-indigo: #999fe0;
   --cover-mix: 14%; --chip-mix: 16%; --tagtext: 100%; --kindtext: 100%;

@@ -1,23 +1,23 @@
 // The twelve colours an Object Type can have (issue #107, ADR 0008). Each has a hand-tuned light and dark pair.
-// They are kept apart from the Tag colours (--g-* in style.css) so a type never looks like a Tag. A type stores only the
+// They are bright, spread around the colour wheel, and kept apart from the Tag colours (--g-* in style.css) so a type never looks like a Tag. A type stores only the
 // colour's key, so a colour can be re-tuned here without touching the database. tests/palette.test.ts fails if any pair
 // stops being readable: the colour as text must reach WCAG AA (4.5:1) on every surface it sits on, and as a fill or
 // outline it must reach 3:1 (WCAG 1.4.11).
 export type PaletteColour = { key: string; label: string; light: string; dark: string };
 
 export const PALETTE: PaletteColour[] = [
-  { key: "ocean", label: "Ocean", light: "#2b7290", dark: "#72b2cb" }, // Source's colour since Build 1
-  { key: "violet", label: "Violet", light: "#7657c2", dark: "#ab96e2" }, // Concept
-  { key: "gold", label: "Gold", light: "#925e08", dark: "#dcae5c" }, // Thought
-  { key: "coral", label: "Coral", light: "#b64630", dark: "#e6907c" }, // Person
-  { key: "green", label: "Green", light: "#2d784c", dark: "#7cc296" },
-  { key: "rose", label: "Rose", light: "#b43c64", dark: "#e58aa8" },
-  { key: "indigo", label: "Indigo", light: "#4a56b8", dark: "#9aa2e8" },
-  { key: "teal", label: "Teal", light: "#1b7570", dark: "#6cc4bd" },
-  { key: "olive", label: "Olive", light: "#626f11", dark: "#b5c068" },
-  { key: "plum", label: "Plum", light: "#9a3f90", dark: "#d48fcb" },
-  { key: "slate", label: "Slate", light: "#546479", dark: "#9fb0c4" },
-  { key: "clay", label: "Clay", light: "#935c32", dark: "#d1a283" },
+  { key: "ocean", label: "Ocean", light: "#0369a1", dark: "#38bdf8" }, // Source
+  { key: "violet", label: "Violet", light: "#7c3aed", dark: "#ab8ffa" }, // Concept
+  { key: "gold", label: "Gold", light: "#9a5c06", dark: "#fbbf24" }, // Thought
+  { key: "coral", label: "Red", light: "#cc2222", dark: "#f87a7a" }, // Person
+  { key: "green", label: "Green", light: "#15793a", dark: "#4ade80" },
+  { key: "rose", label: "Pink", light: "#c3216b", dark: "#f475b7" },
+  { key: "indigo", label: "Indigo", light: "#4338ca", dark: "#909af8" },
+  { key: "teal", label: "Teal", light: "#0f766e", dark: "#2dd4bf" },
+  { key: "lime", label: "Lime", light: "#49760f", dark: "#a3e635" },
+  { key: "orange", label: "Orange", light: "#ba3f0c", dark: "#fb923c" },
+  { key: "fuchsia", label: "Magenta", light: "#a21caf", dark: "#e879f9" },
+  { key: "leaf", label: "Leaf", light: "#2f7a1b", dark: "#7ce05a" },
 ];
 export const COLOUR_KEYS = PALETTE.map((c) => c.key);
 export const isColour = (k: unknown): k is string => typeof k === "string" && COLOUR_KEYS.includes(k);

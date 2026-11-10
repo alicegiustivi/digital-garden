@@ -21,6 +21,11 @@ describe("the type colour palette (issue #107)", () => {
     expect(new Set(PALETTE.map((c) => c.light)).size).toBe(12);
     expect(new Set(PALETTE.map((c) => c.dark)).size).toBe(12);
   });
+  it("spreads around the colour wheel: no two colours within 15 degrees of hue", () => {
+    const hue = (h: string) => { const [r, g, b] = rgb(h).map((v) => v / 255); const mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn; const x = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; return ((x * 60) + 360) % 360; };
+    const hs = PALETTE.map((c) => hue(c.light)).sort((a, b) => a - b);
+    for (let i = 1; i < hs.length; i++) expect(hs[i] - hs[i - 1], `${hs[i - 1]} / ${hs[i]}`).toBeGreaterThanOrEqual(15);
+  });
   for (const c of PALETTE) {
     it(`${c.label}: readable as text (4.5:1) on every surface, and as a fill or outline (3:1), in light and dark`, () => {
       const lightSurfaces = ["#ffffff", surface("sheet", "light"), surface("wash", "light"), mix(c.light, "#ffffff", 0.11)]; // the last is the type chip's tint
@@ -34,14 +39,14 @@ describe("the type colour palette (issue #107)", () => {
   it("the four core types start on a palette colour", () => {
     for (const t of CORE_TYPES) expect(PALETTE.map((c) => c.key)).toContain(DEFAULT_COLOUR[t]);
   });
-  it("the dark colours of the four core types are the ones they have always had", () => {
+  it("the four core types start on these colours (brighter since the owner asked, issue #107)", () => {
     const dark = Object.fromEntries(PALETTE.map((c) => [c.key, c.dark]));
-    expect([dark.ocean, dark.violet, dark.gold, dark.coral]).toEqual(["#72b2cb", "#ab96e2", "#dcae5c", "#e6907c"]);
+    expect([dark.ocean, dark.violet, dark.gold, dark.coral]).toEqual(["#38bdf8", "#ab8ffa", "#fbbf24", "#f87a7a"]);
   });
   it("writes one --t-<key> per type, light and dark, from the data", () => {
     const out = typeColourCss([{ key: "x-book", color: "teal" }, { key: "source", color: "ocean" }]);
-    expect(out).toContain("--t-x-book:#1b7570");
-    expect(out).toContain('--t-x-book:#6cc4bd');
+    expect(out).toContain("--t-x-book:#0f766e");
+    expect(out).toContain('--t-x-book:#2dd4bf');
     expect(out).toContain(':root[data-scheme="dark"]{');
   });
   it("offers only the icons kept in icons.ts, which are the Hugeicons stroke-rounded family", () => {
