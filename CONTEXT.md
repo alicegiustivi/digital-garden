@@ -41,15 +41,15 @@ An Object for an individual who matters to the owner's Garden, either personally
 _Avoid_: Contact, author, people
 
 **Piece**:
-An Object for a piece of work the owner is writing for others to read, such as an essay or a post. It is always in the owner's words, never the AI's, though like any body it can hold Quotes and Mentions. It may belong to a Project or stand alone. The AI never drafts a Piece, and does nothing on a Piece unless the owner asks.
+An Object for a piece of work the owner is writing for others to read, such as an essay or a post. It is always in the owner's words, never the AI's, though like any body it can hold Quotes and Mentions. It belongs to at most one Project, through a "part of" Connection, or stands alone. Everything else connected to it is its material. The AI never drafts a Piece, and does nothing on a Piece unless the owner asks.
 _Avoid_: Draft, article, post, document
 
 **Project**:
-An Object for something the owner is making or doing, such as an essay series, a trip or learning a skill. Its Pieces, if it has any, and the material that feeds it are connected to it. The AI does nothing on a Project unless the owner asks. A Project is never a list of tasks and has no due date.
+An Object for something the owner is making or doing, such as an essay series, a trip or learning a skill. Its Pieces, if it has any, are connected to it by "part of", in an order the owner arranges, and that order is the Project's outline. Everything else connected straight to it is its material; its page also shows, marked with the Piece's name, the material of its Pieces, without connecting it twice. The AI does nothing on a Project unless the owner asks. A Project is never a list of tasks and has no due date.
 _Avoid_: Goal, task list, folder, space
 
 **Stage**:
-Where a Piece or a Project stands, set only by the owner: Idea, Drafting or Finished for a Piece; Active, Paused or Finished for a Project. It carries no date and is never overdue.
+Where a Piece or a Project stands, set only by the owner: Idea, Drafting or Finished for a Piece; Active, Paused or Finished for a Project. It carries no date and is never overdue, and a Project's Stage is independent of its Pieces' Stages.
 _Avoid_: Status, progress, deadline
 
 **Tag**:
@@ -61,7 +61,7 @@ A link between two Objects in the Garden, of one Connection Kind, visible from b
 _Avoid_: Relationship, relation, edge, backlink
 
 **Connection Kind**:
-How two connected Objects relate, chosen from a fixed list: related (the default), supports, contradicts, builds on, inspired by, mentions, authored by. Directed kinds read differently from each end (supports / supported by).
+How two connected Objects relate, chosen from a fixed list: related (the default), supports, contradicts, builds on, inspired by, mentions, authored by, part of (a Piece to its Project, read "has part" from the Project's end; only the owner makes it). Directed kinds read differently from each end (supports / supported by).
 _Avoid_: Link type, relation type, predicate
 
 **Map**:
