@@ -798,12 +798,12 @@ button:not(:disabled):active, .pill:active, .cap:active, .side-link:active { tra
 .core-tag { justify-self: start; font-size: 11px; letter-spacing: .04em; text-transform: uppercase; color: var(--mute); }
 .type-head button[aria-label^="Move"] { width: 30px; height: 30px; border-radius: 50%; box-shadow: 0 0 0 1px var(--line); }
 .type-head button:disabled { opacity: .35; }
-.swatches { display: grid; grid-template-columns: repeat(9, 30px); gap: 10px; justify-content: start; }
-.swatches button { width: 30px; height: 30px; border-radius: 10px; display: grid; place-items: center; background: var(--sw-f); color: var(--sw-t); box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--sw-i) 35%, transparent); }
-:root[data-scheme="dark"] .swatches button { background: var(--sw-df); color: var(--sw-di); box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--sw-di) 40%, transparent); }
-.swatches button.on { box-shadow: inset 0 0 0 2px var(--sw-i), 0 0 0 2px var(--card), 0 0 0 3.5px var(--sw-i); }
-:root[data-scheme="dark"] .swatches button.on { box-shadow: inset 0 0 0 2px var(--sw-di), 0 0 0 2px var(--card), 0 0 0 3.5px var(--sw-di); }
-.swatches button .ic { width: 15px; height: 15px; stroke-width: 2.4; }
+.type-swatches { display: grid; grid-template-columns: repeat(9, 30px); gap: 10px; justify-content: start; }
+.type-swatches button { width: 30px; height: 30px; border-radius: 10px; display: grid; place-items: center; background: var(--sw-f); color: var(--sw-t); box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--sw-i) 35%, transparent); }
+:root[data-scheme="dark"] .type-swatches button { background: var(--sw-df); color: var(--sw-di); box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--sw-di) 40%, transparent); }
+.type-swatches button.on { box-shadow: inset 0 0 0 2px var(--sw-i), 0 0 0 2px var(--card), 0 0 0 3.5px var(--sw-i); }
+:root[data-scheme="dark"] .type-swatches button.on { box-shadow: inset 0 0 0 2px var(--sw-di), 0 0 0 2px var(--card), 0 0 0 3.5px var(--sw-di); }
+.type-swatches button .ic { width: 15px; height: 15px; stroke-width: 2.4; }
 .icon-pick { display: flex; flex-wrap: wrap; gap: 6px; }
 .icon-pick button { width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; color: var(--ink); box-shadow: 0 0 0 1px var(--line); }
 .icon-pick button.on { color: var(--c, var(--ink)); background: var(--cf, color-mix(in srgb, var(--c, var(--ink)) var(--chip-mix), var(--chipmix))); box-shadow: 0 0 0 2px var(--c, var(--ink)); }
@@ -811,7 +811,7 @@ button:not(:disabled):active, .pill:active, .cap:active, .side-link:active { tra
 .small-h { margin: var(--s-3) 0 0; font-size: 12.5px; text-transform: uppercase; letter-spacing: .05em; color: var(--mute); font-weight: 600; }
 .row-fields { display: flex; gap: var(--s-4); flex-wrap: wrap; }
 .row-fields label { display: grid; gap: 4px; font-size: 13px; color: var(--mute); flex: 1 1 200px; }
-.type-edit input[type="text"], .type-edit input:not([type]), .type-new input:not([type]), .type-edit select, .prop-new select { font: inherit; padding: 7px 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--sheet); color: var(--ink); min-width: 0; }
+.type-edit input[type="text"], .type-edit input:not([type]), .type-new input:not([type]), .type-edit select, .tprop-new select { font: inherit; padding: 7px 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--sheet); color: var(--ink); min-width: 0; }
 .tprops { list-style: none; padding: 0; margin: 0; display: grid; gap: var(--s-2); }
 .tprop { display: grid; gap: 6px; padding: 8px 10px; border-radius: 12px; background: var(--wash); }
 .tprop-main { display: flex; align-items: center; gap: var(--s-3); flex-wrap: wrap; }

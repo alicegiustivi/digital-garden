@@ -14,7 +14,7 @@ const listHash = (t: TypeDef) => (t.core ? `#/${t.plural.toLowerCase()}` : `#/t/
 /** The twelve colours. The chosen one carries a tick, so colour is never the only signal. */
 export function Swatches({ value, onPick, label }: { value: string; onPick: (key: string) => void; label: string }) {
   return (
-    <div className="swatches" role="radiogroup" aria-label={label}>
+    <div className="type-swatches" role="radiogroup" aria-label={label}>
       {PALETTE.map((c) => (
         <button key={c.key} type="button" role="radio" aria-checked={value === c.key} className={value === c.key ? "on" : ""} title={c.label} aria-label={c.label}
           style={{ ["--sw-f" as string]: c.fill, ["--sw-i" as string]: c.ink, ["--sw-t" as string]: c.text, ["--sw-df" as string]: c.darkFill, ["--sw-di" as string]: c.darkInk }} onClick={() => onPick(c.key)}>
