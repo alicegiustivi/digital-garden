@@ -210,6 +210,24 @@ select.edit { font-size: 13.5px; }
 .body { width: 100%; max-width: 52rem; font-size: 17px; line-height: 1.72; color: color-mix(in srgb, var(--ink) 92%, var(--ground)); }
 .body-editor .ProseMirror { outline: none; min-height: 8rem; }
 .body-editor .ProseMirror p { margin: 0 0 1em; }
+/* Markdown in the editor (the same look is used where a body is read: .md) */
+.body-editor .ProseMirror h1, .md h1 { font-size: 1.45em; line-height: 1.25; margin: 1.1em 0 .45em; }
+.body-editor .ProseMirror h2, .md h2 { font-size: 1.25em; line-height: 1.3; margin: 1em 0 .4em; }
+.body-editor .ProseMirror h3, .md h3 { font-size: 1.1em; margin: .9em 0 .35em; }
+.body-editor .ProseMirror h4, .md h4 { font-size: 1em; margin: .8em 0 .3em; color: var(--mute); }
+.body-editor .ProseMirror > :first-child:is(h1, h2, h3, h4), .md > :first-child:is(h1, h2, h3, h4) { margin-top: 0; }
+.body-editor .ProseMirror ul, .body-editor .ProseMirror ol, .md ul, .md ol { margin: 0 0 1em; padding-left: 1.5em; }
+.body-editor .ProseMirror li > p, .md li > p { margin: 0 0 .3em; }
+.body-editor .ProseMirror li, .md li { margin: 0 0 .25em; }
+.body-editor .ProseMirror blockquote, .md blockquote { margin: 0 0 1em; padding: .1em 0 .1em 1em; border-left: 3px solid color-mix(in srgb, var(--c, var(--ink)) 55%, transparent); color: color-mix(in srgb, var(--ink) 80%, var(--ground)); }
+.body-editor .ProseMirror code, .md code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: .88em; padding: .1em .35em; border-radius: 4px; background: color-mix(in srgb, var(--ink) 8%, transparent); }
+.body-editor .ProseMirror pre, .md pre { margin: 0 0 1em; padding: .7em .9em; border-radius: 8px; overflow-x: auto; background: color-mix(in srgb, var(--ink) 7%, transparent); }
+.body-editor .ProseMirror pre code, .md pre code { padding: 0; background: none; font-size: .86em; }
+.body-editor .ProseMirror hr, .md hr { border: 0; border-top: 1px solid var(--line); margin: 1.4em 0; }
+.body-editor .ProseMirror a:not(.mention):not(.object-card), .md a:not(.mention):not(.ref) { color: inherit; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: color-mix(in srgb, var(--ink) 40%, transparent); }
+.md h5 { font-size: .95em; margin: .8em 0 .3em; color: var(--mute); }
+.md p { margin: 0 0 .8em; }
+.md > :last-child { margin-bottom: 0; }
 /* the drop cap, in the type's colour */
 .body-editor .ProseMirror > p:first-child:not(.is-empty)::first-letter { font-weight: 600; color: var(--c); initial-letter: 2; margin-right: .12em; }
 .body-editor .ProseMirror p.is-empty::before { content: attr(data-placeholder); color: var(--mute); float: left; height: 0; pointer-events: none; }

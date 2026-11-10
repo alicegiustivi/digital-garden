@@ -6,26 +6,14 @@ import { api, type Found, type MentionInfo, type Types } from "./api";
 import { MentionContext, MentionNode, type Controller } from "./Mention";
 import { Icon, typeVar } from "./ui";
 
-const TOKEN = /\[\[o:([0-9a-f-]{36})\]\]/g;
-
-/** A stored paragraph (words, with [[o:id]] where an Object is mentioned) as an editor paragraph. */
-const toParagraph = (t: string) => {
-  const content: any[] = [];
-  let at = 0;
-  for (const m of t.matchAll(TOKEN)) {
-    if (m.index! > at) content.push({ type: "text", text: t.slice(at, m.index) });
-    content.push({ type: "mention", attrs: { id: m[1] } });
-    at = m.index! + m[0].length;
-  }
-  if (at < t.length) content.push({ type: "text", text: t.slice(at) });
-  return { type: "paragraph", content };
-};
-const toDoc = (paragraphs: string[]) => ({ type: "doc", content: (paragraphs.length ? paragraphs : [""]).map(toParagraph) });
+import { fromDoc, toDoc } from "../shared/markdown-doc";
 
 type Picking = { query: string; command: (p: { id: string }) => void; rect: DOMRect | null; close: () => void };
 
 /**
- * The owner's body. Plain paragraphs and Mentions; everything typed here is saved with Origin "owner".
+ * The owner's body. Markdown and Mentions; everything typed here is saved with Origin "owner". Each block is stored as Markdown
+ * (src/shared/markdown-doc.ts), so words written before Markdown are unchanged. Formatting works as you type, as in most editors:
+ * "# " a heading, "- " or "1. " a list, "> " a quote, **bold**, *italic*, `code`, ```code block```, and ⌘B / ⌘I.
  * Type @ or [[ to mention another Object by name (with an Object Type filter).
  */
 export function BodyEditor({ paragraphs, placeholder, autofocus, selfId, types, info, open, onSave }: {
@@ -50,12 +38,8 @@ export function BodyEditor({ paragraphs, placeholder, autofocus, selfId, types, 
 
   const extensions = useMemo(
     () => [
-      // Paragraphs and Mentions: that's all the Garden stores in a body in this build.
-      StarterKit.configure({
-        heading: false, blockquote: false, bulletList: false, orderedList: false, listItem: false, listKeymap: false,
-        codeBlock: false, code: false, bold: false, italic: false, strike: false, underline: false, link: false,
-        horizontalRule: false, hardBreak: false,
-      }),
+      // Markdown: headings (1-4), bold, italic, strike, code, links, lists, quotes, code blocks and rules. Underline is not Markdown, so it is off.
+      StarterKit.configure({ heading: { levels: [1, 2, 3, 4] }, underline: false, link: { openOnClick: false, autolink: true, HTMLAttributes: { rel: "noopener noreferrer", target: "_blank" } } }),
       Placeholder.configure({ placeholder }),
       MentionNode.configure({ controller: () => controller.current }),
     ],
@@ -64,16 +48,11 @@ export function BodyEditor({ paragraphs, placeholder, autofocus, selfId, types, 
 
   const editor = useEditor({
     extensions,
-    content: toDoc(paragraphs),
+    content: toDoc(paragraphs) as any,
     autofocus: autofocus ? "end" : false,
     editorProps: { attributes: { "aria-label": "Your words", spellcheck: "true" } },
     onUpdate: ({ editor }) => {
-      const next: string[] = [];
-      editor.state.doc.forEach((p) => {
-        let s = "";
-        p.forEach((c) => { s += c.type.name === "mention" ? `[[o:${c.attrs.id}]]` : c.text ?? ""; });
-        next.push(s);
-      });
+      const next = fromDoc(editor.getJSON() as any);
       pending.current = next;
       window.clearTimeout(timer.current);
       timer.current = window.setTimeout(flush, 600);

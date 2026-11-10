@@ -5,6 +5,7 @@ import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
 import { api, type Brief3, type Found, type InquiryRow, type Thread, type Turn } from "./api";
 import { aiChanged, useAi } from "./Ai";
 import { refresh } from "./refresh";
+import { Markdown } from "./Markdown";
 import { showToast } from "./toast";
 import { Icon, formatDay, typeVar } from "./ui";
 
@@ -23,16 +24,7 @@ export const STARTERS: Record<string, string[]> = {
 /** The answer's text: paragraphs, with each link to a real Object as a quiet link. */
 export function AnswerText({ text, links }: { text: string; links: Record<string, { type: string; title: string; private: boolean }> }) {
   return (
-    <>
-      {text.split(/\n{2,}/).map((para, i) => (
-        <p key={i}>
-          {para.split(MENTION).map((part, j) =>
-            j % 2 === 0 ? <Fragment key={j}>{part}</Fragment>
-              : links[part] ? <a key={j} className="ref" href={`#/o/${part}`} title={links[part].title}>{links[part].title}</a> : null,
-          )}
-        </p>
-      ))}
-    </>
+    <Markdown text={text} mention={(id, key) => (links[id] ? <a key={key} className="ref" href={`#/o/${id}`} title={links[id].title}>{links[id].title}</a> : null)} />
   );
 }
 

@@ -200,7 +200,8 @@ Rules:
   5. One question worth asking next, starting "A question to take further:".
 - If the owner is stating a view or testing an idea, challenge it: say what supports it in the Objects and what would count against it. Be direct, not contrarian.
 - If the Objects don't contain the answer, say so plainly and say what is missing. Never invent facts or use knowledge from outside the Objects.
-- Length: as long as the answer deserves, usually 250 to 500 words. No headings or bullet lists. Separate paragraphs with a blank line.
+- Length: as long as the answer deserves, usually 250 to 500 words.
+- Format in Markdown, but light, so it reads as thinking and not as a report: start each of the five parts with a short bold lead-in (for example **The big picture.**), **bold** only for the few key terms, a short "- " bullet list when you set out two or more specifics or claims (each with its ref), and "> " for a short phrase quoted from the text, with its ref after it. No headings with #, no tables, no HTML, no links to the web. Separate paragraphs and lists with a blank line.
 - "connections" lists up to 3 pairs of Objects you read that clearly relate. "kind" is one of: related, supports, contradicts, builds on. Use [] if none.
 Answer with ONE JSON object and nothing else: {"answer": string, "connections": [{"a": "o1", "b": "o2", "kind": "supports"}]}`;
 

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { api, type Connection, type Found, type KindChoice, type MergeAsk, type Obj, type Shares, type Types, displayTitle } from "./api";
 import { Editable } from "./Editable";
+import { Markdown } from "./Markdown";
 import { ThoughtAbout } from "./Desk";
 import { refresh, useRefresh } from "./refresh";
 import { showToast } from "./toast";
@@ -302,9 +303,9 @@ function SideObject({ id, types, onChanged, beside }: { id: string; types: Types
       {leadValue && <p className="standfirst">{leadValue}</p>}
       {obj.tags.length > 0 && <div className="tags">{obj.tags.map((t) => <TagPill key={t.id} tag={t} />)}</div>}
       {obj.blocks.map((b) => (
-        <p key={b.id} className={b.origin === "owner" ? "" : "b-src"}>
+        <div key={b.id} className={b.origin === "owner" ? "" : "b-src"}>
           <PlainBody text={b.text} mentions={obj.mentions ?? {}} beside={beside} />
-        </p>
+        </div>
       ))}
       {!obj.blocks.length && <p className="quiet small">No words yet.</p>}
       <p><a className="pill action" href={`#/o/${id}`}><Icon name="expand" /> Open full page</a></p>
@@ -314,17 +315,15 @@ function SideObject({ id, types, onChanged, beside }: { id: string; types: Types
 
 /** A body read-only: Mentions as quiet links (⌥-click opens beside), missing ones as plain marked text. */
 function PlainBody({ text, mentions, beside }: { text: string; mentions: NonNullable<Obj["mentions"]>; beside: (id: string) => void }) {
-  const parts = text.split(/(\[\[o:[0-9a-f-]{36}\]\])/g);
   return (
-    <>
-      {parts.map((p, i) => {
-        const m = p.match(/^\[\[o:([0-9a-f-]{36})\]\]$/);
-        if (!m) return p;
-        const info = mentions[m[1]];
-        if (!info || info.missing) return <span key={i} className="mention missing">{info?.inBin ? "in the Bin" : "missing Object"}</span>;
-        return <a key={i} className="mention" style={typeVar(info.type!)} href={`#/o/${m[1]}`} onClick={openLink(m[1], beside)}><Icon name={info.type!} />{info.title}</a>;
-      })}
-    </>
+    <Markdown
+      text={text}
+      mention={(id, key) => {
+        const info = mentions[id];
+        if (!info || info.missing) return <span key={key} className="mention missing">{info?.inBin ? "in the Bin" : "missing Object"}</span>;
+        return <a key={key} className="mention" style={typeVar(info.type!)} href={`#/o/${id}`} onClick={openLink(id, beside)}><Icon name={info.type!} />{info.title}</a>;
+      }}
+    />
   );
 }
 
