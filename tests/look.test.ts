@@ -23,10 +23,10 @@ describe("the Issue look", () => {
     const dark = css.slice(css.indexOf(':root[data-scheme="dark"]'));
     expect(dark.slice(0, dark.indexOf("}"))).not.toMatch(/\.o-(ai|src)/);
   });
-  it("SF Pro is the only typeface", () => {
+  it("SF Pro is the only text typeface (code may use the system monospace)", () => {
     const families = [...css.matchAll(/font-family:\s*([^;]+);|--sf:\s*([^;]+);/g)].map((m) => m[1] ?? m[2]);
     expect(families.length).toBeGreaterThan(0);
-    for (const f of families) expect(f).toMatch(/SF Pro|var\(--sf\)|inherit/);
+    for (const f of families) expect(f).toMatch(/SF Pro|var\(--sf\)|inherit|^ui-monospace, "SF Mono", Menlo, monospace$/);
     expect(css).not.toMatch(/Playfair|Fraunces|Georgia|Newsreader|Bricolage/);
   });
   it("the drop cap takes the type's colour", () => {

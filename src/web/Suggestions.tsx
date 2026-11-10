@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { api, type AiNote, type Obj, type Suggestion, type Suggestions, type Types } from "./api";
-import { aiChanged } from "./Ai";
 import { refresh, useRefresh } from "./refresh";
 import { showToast } from "./toast";
 import { AnswerText } from "./Inquiries";

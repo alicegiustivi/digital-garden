@@ -33,6 +33,19 @@ export function createApp(sqlite: Database.Database, opts: Options = {}) {
   const ai = opts.ai ?? createAi(sqlite, { gate: createGate() });
   const app = new Hono();
 
+  // ADR 0002: the Garden answers only this Mac. Binding to 127.0.0.1 keeps other devices out; this keeps out
+  // a web page open in the owner's browser (DNS rebinding, cross-site requests) by refusing any other Host or Origin.
+  const THIS_MAC = new Set(["127.0.0.1", "localhost", "[::1]"]);
+  const hostOf = (v: string) => { try { return new URL(v.includes("://") ? v : `http://${v}`).hostname; } catch { return ""; } };
+  app.use("*", async (c, next) => {
+    const host = c.req.header("host");
+    const origin = c.req.header("origin");
+    if ((host && !THIS_MAC.has(hostOf(host))) || (origin && !THIS_MAC.has(hostOf(origin)))) {
+      return c.json({ error: "The Garden only answers requests from this Mac." }, 403);
+    }
+    await next();
+  });
+
   app.onError((err, c) => {
     if (err instanceof o.BadRequest) return c.json({ error: err.message }, 400);
     console.error(err);

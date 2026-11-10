@@ -2,7 +2,7 @@
 // Also: name search for @ and [[, "Shares words with", and merging two Objects of the same type.
 import type Database from "better-sqlite3";
 import { BadRequest, setPrivate, summarise, titleOf } from "./objects.ts";
-import { MENTION, mentionIds, mentionToken, mentionsInBody, syncMentions } from "./mentions.ts";
+import { MENTION, mentionToken, mentionsInBody, syncMentions } from "./mentions.ts";
 
 type Db = Database.Database;
 

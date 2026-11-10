@@ -24,7 +24,6 @@
     "@tiptap/starter-kit": "^3.33.0",
     "@tiptap/suggestion": "^3.33.0",
     "better-sqlite3": "^13.0.3",
-    "drizzle-orm": "^0.45.4",
     "hono": "^4.13.16",
     "jsdom": "^31.0.0",
     "marked": "^18.2.0",

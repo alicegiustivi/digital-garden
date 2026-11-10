@@ -30,7 +30,7 @@ For a Mac that does not have the Garden yet. About 10 minutes plus the phone set
 3. **Is there already a Garden?** If `~/Garden` exists, stop and ask: this may be a restore (recipe 3) rather than a first install. Never install over it.
 4. **Install and start:** `npm run mac:install`. It builds the screen, starts the Garden, makes it start at every login, and puts **Garden** in `~/Applications`. Tell the owner to drag it to the Dock.
 5. **Check it:** `curl -s http://127.0.0.1:4747/api/health` answers `{"ok":true,…}`. Open the Garden and capture one thought with ⌘N so the owner sees it work.
-6. **Save to Garden bookmark (browser).** In the Garden: More ▸ **Save to Garden bookmark**. The page has a button; the owner drags it onto the browser's bookmarks bar (Chrome: ⌘⇧B shows the bar; Safari: View ▸ Show Favorites Bar). Test it: open any web page, click the bookmark. The Capture window opens in the Garden with that page's link filled in. The bookmark only opens the Garden on this Mac; if the Garden is not running it simply doesn't open.
+6. **Save to Garden bookmark (browser).** In the Garden: More ▸ **Bookmark**. The page has a button called **Save to Garden**; the owner drags it onto the browser's bookmarks bar (Chrome: ⌘⇧B shows the bar; Safari: View ▸ Show Favorites Bar). Test it: open any web page, click the bookmark. The Capture window opens in the Garden with that page's link filled in. The bookmark only opens the Garden on this Mac; if the Garden is not running it simply doesn't open.
 7. **Backups.** Follow `docs/backup.md` ▸ *Set up (once)*: a Drive folder, `npm run backup:password` (owner types it; **write it down**), pick the folder in More ▸ Backup, **Back up now**, then `npm run backup -- test-restore`.
 8. **Phone capture.** Follow the checklist `docs/phone-bot-setup.md` with the owner, one step at a time. It is optional and can be done another day. The owner does the Telegram and Google clicks; never ask for the bot key.
 9. **Tell the owner what now exists** and where: the Garden app in the Dock, `~/Garden` for the data, the Backup folder in Drive, and the four phrases at the top of this page.
@@ -71,7 +71,7 @@ For a dead Mac, a new Mac, or a big mistake. The old Garden is moved aside, neve
 8. **Reconnect what lives outside the database.** The Backup holds the Garden's Objects and images, not its settings:
    - More ▸ Backup: choose the Backup folder again, then **Back up now**.
    - Daily Inbox: **Choose the folder** for the phone capture folder (see `docs/phone-bot-setup.md` ▸ step 1). The Telegram bot and its Apps Script live in the owner's Google account and keep working; if the bot needs to be made again, follow that checklist.
-   - Redo the **Save to Garden bookmark** (recipe 1, step 6) if the browser is new.
+   - Redo the **Save to Garden** bookmark (recipe 1, step 6) if the browser is new.
 9. Tell the owner what was restored (day, Objects, images) and that anything made after that day is not in it.
 
 ---

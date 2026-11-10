@@ -1,10 +1,8 @@
 import Database from "better-sqlite3";
-import { drizzle } from "drizzle-orm/better-sqlite3";
 import { mkdirSync, readdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { dbPath, imagesDir } from "./paths.ts";
-import * as schema from "./schema.ts";
 
 const migrationsDir = join(dirname(fileURLToPath(import.meta.url)), "../../migrations");
 
@@ -31,5 +29,5 @@ export function openDb(file: string = dbPath()) {
   sqlite.pragma("journal_mode = WAL");
   sqlite.pragma("foreign_keys = ON");
   migrate(sqlite);
-  return { sqlite, db: drizzle(sqlite, { schema }) };
+  return { sqlite };
 }
