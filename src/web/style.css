@@ -405,6 +405,7 @@ select.edit { font-size: 13.5px; }
 .confirm { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .pill.danger { color: #b3261e; }
 .toast { position: fixed; left: 50%; bottom: 24px; translate: -50% 0; z-index: 60; animation: toast-in var(--t-toast) var(--spring-big); display: flex; align-items: center; gap: 14px; background: var(--btn-bg); color: var(--btn-fg); padding: 10px 14px 10px 18px; border-radius: 999px; box-shadow: var(--shadow-up); max-width: calc(100vw - 32px); }
+.toast.update-bar { bottom: 76px; }
 .toast .undo { font-weight: 600; text-decoration: underline; color: inherit; }
 .toast .x { color: inherit; opacity: .7; }
 

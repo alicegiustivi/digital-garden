@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { Hono } from "hono";
 import { serveStatic } from "@hono/node-server/serve-static";
 import type Database from "better-sqlite3";
@@ -52,6 +53,12 @@ export function createApp(sqlite: Database.Database, opts: Options = {}) {
     return c.json({ error: "Something went wrong inside the Garden." }, 500);
   });
 
+  // Which build of the screen is installed (the name of the bundle file), so an open window can tell it is out of date.
+  app.get("/api/version", (c) => {
+    let version = "dev";
+    try { version = readFileSync("./dist/web/index.html", "utf8").match(/assets\/index-([\w-]+)\.js/)?.[1] ?? "dev"; } catch { /* not built yet */ }
+    return c.json({ version }, 200, { "cache-control": "no-store" });
+  });
   app.get("/api/health", (c) =>
     c.json({ ok: true, objects: (sqlite.prepare("SELECT count(*) AS n FROM objects WHERE deleted_at IS NULL").get() as any).n }),
   );
