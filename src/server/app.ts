@@ -3,6 +3,7 @@ import { Hono } from "hono";
 import { serveStatic } from "@hono/node-server/serve-static";
 import type Database from "better-sqlite3";
 import * as o from "./objects.ts";
+import * as ty from "./types.ts";
 import { capture } from "./capture.ts";
 import * as k from "./connections.ts";
 import { graph } from "./graph.ts";
@@ -64,6 +65,19 @@ export function createApp(sqlite: Database.Database, opts: Options = {}) {
   );
 
   app.get("/api/types", (c) => c.json(o.listTypes(sqlite)));
+  // Making and shaping Object Types (issue #107, ADR 0008). The owner's act only: no AI role reaches these.
+  const body = async (c: any) => (await c.req.json().catch(() => ({}))) as any;
+  const typesNow = (c: any, status: 200 | 201 = 200, extra: object = {}) => c.json({ ...o.listTypes(sqlite), ...extra }, status);
+  app.post("/api/types", async (c) => { const key = ty.createType(sqlite, await body(c)); return typesNow(c, 201, { key }); });
+  app.put("/api/types/order", async (c) => { ty.reorderTypes(sqlite, (await body(c)).keys); return typesNow(c); });
+  app.patch("/api/types/:key", async (c) => { ty.updateType(sqlite, c.req.param("key"), await body(c)); return typesNow(c); });
+  app.post("/api/types/:key/move", async (c) => { const moved = ty.moveObjects(sqlite, c.req.param("key"), (await body(c)).to); return typesNow(c, 200, { moved }); });
+  app.delete("/api/types/:key", (c) => { ty.deleteType(sqlite, c.req.param("key")); return typesNow(c); });
+  app.post("/api/types/:key/fields", async (c) => { const field = ty.addField(sqlite, c.req.param("key"), await body(c)); return typesNow(c, 201, { field }); });
+  app.put("/api/types/:key/fields/order", async (c) => { ty.reorderFields(sqlite, c.req.param("key"), (await body(c)).keys); return typesNow(c); });
+  app.patch("/api/types/:key/fields/:field", async (c) => { ty.updateField(sqlite, c.req.param("key"), c.req.param("field"), await body(c)); return typesNow(c); });
+  app.get("/api/types/:key/fields/:field/removal", (c) => c.json(ty.fieldRemoval(sqlite, c.req.param("key"), c.req.param("field"))));
+  app.delete("/api/types/:key/fields/:field", (c) => { const gone = ty.removeField(sqlite, c.req.param("key"), c.req.param("field")); return typesNow(c, 200, { removed: gone }); });
 
   // The filters and sort every list shares (issue #33).
   const filtersOf = (c: any) => ({ type: c.req.query("type"), tag: c.req.query("tag"), since: c.req.query("since"), until: c.req.query("until"), unreviewed: c.req.query("unreviewed"), noConnections: c.req.query("noConnections"), sort: c.req.query("sort") });

@@ -107,7 +107,8 @@ const SYSTEM = `You are the Archivist in a personal knowledge Garden. You READ o
 Answer with ONE JSON object and nothing else, in this shape:
 {"format": string or null, "title": string or null, "authors": string or null, "published": string or null,
  "summary": string or null, "claims": [{"claim": string, "kind": "reported" or "interpretation", "by": string or null}],
- "tags": [string], "people": [{"name": string, "central": boolean}], "type": string or null, "thoughtTitle": string or null}
+ "tags": [string], "people": [{"name": string, "central": boolean}], "type": string or null, "thoughtTitle": string or null,
+ "properties": {property key: string or null}}
 Rules:
 - "format" is one of: book, article, video, podcast, web page, image, document. Use null if unsure.
 - "title", "authors" and "published" are facts about the item itself (published as YYYY, YYYY-MM or YYYY-MM-DD). Use null unless the text shows them. Never invent.
@@ -117,6 +118,7 @@ Rules:
 - "people" lists people the item is by or mainly about. "central" is true only if the item is mainly about that person.
 - "type" is "source" or "person" only if the Kind of Object is clearly wrong, else null.
 - "thoughtTitle" is a short title, only for a Thought that has none, else null.
+- "properties" is only for an Object whose kind lists "Properties" below, and uses only the keys listed there; otherwise {}. Fill a property only with a fact the text itself states, copied as the text words it (a choice must be exactly one of its options). If the text does not state it, leave it out. Never guess, never use your own knowledge, never write an opinion.
 - Never write opinions, summaries or anything in the owner's voice. Text marked "the owner's words" is theirs; you only describe, you never rewrite it.`;
 
 /** What the Archivist is shown about one Object, or null if it may not read it. */
@@ -125,9 +127,15 @@ export function archivistPrompt(db: Db, id: string, image?: { dataUrl: string })
   if (!o || o.private) return null;
   const fields = db.prepare("SELECT * FROM field_values WHERE object_id = ? AND field NOT IN ('extraction')").all(id) as any[];
   const blocks = db.prepare("SELECT * FROM blocks WHERE object_id = ? ORDER BY position").all(id) as any[];
-  const lines: string[] = [`Kind of Object: ${o.type}`];
+  const own = db.prepare("SELECT label, core FROM object_types WHERE key = ?").get(o.type) as any;
+  const lines: string[] = [`Kind of Object: ${own && !own.core ? own.label : o.type}`];
+  if (own && !own.core) {
+    const props = db.prepare("SELECT fd.key, fd.label, fd.input, fd.options FROM type_fields tf JOIN field_definitions fd ON fd.key = tf.field WHERE tf.type = ? ORDER BY tf.position").all(o.type) as any[];
+    // A kind the owner made is a plain Object: tags and Connections like any other, plus its own properties to fill from the text.
+    if (props.length) lines.push(`Properties of this kind (key: name, how it is filled):\n${props.map((p) => `- ${p.key}: ${p.label}, ${p.input === "select" ? `one of ${p.options}` : p.input === "longtext" ? "a short description of 1 to 3 sentences" : "a short value"}`).join("\n")}`);
+  }
   // The extract (the words read from the page) is the heart of a Source, so it is read in full, not as a short first part.
-  for (const f of fields) lines.push(`${f.field}${f.field === "captured" ? " (the extract, the item's own text)" : ""} (${labelOf(f)}): ${clip(String(f.value), f.field === "captured" ? AI_CONFIG.readChars : 3000)}`);
+  for (const f of fields) lines.push(`${f.field.startsWith("c-") ? (db.prepare("SELECT label FROM field_definitions WHERE key = ?").get(f.field) as any)?.label ?? f.field : f.field}${f.field === "captured" ? " (the extract, the item's own text)" : ""} (${labelOf(f)}): ${clip(String(f.value), f.field === "captured" ? AI_CONFIG.readChars : 3000)}`);
   const body = blocks.map((b) => ({ ...b, text: cleanText(db, b.text) })).filter((b) => b.text);
   if (body.length) {
     lines.push("Text:");

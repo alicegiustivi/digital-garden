@@ -13,7 +13,8 @@ import { BackupPage } from "./Backup";
 import { ExportPage } from "./Export";
 import { AiLine, AiPage, aiChanged } from "./Ai";
 import type { Summary } from "./api";
-import { Icon, typeVar } from "./ui";
+import { Icon, applyTypes, typeVar } from "./ui";
+import { TypesPage } from "./Types";
 import { Palette, SearchPage } from "./Search";
 import { TimelinePage } from "./Timeline";
 import { InboxPage } from "./Inbox";
@@ -39,25 +40,9 @@ const useHash = () => {
 };
 const go = (h: string) => { location.hash = h; };
 
-const TYPE_OF_ROUTE: Record<string, string> = { sources: "source", concepts: "concept", thoughts: "thought", people: "person" };
-const TYPE_ROWS = [
-  { key: "source", label: "Sources", hash: "#/sources" },
-  { key: "concept", label: "Concepts", hash: "#/concepts" },
-  { key: "thought", label: "Thoughts", hash: "#/thoughts" },
-  { key: "person", label: "People", hash: "#/people" },
-];
-
-/** How many Objects of each type there are, for the side column. */
-function useTypeCounts(version: number) {
-  const [counts, setCounts] = useState<Record<string, number>>({});
-  useEffect(() => {
-    let live = true;
-    Promise.all(TYPE_ROWS.map((t) => api.list({ type: t.key }).then((r) => [t.key, r.length] as const)))
-      .then((pairs) => live && setCounts(Object.fromEntries(pairs))).catch(() => {});
-    return () => { live = false; };
-  }, [version]);
-  return counts;
-}
+// A type's list lives at #/sources etc. for the four core types (as always) and at #/t/<key> for a type the owner made.
+const listHash = (t: { key: string; plural: string; core: boolean }) => (t.core ? `#/${t.plural.toLowerCase()}` : `#/t/${t.key}`);
+const typeOfRoute = (types: Types, parts: string[]) => (parts[0] === "t" ? types.types.find((t) => t.key === parts[1]) : types.types.find((t) => t.core && t.plural.toLowerCase() === parts[0]));
 
 function SideLink({ href, on, type, icon, children, count, onGo }: { href: string; on: boolean; type?: string; icon?: string; children: React.ReactNode; count?: number; onGo?: () => void }) {
   return (
@@ -70,14 +55,13 @@ function SideLink({ href, on, type, icon, children, count, onGo }: { href: strin
 }
 
 /** The left column: Capture and Search on top, then everything the Garden has, then the rarely-used pages and Appearance. */
-function SideColumn({ hash, unreviewed, version, onCapture, onSearch }: { hash: string; unreviewed: number; version: number; onCapture: () => void; onSearch: () => void }) {
+function SideColumn({ hash, unreviewed, types, onCapture, onSearch }: { hash: string; unreviewed: number; types: Types; onCapture: () => void; onSearch: () => void }) {
   const [menu, setMenu] = useState(false); // only used on a narrow window, where the column folds away
   const [appearance, setAppearanceState] = useState<Appearance>(getAppearance());
-  const counts = useTypeCounts(version);
   useEffect(() => setMenu(false), [hash]);
   const section0 = "#/" + hash.slice(2).split("?")[0].split("/")[0];
   const section = section0 === "#/inquiry" ? "#/inquiries" : section0;
-  const here = (h: string) => section === h || (h === "#/" && hash === "#/");
+  const here = (h: string) => section === h || (h === "#/" && hash === "#/") || (h.startsWith("#/t/") && hash.split("?")[0] === h);
   const choose = (a: Appearance) => { setAppearance(a); setAppearanceState(a); };
   return (
     <aside className={`side${menu ? " open" : ""}`} aria-label="Garden">
@@ -97,7 +81,7 @@ function SideColumn({ hash, unreviewed, version, onCapture, onSearch }: { hash: 
         </div>
         <div className="side-group">
           <h3 className="side-h">Object Types</h3>
-          {TYPE_ROWS.map((t) => <SideLink key={t.key} href={t.hash} type={t.key} on={here(t.hash)} count={counts[t.key]}>{t.label}</SideLink>)}
+          {types.types.map((t) => <SideLink key={t.key} href={listHash(t)} type={t.key} on={here(listHash(t))} count={t.count}>{t.plural}</SideLink>)}
         </div>
         <div className="side-group">
           <SideLink icon="tags" href="#/tags" on={here("#/tags")}>Tags</SideLink>
@@ -107,6 +91,7 @@ function SideColumn({ hash, unreviewed, version, onCapture, onSearch }: { hash: 
         </div>
         <div className="side-group">
           <h3 className="side-h">More</h3>
+          <SideLink icon="box" href="#/types" on={here("#/types")}>Types</SideLink>
           <SideLink icon="inbox" href="#/inbox" on={here("#/inbox")}>Daily Inbox</SideLink>
           <SideLink icon="questions" href="#/questions" on={here("#/questions")}>Questions</SideLink>
           <SideLink icon="bin" href="#/bin" on={here("#/bin")}>Bin</SideLink>
@@ -208,7 +193,10 @@ function App() {
   // A Connection changed somewhere on screen: lists and counts reload.
   const connectionsTick = useRefresh();
   useEffect(() => { if (connectionsTick) changed(); }, [connectionsTick, changed]);
-  useEffect(() => { api.types().then(setTypes); }, []);
+  // Whenever the types change (the owner on the Types page, or Objects coming and going), the screen's colours and icons follow the data.
+  const adoptTypes = useCallback((t: Types) => { applyTypes(t); setTypes(t); }, []);
+  useEffect(() => { api.types().then(adoptTypes); }, [adoptTypes]);
+  useEffect(() => { if (version) api.types().then(adoptTypes).catch(() => {}); }, [version, adoptTypes]);
   useEffect(() => setPeek(null), [hash]);
   // Objects opened lately sit in ⌘K.
   useEffect(() => { const m = hash.match(/^#\/o\/([0-9a-f-]{36})/); if (m) addRecent(m[1]); }, [hash]);
@@ -281,8 +269,10 @@ function App() {
         {paneId && <SidePane paneId={paneId} mainId={mainId} types={types} onNavigate={beside} onClose={() => go(`#/o/${mainId}`)} onChanged={changed} />}
       </main>
     );
-  } else if (TYPE_OF_ROUTE[parts[0]]) {
-    page = <TypeList typeKey={TYPE_OF_ROUTE[parts[0]]} types={types} version={version} onNew={make} onOpen={open} />;
+  } else if (parts[0] === "types") {
+    page = <TypesPage types={types} onTypes={(t) => { adoptTypes(t); changed(); }} go={go} />;
+  } else if (typeOfRoute(types, parts)) {
+    page = <TypeList key={typeOfRoute(types, parts)!.key} typeKey={typeOfRoute(types, parts)!.key} types={types} version={version} onNew={make} onOpen={open} />;
   } else if (parts[0] === "search") {
     page = <SearchPage key={hash} hash={hash} types={types} version={version} onOpen={open} />;
   } else if (parts[0] === "overview") {
@@ -320,13 +310,14 @@ function App() {
   return (
     <>
       <div className="shell">
-        <SideColumn hash={hash} version={version} unreviewed={unreviewed?.length ?? 0} onCapture={() => { setPeek(null); setCapture(true); }} onSearch={() => { setPeek(null); setSearching(true); }} />
+        <SideColumn hash={hash} types={types} unreviewed={unreviewed?.length ?? 0} onCapture={() => { setPeek(null); setCapture(true); }} onSearch={() => { setPeek(null); setSearching(true); }} />
         <div className="main">{page}</div>
       </div>
       <Toasts />
       <UpdateBar />
       {capture && (
         <Capture
+          types={types}
           draft={draft}
           setDraft={setDraft}
           onClose={() => { setCapture(false); api.aiFlush().then(aiChanged).catch(() => {}); }}

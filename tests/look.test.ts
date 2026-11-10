@@ -33,7 +33,8 @@ describe("the Issue look", () => {
     expect(css).toMatch(/first-letter[^}]*color: var\(--c\)/);
   });
   it("the top bar has the listed pages and More, and no sidebar", () => {
-    for (const label of ["This week", "Sources", "Concepts", "Thoughts", "People", "Tags", "More"]) expect(main).toContain(label);
+    for (const label of ["This week", "Tags", "More", "Types"]) expect(main).toContain(label);
+    expect(main).toContain("types.types.map"); // the type links (Sources, Concepts, ... and the owner's own) come from the data (issue #107)
     expect(main).not.toMatch(/sidebar/i);
     expect(main).toContain("Dark (Espresso)");
     expect(main).toContain("Same as Mac");

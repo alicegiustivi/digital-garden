@@ -785,3 +785,40 @@ button:not(:disabled):active, .pill:active, .cap:active, .side-link:active { tra
 .t-thought::after, .t-source:not(:has(.story-img))::after, .lead.plain::after { content: ""; position: absolute; left: 0; right: 0; top: -2px; height: 2px; background: var(--c); transform: scaleX(0); transform-origin: center; transition: transform .3s cubic-bezier(.4, 0, .2, 1); pointer-events: none; }
 .t-source:not(:has(.story-img))::after { top: -1px; }
 .t-thought:hover::after, .t-source:not(:has(.story-img)):hover::after, .lead.plain:hover::after { transform: scaleX(1); transition: transform .5s cubic-bezier(.16, 1, .3, 1); }
+
+/* The Types page (issue #107). Colours come from the data (--t-<key> is set from the type's palette colour), never from here. */
+.types-page .type-rows { list-style: none; padding: 0; margin: var(--s-5) 0; display: grid; gap: var(--s-3); }
+.type-row { background: var(--card); border-radius: 18px; box-shadow: var(--shadow); padding: var(--s-4); display: grid; gap: var(--s-3); }
+.type-head { display: flex; align-items: center; gap: var(--s-3); flex-wrap: wrap; }
+.type-name { display: grid; gap: 2px; }
+.type-name strong { color: var(--c); font-size: 1.05rem; }
+.core-tag { justify-self: start; font-size: 11px; letter-spacing: .04em; text-transform: uppercase; color: var(--mute); }
+.type-head button[aria-label^="Move"] { width: 30px; height: 30px; border-radius: 50%; box-shadow: 0 0 0 1px var(--line); }
+.type-head button:disabled { opacity: .35; }
+.swatches { display: flex; flex-wrap: wrap; gap: 8px; }
+.swatches button { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: var(--sw-l); color: #fff; box-shadow: 0 0 0 1px var(--line); }
+:root[data-scheme="dark"] .swatches button { background: var(--sw-d); color: #191613; }
+.swatches button.on { box-shadow: 0 0 0 2px var(--card), 0 0 0 4px var(--ink); }
+.swatches button .ic { width: 15px; height: 15px; stroke-width: 2.4; }
+.icon-pick { display: flex; flex-wrap: wrap; gap: 6px; }
+.icon-pick button { width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; color: var(--ink); box-shadow: 0 0 0 1px var(--line); }
+.icon-pick button.on { color: var(--c, var(--ink)); background: color-mix(in srgb, var(--c, var(--ink)) var(--chip-mix), var(--chipmix)); box-shadow: 0 0 0 2px var(--c, var(--ink)); }
+.type-edit { display: grid; gap: var(--s-3); border-top: 1px solid var(--line); padding-top: var(--s-4); }
+.small-h { margin: var(--s-3) 0 0; font-size: 12.5px; text-transform: uppercase; letter-spacing: .05em; color: var(--mute); font-weight: 600; }
+.row-fields { display: flex; gap: var(--s-4); flex-wrap: wrap; }
+.row-fields label { display: grid; gap: 4px; font-size: 13px; color: var(--mute); flex: 1 1 200px; }
+.type-edit input[type="text"], .type-edit input:not([type]), .type-new input:not([type]), .type-edit select, .prop-new select { font: inherit; padding: 7px 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--sheet); color: var(--ink); min-width: 0; }
+.props { list-style: none; padding: 0; margin: 0; display: grid; gap: var(--s-2); }
+.prop { display: grid; gap: 6px; padding: 8px 10px; border-radius: 12px; background: var(--wash); }
+.prop-main { display: flex; align-items: center; gap: var(--s-3); flex-wrap: wrap; }
+.prop-main input:not([type]) { flex: 1 1 160px; }
+.prop-opts { display: grid; gap: 4px; color: var(--mute); }
+.prop-ask { margin: 0; font-size: 13.5px; }
+.prop-new { display: flex; gap: var(--s-2); flex-wrap: wrap; align-items: center; }
+.prop-new input { flex: 1 1 160px; }
+.move-row { display: inline-flex; gap: var(--s-2); margin-left: var(--s-3); align-items: center; }
+.type-new { background: var(--wash); border-radius: 18px; padding: var(--s-4) var(--s-5); display: grid; gap: var(--s-3); }
+.type-new h3 { margin: 0; }
+.err { border-left: 3px solid var(--ink); padding-left: 10px; }
+.cw-as { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--mute); }
+.cw-as select { font: inherit; padding: 3px 8px; border-radius: 8px; border: 1px solid var(--line); background: var(--sheet); color: var(--ink); }

@@ -16,7 +16,8 @@ const originOf = (r: any): OriginInfo => ({ origin: r.origin, aiRole: r.ai_role,
 const iso = (s: string | null) => (s ? s.replace(" ", "T") + "Z" : null);
 
 export function listTypes(db: Db) {
-  const types = db.prepare("SELECT key, label, plural FROM object_types ORDER BY position").all() as any[];
+  const types = db.prepare("SELECT key, label, plural, color, icon, core FROM object_types ORDER BY position").all() as any[];
+  const used = new Map((db.prepare("SELECT type, count(*) AS total, coalesce(sum(deleted_at IS NOT NULL), 0) AS bin FROM objects GROUP BY type").all() as any[]).map((r) => [r.type as string, r]));
   const fields = db
     .prepare(
       `SELECT tf.type, tf.lead, fd.key, fd.label, fd.input, fd.options
@@ -28,6 +29,10 @@ export function listTypes(db: Db) {
   return {
     types: types.map((t) => ({
       ...t,
+      core: !!t.core,
+      /** Objects of this type, and how many of those are in the Bin (a type with any cannot be removed). */
+      count: (used.get(t.key)?.total ?? 0) - (used.get(t.key)?.bin ?? 0),
+      inBin: used.get(t.key)?.bin ?? 0,
       fields: fields.filter((f) => f.type === t.key).map((f) => ({ ...shape(f), lead: !!f.lead })),
     })),
     fieldLabels: Object.fromEntries(all.map((f) => [f.key, shape(f)])),

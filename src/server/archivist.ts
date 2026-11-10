@@ -7,12 +7,13 @@ import type Database from "better-sqlite3";
 import { cleanTagName, tagIdFor } from "./objects.ts";
 import { broadTags, VAGUE_TAGS } from "./ai-prompt.ts";
 import { ENTITY_FIELDS } from "./describe.ts";
+import { isCoreType as isCore } from "../shared/palette.ts";
 
 type Db = Database.Database;
 export const ROLE = "Archivist";
 const FORMATS = ["book", "article", "video", "podcast", "web page", "image", "document"];
 
-export type Findings = { format?: string; title?: string; authors?: string; published?: string; tags: string[]; /** For a Person or Concept: the fields written from the Garden's Sources (describe.ts). */ facts?: Record<string, string> };
+export type Findings = { format?: string; title?: string; authors?: string; published?: string; tags: string[]; /** For an Object of a type the owner made: values for that type's own properties, by property key (issue #107). Checked against the type and the Object's own text before anything is saved. */ props?: Record<string, string>; /** For a Person or Concept: the fields written from the Garden's Sources (describe.ts). */ facts?: Record<string, string> };
 
 /** Reads the model's answer. Anything that isn't a clear JSON object is "unusable" (null), never guessed at. */
 export function jsonOf(text: string): any | null {
@@ -30,13 +31,47 @@ export function parseFindings(text: string): Findings | null {
   const format = typeof j.format === "string" && FORMATS.includes(j.format.trim().toLowerCase()) ? j.format.trim().toLowerCase() : undefined;
   const published = str(j.published, 10);
   const tags = Array.isArray(j.tags) ? [...new Set((j.tags as unknown[]).map(cleanTagName).filter((t) => t && t.length <= 40 && !VAGUE_TAGS.has(t)))].slice(0, 4) : [];
+  const props: Record<string, string> = {};
+  if (j.properties && typeof j.properties === "object" && !Array.isArray(j.properties))
+    for (const [k, v] of Object.entries(j.properties)) { const t = str(v, 1500); if (t) props[k] = t; }
   return {
+    props: Object.keys(props).length ? props : undefined,
     format,
     title: str(j.title, 200),
     authors: str(j.authors, 200),
     published: published && /^\d{4}(-\d{2}(-\d{2})?)?$/.test(published) ? published : undefined,
     tags,
   };
+}
+
+const squash = (t: string) => t.toLowerCase().replace(/\s+/g, " ").trim();
+
+/**
+ * Of the values the model proposed for a custom type's properties, keeps only those that may be written (issue #107):
+ * the property must belong to this Object's type; a choice must be one of its options; and a short text or a choice must
+ * appear in the Object's own words (title, body, other values) so a value the text does not state is never invented.
+ * A long text is not matched word for word (it is a short description), so the prompt asks for it to stay close to the text.
+ */
+export function statedProps(db: Db, id: string, type: string, props: Record<string, string>): Record<string, string> {
+  const defs = db.prepare("SELECT fd.key, fd.input, fd.options FROM type_fields tf JOIN field_definitions fd ON fd.key = tf.field WHERE tf.type = ?").all(type) as any[];
+  const own = squash([
+    ...(db.prepare("SELECT value FROM field_values WHERE object_id = ?").all(id) as any[]).map((r) => r.value),
+    ...(db.prepare("SELECT text FROM blocks WHERE object_id = ?").all(id) as any[]).map((r) => r.text),
+  ].join("\n"));
+  const out: Record<string, string> = {};
+  for (const [k, raw] of Object.entries(props)) {
+    const d = defs.find((x) => x.key === k);
+    if (!d) continue;
+    let v = raw.trim();
+    if (d.input === "select") {
+      const opt = (JSON.parse(d.options ?? "[]") as string[]).find((o) => squash(o) === squash(v));
+      if (!opt) continue;
+      v = opt;
+    }
+    if (d.input !== "longtext" && !own.includes(squash(v))) continue;
+    out[k] = v;
+  }
+  return out;
 }
 
 type Change =
@@ -72,6 +107,8 @@ export function applyFindings(db: Db, id: string, f: Findings, model: string, no
       if (f.authors) put("authors", f.authors);
       if (f.published) put("published", f.published);
     }
+    // An Object of a type the owner made (ADR 0008): the type's own properties, filled only with what the Object's own text states.
+    if (!isCore(obj.type) && f.props) for (const [k, v] of Object.entries(statedProps(db, id, obj.type, f.props))) put(k, v);
     for (const [k, v] of Object.entries(f.facts ?? {})) if (ENTITY_FIELDS[obj.type]?.includes(k)) put(k, v, { replaceAi: true }); // a Person's or Concept's description, from the Sources
     const rejected = new Set((db.prepare("SELECT value FROM ai_rejected WHERE object_id = ? AND kind = 'tag'").all(id) as any[]).map((r) => r.value));
     const broad = broadTags(db); // a Tag already on a quarter of the Garden says too little to add again

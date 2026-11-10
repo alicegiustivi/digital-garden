@@ -23,6 +23,26 @@ beforeEach(() => {
 });
 const walk = (d: string): string[] => readdirSync(d, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walk(join(d, e.name)) : [join(d, e.name)]));
 
+describe("backup and custom types (issue #107)", () => {
+  it("a Backup brings back a type the owner made, its colour, icon, properties and Objects, intact", async () => {
+    sqlite.prepare("INSERT INTO object_types (key, label, plural, position, color, icon, core) VALUES ('x-book','Book','Books',5,'rose','book',0)").run();
+    sqlite.prepare("INSERT INTO field_definitions (key, label, input, options) VALUES ('c-1','Author','text',NULL)").run();
+    sqlite.prepare("INSERT INTO type_fields (type, field, position, lead) VALUES ('x-book','c-1',0,1)").run();
+    sqlite.prepare("INSERT INTO objects (id, type, created_at, updated_at) VALUES ('22222222-2222-2222-2222-222222222222','x-book',datetime('now'),datetime('now'))").run();
+    sqlite.prepare("INSERT INTO field_values (object_id, field, value, origin) VALUES ('22222222-2222-2222-2222-222222222222','c-1','Frank Herbert','owner')").run();
+    await bk.runBackup(sqlite, { password: async () => PW, ...day("2026-11-10T03:12:00") });
+    const into = join(mkdtempSync(join(tmpdir(), "garden-spare-")), "restored");
+    await bk.restoreBackup(drive, PW, into);
+    const { default: Database } = await import("better-sqlite3");
+    const back = new Database(join(into, "garden.db"), { readonly: true });
+    expect(back.prepare("SELECT label, plural, color, icon, core FROM object_types WHERE key = 'x-book'").get()).toEqual({ label: "Book", plural: "Books", color: "rose", icon: "book", core: 0 });
+    expect(back.prepare("SELECT lead FROM type_fields WHERE type = 'x-book'").get()).toEqual({ lead: 1 });
+    expect(back.prepare("SELECT value FROM field_values WHERE field = 'c-1'").get()).toEqual({ value: "Frank Herbert" });
+    expect(back.prepare("SELECT type FROM objects WHERE id = '22222222-2222-2222-2222-222222222222'").get()).toEqual({ type: "x-book" });
+    back.close();
+  });
+});
+
 describe("backup", () => {
   it("encrypts everything, and restores into a spare folder", async () => {
     writeFileSync(join(imagesDir(), "a.jpg"), "PICTURE-SECRET-BYTES");
