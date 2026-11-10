@@ -9,5 +9,6 @@ Written before the build, to settle questions. They are history, not instruction
 | [free-retrieval.md](free-retrieval.md) | How can the Researcher find the right Objects without paid search? | Fed the design of how the Researcher finds Objects. |
 | [link-image-capture.md](link-image-capture.md) | How to read a web link and keep an image, for free? | Fed link and image Capture. |
 | [typed-object-models.md](typed-object-models.md) | How do other tools model typed objects and connections? | Fed Object Types and Connection Kinds. |
+| [writing-tools.md](writing-tools.md) | How do writing tools organise projects, material and outlines? | Feeds Pieces and Projects in the Express add-on (#113, #114). |
 
 The experiment behind the free-model choice (scripts and results) is kept on the branch `prototype/free-models-test`.
