@@ -43,7 +43,7 @@ function ActionsMenu({ isPrivate, onMerge, onBeside, onPrivate, onDelete }: { is
         <div className="menu" role="menu">
           <button role="menuitem" onClick={pick(onMerge)} title="Merge a duplicate of this into one Object"><span className="tick" />Merge…</button>
           <button role="menuitem" onClick={pick(onBeside)} title="Open a second pane beside this one (⌥-click any Object to put it there)"><span className="tick" />Open beside</button>
-          <button role="menuitemcheckbox" aria-checked={isPrivate} onClick={pick(onPrivate)} title="Private: no AI reads this."><span className="tick">{isPrivate ? "✓" : ""}</span>{isPrivate ? "Private" : "Make Private"}</button>
+          <button role="menuitemcheckbox" aria-checked={isPrivate} onClick={pick(onPrivate)} title="Private: no AI reads this."><span className="tick">{isPrivate ? <Icon name="check" /> : null}</span>{isPrivate ? "Private" : "Make Private"}</button>
           <hr className="menu-sep" />
           <button role="menuitem" onClick={pick(onDelete)} title="Move to the Bin. You can undo, and restore it for 30 days."><span className="tick" />Delete</button>
         </div>

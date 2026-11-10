@@ -162,7 +162,7 @@ export function Capture({ draft, setDraft, onClose, onSaved, onOpen }: {
         {error && <div className="cw-line cw-err" role="alert">{error}</div>}
         {draft.saved && (
           <div className="cw-saved" role="status">
-            ✓ <b>Saved</b> · {draft.saved.what} · <button onClick={() => onOpen(draft.saved!.openId)}>Open it</button>
+            <Icon name="check" /> <b>Saved</b> · {draft.saved.what} · <button onClick={() => onOpen(draft.saved!.openId)}>Open it</button>
           </div>
         )}
         <div className="cw-foot">

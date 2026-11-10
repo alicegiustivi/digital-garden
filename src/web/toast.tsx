@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Icon } from "./ui";
 
 // A small message at the bottom of the screen that offers Undo for a few seconds (issue #30).
 type Toast = { id: number; message: string; undo?: () => Promise<unknown> | void };
@@ -33,7 +34,7 @@ export function Toasts() {
     <div className="toast" role="status" aria-live="polite" key={t.id}>
       <span>{error ?? t.message}</span>
       {t.undo && !error && <button className="undo" onClick={undo}>Undo</button>}
-      <button className="x" onClick={dismiss} aria-label="Dismiss"><span aria-hidden>×</span></button>
+      <button className="x" onClick={dismiss} aria-label="Dismiss"><Icon name="close" /></button>
     </div>
   );
 }

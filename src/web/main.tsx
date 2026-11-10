@@ -58,10 +58,10 @@ function useTypeCounts(version: number) {
   return counts;
 }
 
-function SideLink({ href, on, type, children, count, onGo }: { href: string; on: boolean; type?: string; children: React.ReactNode; count?: number; onGo?: () => void }) {
+function SideLink({ href, on, type, icon, children, count, onGo }: { href: string; on: boolean; type?: string; icon?: string; children: React.ReactNode; count?: number; onGo?: () => void }) {
   return (
     <a href={href} className={`side-link${on ? " on" : ""}`} style={type ? typeVar(type) : undefined} aria-current={on ? "page" : undefined} onClick={onGo}>
-      {type && <Icon name={type} />}
+      {(type || icon) && <Icon name={(type || icon)!} />}
       <span className="side-label">{children}</span>
       {count !== undefined && <span className="side-count">{count}</span>}
     </a>
@@ -90,33 +90,33 @@ function SideColumn({ hash, unreviewed, version, onCapture, onSearch }: { hash: 
       </div>
       <nav id="side-nav" aria-label="Main">
         <div className="side-group">
-          <SideLink href="#/" on={here("#/")}>This week</SideLink>
-          <SideLink href="#/overview" on={here("#/overview")}>Overview</SideLink>
-          <SideLink href="#/unreviewed" on={here("#/unreviewed")} count={unreviewed}>Unreviewed</SideLink>
+          <SideLink icon="week" href="#/" on={here("#/")}>This week</SideLink>
+          <SideLink icon="overview" href="#/overview" on={here("#/overview")}>Overview</SideLink>
+          <SideLink icon="unreviewed" href="#/unreviewed" on={here("#/unreviewed")} count={unreviewed}>Unreviewed</SideLink>
         </div>
         <div className="side-group">
           <h3 className="side-h">Object Types</h3>
           {TYPE_ROWS.map((t) => <SideLink key={t.key} href={t.hash} type={t.key} on={here(t.hash)} count={counts[t.key]}>{t.label}</SideLink>)}
         </div>
         <div className="side-group">
-          <SideLink href="#/tags" on={here("#/tags")}>Tags</SideLink>
-          <SideLink href="#/timeline" on={here("#/timeline")}>Timeline</SideLink>
-          <SideLink href="#/map" on={here("#/map")}>Map</SideLink>
-          <SideLink href="#/inquiries" on={here("#/inquiries")}>Inquiries</SideLink>
+          <SideLink icon="tags" href="#/tags" on={here("#/tags")}>Tags</SideLink>
+          <SideLink icon="timeline" href="#/timeline" on={here("#/timeline")}>Timeline</SideLink>
+          <SideLink icon="map" href="#/map" on={here("#/map")}>Map</SideLink>
+          <SideLink icon="inquiries" href="#/inquiries" on={here("#/inquiries")}>Inquiries</SideLink>
         </div>
         <div className="side-group">
           <h3 className="side-h">More</h3>
-          <SideLink href="#/inbox" on={here("#/inbox")}>Daily Inbox</SideLink>
-          <SideLink href="#/questions" on={here("#/questions")}>Questions</SideLink>
-          <SideLink href="#/bin" on={here("#/bin")}>Bin</SideLink>
-          <SideLink href="#/backup" on={here("#/backup")}>Backup</SideLink>
-          <SideLink href="#/export" on={here("#/export")}>Export</SideLink>
+          <SideLink icon="inbox" href="#/inbox" on={here("#/inbox")}>Daily Inbox</SideLink>
+          <SideLink icon="questions" href="#/questions" on={here("#/questions")}>Questions</SideLink>
+          <SideLink icon="bin" href="#/bin" on={here("#/bin")}>Bin</SideLink>
+          <SideLink icon="backup" href="#/backup" on={here("#/backup")}>Backup</SideLink>
+          <SideLink icon="export" href="#/export" on={here("#/export")}>Export</SideLink>
           <AiLine on={here("#/ai")} />
-          <SideLink href="#/bookmark" on={here("#/bookmark")}>Bookmark</SideLink>
+          <SideLink icon="bookmark" href="#/bookmark" on={here("#/bookmark")}>Bookmark</SideLink>
         </div>
         <div className="side-group side-look" role="radiogroup" aria-label="Appearance">
           {([["light", "Light"], ["dark", "Dark"], ["system", "Mac"]] as [Appearance, string][]).map(([v, label]) => (
-            <button key={v} role="radio" aria-checked={appearance === v} className={appearance === v ? "on" : ""} title={v === "dark" ? "Dark (Espresso)" : v === "system" ? "Same as Mac" : "Light"} onClick={() => choose(v)}>{label}</button>
+            <button key={v} role="radio" aria-checked={appearance === v} className={appearance === v ? "on" : ""} title={v === "dark" ? "Dark (Espresso)" : v === "system" ? "Same as Mac" : "Light"} onClick={() => choose(v)}><Icon name={v === "light" ? "sun" : v === "dark" ? "moon" : "monitor"} />{label}</button>
           ))}
         </div>
       </nav>
@@ -183,7 +183,7 @@ function Peek({ id, ids, types, pending, onChanged, onMove, onReview, onClose }:
           <button disabled={!next} onClick={() => next && onMove(next)} aria-label="Next"><Icon name="right" /></button>
           <span className="quiet small">{i >= 0 ? `${i + 1} of ${ids.length}` : ""}</span>
           <span className="grow" />
-          {pending && <button className="pill action reviewed" onClick={onReview}>✓ Reviewed <kbd>R</kbd></button>}
+          {pending && <button className="pill action reviewed" onClick={onReview}><Icon name="check" /> Reviewed <kbd>R</kbd></button>}
           <button className="pill action" onClick={() => { onClose(); go(`#/o/${id}`); }}><Icon name="expand" /> Open full page</button>
           <button onClick={onClose} aria-label="Close"><Icon name="close" /></button>
         </div>

@@ -23,7 +23,7 @@ export function AiLine({ on }: { on?: boolean } = {}) {
   const ai = useAi();
   if (!ai) return null;
   const text = !ai.keySet ? "AI · add your key" : ai.keyProblem ? "AI · key needs attention" : `AI · ${ai.low ? `only ${ai.left} calls left today` : `${ai.left} calls left`}${ai.waiting ? ` · ${ai.waiting} waiting` : ""}`;
-  return <a className={`side-link ai-line${on ? " on" : ""} ${ai.keySet && !ai.keyProblem && !ai.low ? "" : "attn"}`} href="#/ai" title="Today's free AI allowance, shared by the Archivist and the Researcher">{text}</a>;
+  return <a className={`side-link ai-line${on ? " on" : ""} ${ai.keySet && !ai.keyProblem && !ai.low ? "" : "attn"}`} href="#/ai" title="Today's free AI allowance, shared by the Archivist and the Researcher"><Icon name="ai" /><span className="side-label">{text}</span></a>;
 }
 
 const statusText = (st: AiStatus): string =>
