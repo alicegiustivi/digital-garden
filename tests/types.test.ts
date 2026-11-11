@@ -42,7 +42,7 @@ describe("the four core types after the migration", () => {
     const t = await types();
     expect(t.map((x) => [x.key, x.color, x.icon, x.core])).toEqual([
       ["source", "ocean", "source", true], ["concept", "violet", "concept", true], ["thought", "gold", "thought", true], ["person", "coral", "person", true],
-      ["project", "green", "book", true], ["piece", "orange", "pen", true],
+      ["project", "green", "box", true], ["piece", "orange", "pen", true],
     ]);
   });
   it("still refuse an Object of an unknown type, in the database itself", () => {
