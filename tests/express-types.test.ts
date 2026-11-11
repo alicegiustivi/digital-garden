@@ -35,7 +35,7 @@ describe("Piece and Project exist", () => {
   it("come after People, in the order Projects then Pieces, as Core types with their colour and icon", async () => {
     const t = (await call("GET", "/api/types")).json.types;
     expect(t.map((x: any) => x.key)).toEqual(["source", "concept", "thought", "person", "project", "piece"]);
-    expect(t.find((x: any) => x.key === "project")).toMatchObject({ label: "Project", plural: "Projects", color: "green", icon: "book", core: true });
+    expect(t.find((x: any) => x.key === "project")).toMatchObject({ label: "Project", plural: "Projects", color: "green", icon: "box", core: true });
     expect(t.find((x: any) => x.key === "piece")).toMatchObject({ label: "Piece", plural: "Pieces", color: "orange", icon: "pen", core: true });
   });
   it("have only a Stage and an About line, and no property can be added or removed", async () => {
