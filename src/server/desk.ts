@@ -105,7 +105,7 @@ const GROUPS = [
 ];
 const SENSE: Record<string, [string, string]> = {
   related: ["related", "related"], supports: ["supports", "supported by"], contradicts: ["contradicts", "contradicts"], "builds on": ["builds on", "built on by"],
-  "inspired by": ["inspired by", "inspired"], mentions: ["mentions", "mentioned by"], "authored by": ["authored by", "author of"],
+  "inspired by": ["inspired by", "inspired"], mentions: ["mentions", "mentioned by"], "authored by": ["authored by", "author of"], "part of": ["part of", "has part"],
 };
 
 /** Only Connections the owner made or approved count (a pending Suggestion is not a Connection). */

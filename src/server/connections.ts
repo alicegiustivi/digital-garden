@@ -1,12 +1,13 @@
-// Connections between Objects (issue #7): one per pair, seven fixed kinds, readable from both ends.
+// Connections between Objects (issue #7): one per pair, eight fixed kinds, readable from both ends.
 // Also: name search for @ and [[, "Shares words with", and merging two Objects of the same type.
 import type Database from "better-sqlite3";
 import { BadRequest, setPrivate, summarise, titleOf } from "./objects.ts";
 import { MENTION, mentionToken, mentionsInBody, syncMentions } from "./mentions.ts";
+import { PART_OF, checkOnePlace, endOfOutline, partEnds, projectOf, renumber } from "./parts.ts";
 
 type Db = Database.Database;
 
-export const KINDS = ["related", "supports", "contradicts", "builds on", "inspired by", "mentions", "authored by"] as const;
+export const KINDS = ["related", "supports", "contradicts", "builds on", "inspired by", "mentions", "authored by", "part of"] as const;
 export type Kind = (typeof KINDS)[number];
 /** How each kind reads from the Object it points away from, and from the Object it points to. */
 const LABELS: Record<Kind, [string, string]> = {
@@ -17,6 +18,7 @@ const LABELS: Record<Kind, [string, string]> = {
   "inspired by": ["inspired by", "inspired"],
   mentions: ["mentions", "mentioned by"],
   "authored by": ["authored by", "author of"],
+  "part of": ["part of", "has part"], // a Piece is part of a Project (issue #140)
 };
 const SYMMETRIC = new Set<string>(["related", "contradicts"]);
 const labelFor = (kind: string, subject: boolean) => LABELS[kind as Kind][subject ? 0 : 1];
@@ -89,7 +91,7 @@ export const kindChoices = KINDS.flatMap((k) =>
 
 const cleanNote = (n: unknown) => (typeof n === "string" ? n.replace(/\s+/g, " ").trim().slice(0, 200) : "");
 
-export function connect(db: Db, input: { a?: unknown; b?: unknown; kind?: unknown; note?: unknown }) {
+export function connect(db: Db, input: { a?: unknown; b?: unknown; kind?: unknown; note?: unknown; move?: unknown }) {
   const { a, b } = input;
   if (typeof a !== "string" || typeof b !== "string") throw new BadRequest("two Objects are needed");
   if (a === b) throw new BadRequest("An Object can't be connected to itself");
@@ -98,11 +100,21 @@ export function connect(db: Db, input: { a?: unknown; b?: unknown; kind?: unknow
   if (!KINDS.includes(kind as Kind) || kind === "mentions") throw new BadRequest("Pick another kind: Mentions come from the text");
   if (db.prepare("SELECT 1 FROM connections WHERE (from_id = ? AND to_id = ?) OR (from_id = ? AND to_id = ?)").get(a, b, b, a))
     throw new BadRequest("These two are already connected");
+  if (kind === PART_OF) {
+    // Always made by the owner (this is the owner's route in), always from the Piece to its Project, at the end of the outline.
+    const { piece, project } = partEnds(db, a, b);
+    const made = db.transaction(() => {
+      checkOnePlace(db, piece, project, { move: input.move === true });
+      const r = db.prepare("INSERT INTO connections (from_id, to_id, kind, origin, note, position) VALUES (?, ?, 'part of', 'owner', ?, ?)").run(piece, project, cleanNote(input.note) || null, endOfOutline(db, project));
+      return Number(r.lastInsertRowid);
+    })();
+    return connectionsOf(db, a)!.find((c: any) => c.id === made);
+  }
   const r = db.prepare("INSERT INTO connections (from_id, to_id, kind, origin, note) VALUES (?, ?, ?, 'owner', ?)").run(a, b, kind, cleanNote(input.note) || null);
   return connectionsOf(db, a)!.find((c: any) => c.id === Number(r.lastInsertRowid));
 }
 
-export function updateConnection(db: Db, id: number, patch: { kind?: unknown; subject?: unknown; note?: unknown }) {
+export function updateConnection(db: Db, id: number, patch: { kind?: unknown; subject?: unknown; note?: unknown; move?: unknown }) {
   const c = db.prepare("SELECT * FROM connections WHERE id = ?").get(id) as any;
   if (!c) return null;
   db.transaction(() => {
@@ -113,12 +125,20 @@ export function updateConnection(db: Db, id: number, patch: { kind?: unknown; su
         throw new BadRequest("A Mention comes from the text: write the reference in a body");
       // `subject` is the Object that "supports", "builds on" and so on. Flip the ends when it is the other one.
       let { from_id: from, to_id: to } = c;
-      if (typeof patch.subject === "string" && !SYMMETRIC.has(kind)) {
+      let position: number | null = null;
+      if (kind === PART_OF) {
+        // Joins a Piece to a Project, read from the Piece. A Piece has one Project at most; the owner may move it.
+        const ends = partEnds(db, from, to);
+        from = ends.piece; to = ends.project;
+        if (c.kind !== PART_OF) { checkOnePlace(db, from, to, { move: patch.move === true, ignore: id }); position = endOfOutline(db, to); }
+        else position = c.position;
+      } else if (typeof patch.subject === "string" && !SYMMETRIC.has(kind)) {
         if (patch.subject !== from && patch.subject !== to) throw new BadRequest("subject must be one of the two Objects");
         if (patch.subject === to) [from, to] = [to, from];
       }
       // Choosing a kind is the owner's decision, so the Connection becomes theirs (ADR 0001).
-      db.prepare("UPDATE connections SET kind = ?, from_id = ?, to_id = ?, origin = 'owner', ai_role = NULL, ai_model = NULL, ai_date = NULL, approved = 0 WHERE id = ?").run(kind, from, to, id);
+      db.prepare("UPDATE connections SET kind = ?, from_id = ?, to_id = ?, origin = 'owner', ai_role = NULL, ai_model = NULL, ai_date = NULL, approved = 0, position = ? WHERE id = ?").run(kind, from, to, position, id);
+      if (c.kind === PART_OF && kind !== PART_OF) renumber(db, c.to_id); // it left that Project's outline
     }
     if (patch.note !== undefined) db.prepare("UPDATE connections SET note = ? WHERE id = ?").run(cleanNote(patch.note) || null, id);
   })();
@@ -131,6 +151,7 @@ export function disconnect(db: Db, id: number) {
   if (c.kind === "mentions" && (mentionsInBody(db, c.from_id).has(c.to_id) && live(db, c.to_id)))
     throw new BadRequest("This one comes from a Mention in the text. Remove the Mention, or give it another kind.");
   db.prepare("DELETE FROM connections WHERE id = ?").run(id);
+  if (c.kind === PART_OF) renumber(db, c.to_id);
   return true;
 }
 
@@ -246,6 +267,10 @@ export function mergeObjects(db: Db, keepId: string, dropId: string, picks: Reco
   if (!keep || !drop) throw new BadRequest("That Object could not be found");
   if (keep.type !== drop.type) throw new BadRequest("Only two Objects of the same type can be merged");
 
+  // Two Pieces that belong to different Projects can't become one Piece (it would be in two Projects).
+  const projectOfKeep = projectOf(db, keepId), projectOfDrop = projectOf(db, dropId);
+  if (projectOfKeep && projectOfDrop && projectOfKeep.projectId !== projectOfDrop.projectId)
+    throw new BadRequest("These two Pieces belong to different Projects. Take one out of its Project before merging them.");
   const all = (id: string) => db.prepare("SELECT * FROM connections WHERE from_id = ? OR to_id = ?").all(id, id) as Conn[];
   const otherEnd = (c: Conn, me: string) => (c.from_id === me ? c.to_id : c.from_id);
   const keepBy = new Map(all(keepId).map((c) => [otherEnd(c, keepId), c]));
@@ -304,6 +329,8 @@ export function mergeObjects(db: Db, keepId: string, dropId: string, picks: Reco
     // The merged Object goes to the Bin; everything of value has moved to the kept one.
     db.prepare("UPDATE objects SET deleted_at = datetime('now') WHERE id = ?").run(dropId);
     syncMentions(db, keepId);
+    // Pieces that moved over to a kept Project, or a Piece that kept its Project, leave the outline in a clean order.
+    for (const p of db.prepare("SELECT DISTINCT to_id FROM connections WHERE kind = 'part of' AND (to_id = ? OR from_id = ?)").all(keepId, keepId) as any[]) renumber(db, p.to_id);
   })();
   return { merged: true, keepId };
 }

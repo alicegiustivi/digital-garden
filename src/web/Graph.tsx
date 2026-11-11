@@ -66,8 +66,8 @@ function useSim(key: string, build: () => Sim, remember = true) {
 /* ---------- the drawing surface (zoom, pan, drag, labels, floating controls) ---------- */
 export type Item = { id: string; label: string; type: string; r: number; private?: boolean; fade: number; concept?: boolean; rank: number; sub?: string; meta?: string };
 export type Link = { key: string; a: string; b: string; kind: string; origin: string; approved: boolean; fade: number; note?: string };
-const DASH: Record<string, string | undefined> = { related: undefined, supports: undefined, "builds on": undefined, "inspired by": "1 4", contradicts: "7 4", mentions: "2 3", "authored by": "10 3 2 3" };
-const DIRECTED = new Set(["supports", "builds on", "inspired by", "authored by", "mentions"]);
+const DASH: Record<string, string | undefined> = { related: undefined, supports: undefined, "builds on": undefined, "inspired by": "1 4", contradicts: "7 4", mentions: "2 3", "authored by": "10 3 2 3", "part of": undefined };
+const DIRECTED = new Set(["supports", "builds on", "inspired by", "authored by", "mentions", "part of"]);
 
 function Canvas({ sim, items, links, under, onNode, onNodeDouble, selected, labelBudget, onReheat, initialK = 1, noFit, flyTo, topLeft, topRight, count, lightSelected = true, edgeText }: {
   sim: Sim; items: Item[]; links: Link[]; under?: (pos: (id: string) => SN | undefined) => React.ReactNode; onNode: (id: string, e: React.MouseEvent) => void; onNodeDouble?: (id: string) => void;
@@ -262,8 +262,8 @@ function KeyPanel({ types }: { types: Types }) {
       <h4>Colour</h4>
       {types.types.map((t) => <p key={t.key} style={typeVar(t.key)}><i className="dot" />{t.label}</p>)}
       <h4>Lines</h4>
-      <p>{line()}related</p><p>{line("7 4")}contradicts</p><p>{line("1 4")}inspired by</p><p>{line("2 3")}mentions</p>
-      <p className="quiet small">Arrows (supports, builds on, authored by) point at the other end and show as you point at an Object.</p>
+      <p>{line()}related</p><p><svg width="30" height="8" aria-hidden="true"><line x1="0" y1="4" x2="30" y2="4" className="gx-edge hot k-part-of" /></svg>part of</p><p>{line("7 4")}contradicts</p><p>{line("1 4")}inspired by</p><p>{line("2 3")}mentions</p>
+      <p className="quiet small">Arrows (supports, builds on, authored by, part of) point at the other end and show as you point at an Object.</p>
       <h4>Marks</h4>
       <p>✦ added by the Archivist</p><p>✧ AI, approved by you</p>
       <p><svg width="12" height="12" viewBox="-6 -6 12 12" className="gx-lock keyl"><rect x="-4.5" y="-1.5" width="9" height="6.5" rx="1.6" /><path d="M-2.6 -1.5V-3a2.6 2.6 0 0 1 5.2 0v1.5" /></svg> Private</p>

@@ -186,7 +186,7 @@ const hhmm = (iso: string) => new Date(iso.includes("T") ? iso : iso.replace(" "
 function markdownFor(g: Garden, L: ReturnType<typeof layout>, privateIds: Set<string>) {
   const byId = new Map(g.objects.map((o) => [o.id, o]));
   const typeOf = new Map(g.objectTypes.map((t) => [t.key, t]));
-  const KIND: Record<string, [string, string]> = { related: ["related", "related"], supports: ["supports", "supported by"], contradicts: ["contradicts", "contradicts"], "builds on": ["builds on", "built on by"], "inspired by": ["inspired by", "inspired"], mentions: ["mentions", "mentioned by"], "authored by": ["authored by", "author of"] };
+  const KIND: Record<string, [string, string]> = { related: ["related", "related"], supports: ["supports", "supported by"], contradicts: ["contradicts", "contradicts"], "builds on": ["builds on", "built on by"], "inspired by": ["inspired by", "inspired"], mentions: ["mentions", "mentioned by"], "authored by": ["authored by", "author of"], "part of": ["part of", "has part"] };
 
   /** A Mention becomes a link to the other Object's file. */
   const mentions = (text: string, from: string) =>

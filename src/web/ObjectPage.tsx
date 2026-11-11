@@ -7,6 +7,7 @@ import { PictureProp, Stars } from "./PropKinds";
 import { AiStatusLine } from "./Ai";
 import { AiNotes, ArchivistSuggestions, WebLookup } from "./Suggestions";
 import { ConnectionsPanel, MergeDialog } from "./Connections";
+import { PieceProject, ProjectPieces } from "./PartOf";
 import { AskPanel } from "./Inquiries";
 import { ConceptDesk, DeskSummary, OpenQuestionControl, useDesk } from "./Desk";
 import { wasMadeHere } from "./fresh";
@@ -184,6 +185,7 @@ export function ObjectPage({ id, types, fresh, onChanged, beside, onDeleted }: P
             </div>}
           />
 
+          {obj.type === "piece" && <PieceProject id={obj.id} types={types} beside={beside} />}
           {obj.type === "thought" && <div className="byline"><OpenQuestionControl id={obj.id} beside={beside} /></div>}
           {obj.type === "concept" && <DeskSummary desk={desk} types={types} />}
 
@@ -228,6 +230,7 @@ export function ObjectPage({ id, types, fresh, onChanged, beside, onDeleted }: P
             <blockquote key={b.id} className="b-src"><Marked o={b}>{b.text}</Marked></blockquote>
           ))}
           {editor}
+          {obj.type === "project" && <ProjectPieces id={obj.id} types={types} beside={beside} />}
           <AiNotes obj={obj} />
           <ConnectionsPanel obj={obj} types={types} beside={beside} />
           {transcript && (
