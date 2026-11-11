@@ -855,3 +855,4 @@ button:not(:disabled):active, .pill:active, .cap:active, .side-link:active { tra
 .pic-pick { position: relative; display: grid; place-items: center; min-width: 88px; min-height: 120px; max-width: 220px; border-radius: 10px; overflow: hidden; background: var(--wash); box-shadow: var(--shadow); }
 .pic-pick img { display: block; max-width: 220px; max-height: 300px; object-fit: contain; }
 .pic-empty .ic { width: 28px; height: 28px; color: var(--mute); }
+.prop:has(.pic-prop) { align-items: start; }
