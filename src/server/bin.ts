@@ -9,6 +9,7 @@ import { imagesDir } from "./paths.ts";
 import { dropPortraitFiles } from "./portraits.ts";
 import { dropPropImageFiles } from "./prop-images.ts";
 import { mentionToken, syncMentions } from "./mentions.ts";
+import { PART_OF, checkOnePlace, endOfOutline, partEnds, renumber } from "./parts.ts";
 import { emptyInquiryBin, purgeExpiredInquiries } from "./researcher.ts";
 
 type Db = Database.Database;
@@ -77,8 +78,11 @@ export function restoreConnection(db: Db, c: any) {
   if (!live(c?.fromId) || !live(c?.toId)) throw new BadRequest("That Object could not be found");
   if (db.prepare("SELECT 1 FROM connections WHERE (from_id = ? AND to_id = ?) OR (from_id = ? AND to_id = ?)").get(c.fromId, c.toId, c.toId, c.fromId))
     throw new BadRequest("These two are already connected");
-  db.prepare("INSERT INTO connections (from_id, to_id, kind, origin, ai_role, ai_model, ai_date, note, approved) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")
-    .run(c.fromId, c.toId, String(c.kind), ...originCols(c), c.note ?? null, c.origin === "ai" && c.approved ? 1 : 0);
+  const isPart = c.kind === PART_OF;
+  if (isPart) { partEnds(db, c.fromId, c.toId); checkOnePlace(db, c.fromId, c.toId); } // Undo can't put a Piece into a second Project
+  db.prepare("INSERT INTO connections (from_id, to_id, kind, origin, ai_role, ai_model, ai_date, note, approved, position) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+    .run(c.fromId, c.toId, String(c.kind), ...originCols(c), c.note ?? null, c.origin === "ai" && c.approved ? 1 : 0, isPart ? (Number.isInteger(c.position) ? c.position - 0.5 : endOfOutline(db, c.toId)) : null);
+  if (isPart) renumber(db, c.toId);
   return { restored: true };
 }
 

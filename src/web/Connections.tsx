@@ -75,9 +75,11 @@ export function FindObject({ types, exclude, onlyType, action, onPick, onClose, 
   );
 }
 
-function KindSelect({ c, choices, onPick }: { c: Connection; choices: KindChoice[]; onPick: (k: KindChoice) => void }) {
+function KindSelect({ c, choices, mine, onPick }: { c: Connection; choices: KindChoice[]; mine: string; onPick: (k: KindChoice) => void }) {
   const current = `${c.kind}|${c.subject || c.kind === "related" || c.kind === "contradicts" ? 1 : 0}`;
-  const usable = choices.filter((k) => k.kind !== "mentions" || c.kind === "mentions");
+  // "part of" joins a Piece to a Project: offered only between those two, and read from the right end.
+  const partOf = (k: KindChoice) => (mine === "piece" && c.other.type === "project" ? k.subject : mine === "project" && c.other.type === "piece" ? !k.subject : false);
+  const usable = choices.filter((k) => (k.kind !== "mentions" || c.kind === "mentions") && (k.kind !== "part of" || partOf(k)));
   return (
     <label className="kind" title="Change how these two are connected">
       <Marked o={c}><span>{c.label}</span></Marked>
@@ -94,7 +96,7 @@ function KindSelect({ c, choices, onPick }: { c: Connection; choices: KindChoice
 }
 
 /** Under the body: each Object connected here, how, and the sentence that mentions it. */
-export function ConnectionsPanel({ obj, types, beside }: { obj: Pick<Obj, "id">; types: Types; beside: (id: string) => void }) {
+export function ConnectionsPanel({ obj, types, beside }: { obj: Pick<Obj, "id" | "type">; types: Types; beside: (id: string) => void }) {
   const tick = useRefresh();
   const [rows, setRows] = useState<Connection[] | null>(null);
   const [choices, setChoices] = useState<KindChoice[]>([]);
@@ -102,7 +104,13 @@ export function ConnectionsPanel({ obj, types, beside }: { obj: Pick<Obj, "id">;
   const [error, setError] = useState<string>();
   useEffect(() => { api.connections(obj.id).then(setRows); }, [obj.id, tick]);
   useEffect(() => { api.kinds().then(setChoices); }, []);
-  const run = (p: Promise<unknown>) => p.then(() => { setError(undefined); refresh(); }).catch((e) => setError(e.message));
+  const run = (p: Promise<unknown>) => p.then(() => { setError(undefined); setMovable(null); refresh(); }).catch((e) => { setError(e.message); });
+  // A Piece that already has a Project: say so, and let the owner move it instead.
+  const [movable, setMovable] = useState<{ c: Connection; k: KindChoice } | null>(null);
+  const moveOrFail = (c: Connection, k: KindChoice) => (e: Error & { data?: { partOf?: { title: string } } }) => {
+    if (e.data?.partOf) setMovable({ c, k });
+    throw e;
+  };
   const removeConnection = (c: Connection) =>
     run(api.disconnect(c.id).then((r) => showToast(`Connection to ${c.other.title} removed.`, () => api.restoreConnection(r.was).then(refresh))));
   return (
@@ -121,13 +129,18 @@ export function ConnectionsPanel({ obj, types, beside }: { obj: Pick<Obj, "id">;
           onPick={(f) => run(api.connect(obj.id, f.id))}
         />
       )}
-      {error && <p className="quiet small" role="alert">{error}</p>}
+      {error && (
+        <p className="quiet small" role="alert">
+          {error}{" "}
+          {movable && <button className="pill action" onClick={() => run(api.setConnection(movable.c.id, { kind: movable.k.kind, move: true }))}>Move it here</button>}
+        </p>
+      )}
       {rows && !rows.length && <p className="quiet small">Nothing is connected yet. Mention an Object in your words with @, or press Connect.</p>}
       <ul className="conn-list">
         {rows?.map((c) => (
           <li key={c.id} className="conn" style={typeVar(c.other.type)}>
             <div className="conn-main">
-              <KindSelect c={c} choices={choices} onPick={(k) => run(api.setConnection(c.id, { kind: k.kind, subject: k.subject ? obj.id : c.other.id }))} />
+              <KindSelect c={c} choices={choices} mine={obj.type} onPick={(k) => run(api.setConnection(c.id, { kind: k.kind, subject: k.subject ? obj.id : c.other.id }).catch(moveOrFail(c, k)))} />
               <a className="conn-name" href={`#/o/${c.other.id}`} onClick={openLink(c.other.id, beside)} title="⌥-click opens it beside this one">
                 <Icon name={c.other.type} /> {c.other.title} {c.other.private && <Icon name="lock" />}
               </a>

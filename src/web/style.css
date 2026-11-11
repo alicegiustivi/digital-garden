@@ -674,6 +674,7 @@ p.inbox-warn { margin: 10px 0; padding: 8px 14px; border-radius: 10px; backgroun
 .gx-edge { stroke: var(--faint); fill: none; stroke-linecap: round; stroke-width: .9; }
 .gx-edge.hot { stroke: color-mix(in srgb, var(--ink) 65%, var(--card)); stroke-width: 1.2; }
 .gx-edge.k-contradicts { stroke: var(--t-person); }
+.gx-edge.k-part-of { stroke: var(--t-project); stroke-width: 2.4; } /* a Piece is part of a Project: drawn heavier, in the Project's colour (issue #140) */
 .gx-label { fill: color-mix(in srgb, var(--ink) 80%, var(--card)); pointer-events: none; font-family: var(--sf); }
 .gx-label.concept { font-weight: 600; fill: var(--ink); }
 .gx-elabel { fill: var(--ink); pointer-events: none; font-style: italic; }
@@ -921,3 +922,25 @@ button:not(:disabled):active, .pill:active, .cap:active, .side-link:active { tra
 .stage-row:hover .stage-title { text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--c) 55%, transparent); text-underline-offset: 4px; }
 .stage-title { font-weight: 600; font-size: 1.05rem; letter-spacing: -.01em; }
 .stage-about { color: var(--mute); font-size: .95rem; }
+
+/* "Part of" (issue #140): a Project's outline of Pieces, and the Project a Piece belongs to. */
+.project-pieces { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 15px; line-height: 1.5; }
+.project-pieces > header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+.project-pieces h3 { font-size: 1.1rem; }
+.project-pieces h3 em { font-style: normal; color: var(--mute); }
+.project-pieces .stage-groups { gap: var(--s-4); }
+.outline-row { display: flex; align-items: center; gap: 10px; padding: 10px 4px 10px 8px; border-bottom: 1px solid var(--line); background: var(--bg); position: relative; cursor: grab; }
+.outline-row.dragging { opacity: .4; }
+.outline-row.over { box-shadow: inset 0 2px 0 var(--c); }
+.outline-row .grip { color: var(--faint); letter-spacing: -2px; user-select: none; font-size: .9em; }
+.outline-title { flex: 1; min-width: 0; font-weight: 600; font-size: 1.02rem; letter-spacing: -.01em; text-decoration: none; color: inherit; }
+.outline-title:hover { text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--c) 55%, transparent); text-underline-offset: 4px; }
+.outline-move { display: inline-flex; gap: 2px; opacity: 0; transition: opacity .12s; }
+.outline-row:hover .outline-move, .outline-row:focus-within .outline-move { opacity: 1; }
+.outline-move .x:disabled { opacity: .25; cursor: default; }
+.part-notice { margin: 8px 0; }
+.piece-project { margin: 4px 0 var(--s-3); font-size: 15px; }
+.piece-project p { margin: 0; }
+.piece-project-link { color: var(--c); font-weight: 600; text-decoration: none; }
+.piece-project-link:hover { text-decoration: underline; text-underline-offset: 4px; }
+.piece-project .finder { max-width: 520px; }

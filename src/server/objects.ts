@@ -9,7 +9,8 @@ type Db = Database.Database;
 
 export const TAG_COLORS = ["blue", "rose", "olive", "amber", "sky", "lilac", "green", "peach", "indigo"] as const;
 
-export class BadRequest extends Error {}
+/** A refusal the screen shows as it is. `extra` is anything more the screen needs to offer a way forward (for example, move a Piece). */
+export class BadRequest extends Error { extra?: Record<string, unknown>; }
 
 type OriginInfo = { origin: "source" | "ai" | "owner"; aiRole: string | null; aiModel: string | null; aiDate: string | null; approved: boolean; /** A fact looked up on the web (issue #108): the page it came from. */ sourceUrl?: string; sourceName?: string | null; sourceDate?: string | null };
 // `approved` is only ever true for an AI piece the owner accepted as a Suggestion (it keeps AI Origin, shown ✧).
@@ -226,6 +227,9 @@ export function updateObject(db: Db, id: string, patch: { type?: unknown; privat
   db.transaction(() => {
     if (patch.type !== undefined) {
       if (!typeExists(db, patch.type)) throw new BadRequest("unknown Object Type");
+      // A Piece that is part of a Project, or a Project that has Pieces, can't become something else until they are taken apart.
+      if (patch.type !== (db.prepare("SELECT type FROM objects WHERE id = ?").get(id) as any)?.type && db.prepare("SELECT 1 FROM connections WHERE kind = 'part of' AND (from_id = ? OR to_id = ?)").get(id, id))
+        throw new BadRequest("This is connected by “part of”. Take it out of its Project (or take its Pieces out) before changing its type.");
       // Only the type changes. Field values that don't fit the new type stay stored.
       // Choosing a type is the owner's decision, so it stops being the Archivist's.
       db.prepare("UPDATE objects SET type = ?, type_ai = CASE WHEN type = ? THEN type_ai ELSE NULL END WHERE id = ?").run(patch.type, patch.type, id);

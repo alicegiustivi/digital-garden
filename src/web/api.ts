@@ -48,7 +48,7 @@ export type Types = { types: TypeDef[]; fieldLabels: Record<string, FieldDef> };
 export type TypesAnswer = Types & { key?: string; field?: string; moved?: number; removed?: { values: number; inBin: number } };
 export type CaptureResult = { created: Obj[]; existing: Obj[]; thoughtId: string | null; openId: string };
 export type BinRow = Summary & { title: string; deletedAt: string; daysLeft: number };
-export type RemovedConnection = { fromId: string; toId: string; kind: string; note: string | null } & OriginInfo;
+export type RemovedConnection = { fromId: string; toId: string; kind: string; note: string | null; position?: number | null } & OriginInfo;
 export type RemovedTag = { tag: TagRow; objects: number; turnedDown?: string[]; on: ({ objectId: string } & OriginInfo)[] };
 export type AiSummary = {
   keySet: boolean; keyProblem: boolean; left: number; low: boolean; researcherLeft: number; waiting: number;
@@ -100,9 +100,15 @@ export type TagRow = { id: number; name: string; color: string; count: number };
 
 export async function call<T>(method: string, path: string, body?: unknown): Promise<T> {
   const res = await fetch(path, { method, headers: { "content-type": "application/json" }, body: body === undefined ? undefined : JSON.stringify(body) });
-  if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error ?? res.statusText);
+  if (!res.ok) { const j = await res.json().catch(() => ({})); throw Object.assign(new Error(j.error ?? res.statusText), { data: j }); }
   return res.json();
 }
+
+/** A Project's Pieces in the owner's order, and the Project a Piece is part of (issue #140). */
+export type PartBrief = { id: string; type: "piece" | "project"; title: string; stage: string; private: boolean };
+export type ProjectPieces = { project: PartBrief; pieces: (PartBrief & { connectionId: number })[] };
+/** What the Garden says when a Piece is already part of another Project: enough to offer "Move it here". */
+export type AlreadyPartOf = { partOf: { id: string; title: string } };
 
 const params = (q: Record<string, unknown>) =>
   new URLSearchParams(Object.entries(q).filter(([, v]) => v !== undefined && v !== "" && v !== null).map(([k, v]) => [k, String(v)])).toString();
@@ -182,8 +188,11 @@ export const api = {
   connections: (id: string) => call<Connection[]>("GET", `/api/objects/${id}/connections`),
   kinds: () => call<KindChoice[]>("GET", "/api/connection-kinds"),
   sharesWords: (id: string) => call<Shares[]>("GET", `/api/objects/${id}/shares-words`),
-  connect: (a: string, b: string) => call<Connection>("POST", "/api/connections", { a, b }),
-  setConnection: (id: number, patch: { kind?: string; subject?: string; note?: string }) => call<unknown>("PATCH", `/api/connections/${id}`, patch),
+  connect: (a: string, b: string, kind?: string, move?: boolean) => call<Connection>("POST", "/api/connections", { a, b, kind, move }),
+  pieces: (projectId: string) => call<ProjectPieces>("GET", `/api/objects/${projectId}/pieces`),
+  orderPieces: (projectId: string, order: string[]) => call<ProjectPieces>("PUT", `/api/objects/${projectId}/pieces/order`, { order }),
+  projectOf: (pieceId: string) => call<{ project: (PartBrief & { connectionId: number }) | null }>("GET", `/api/objects/${pieceId}/project`),
+  setConnection: (id: number, patch: { kind?: string; subject?: string; note?: string; move?: boolean }) => call<unknown>("PATCH", `/api/connections/${id}`, patch),
   disconnect: (id: number) => call<{ was: RemovedConnection }>("DELETE", `/api/connections/${id}`),
   restoreConnection: (was: RemovedConnection) => call<unknown>("POST", "/api/connections/restore", was),
   // A Person's Portrait (issue #69). Each answer carries "previous", what Undo sets back.

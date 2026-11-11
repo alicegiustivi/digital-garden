@@ -7,6 +7,7 @@ import * as ty from "./types.ts";
 import { propImageFile, removePropImage, restorePropImage, setPropImage } from "./prop-images.ts";
 import { capture } from "./capture.ts";
 import * as k from "./connections.ts";
+import * as parts from "./parts.ts";
 import { graph } from "./graph.ts";
 
 import { extractInto } from "./extract.ts";
@@ -53,7 +54,7 @@ export function createApp(sqlite: Database.Database, opts: Options = {}) {
   });
 
   app.onError((err, c) => {
-    if (err instanceof o.BadRequest) return c.json({ error: err.message }, 400);
+    if (err instanceof o.BadRequest) return c.json({ error: err.message, ...err.extra }, 400);
     console.error(err);
     return c.json({ error: "Something went wrong inside the Garden." }, 500);
   });
@@ -187,8 +188,12 @@ export function createApp(sqlite: Database.Database, opts: Options = {}) {
     const id = Number(c.req.param("id"));
     const was = sqlite.prepare("SELECT * FROM connections WHERE id = ?").get(id) as any;
     if (!k.disconnect(sqlite, id)) return c.json({ error: "Not found" }, 404);
-    return c.json({ removed: true, was: { fromId: was.from_id, toId: was.to_id, kind: was.kind, note: was.note, origin: was.origin, aiRole: was.ai_role, aiModel: was.ai_model, aiDate: was.ai_date, approved: !!was.approved } });
+    return c.json({ removed: true, was: { fromId: was.from_id, toId: was.to_id, kind: was.kind, note: was.note, origin: was.origin, aiRole: was.ai_role, aiModel: was.ai_model, aiDate: was.ai_date, approved: !!was.approved, position: was.position } });
   });
+  // "Part of" (issue #140): a Project's Pieces in the owner's order, the Project a Piece is part of, and dragging the order.
+  app.get("/api/objects/:id/pieces", (c) => found(c, parts.piecesOf(sqlite, c.req.param("id"))));
+  app.put("/api/objects/:id/pieces/order", async (c) => found(c, parts.setOutline(sqlite, c.req.param("id"), (await c.req.json().catch(() => ({}))).order)));
+  app.get("/api/objects/:id/project", (c) => found(c, parts.projectOfPiece(sqlite, c.req.param("id"))));
   app.post("/api/connections/restore", async (c) => c.json(bin.restoreConnection(sqlite, await c.req.json().catch(() => ({}))), 201));
   // Merge two Objects of the same type into the kept one. If two Connections disagree it answers 409 with what to ask.
   app.post("/api/objects/:id/merge", async (c) => {
