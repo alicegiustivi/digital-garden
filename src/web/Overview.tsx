@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { api, type Island, type LightUp, type OverviewData, type TagRow, type Types } from "./api";
 import { showToast } from "./toast";
+import { GardenStrip } from "./Garden";
 import { Icon, tagVar, typeVar } from "./ui";
 
 const FIRST = 24; // how many islands show before "Show the other N"
@@ -64,6 +65,8 @@ export function OverviewPage({ types, version, onOpen, go, onChanged }: { types:
   return (
     <main className="contents wrap">
       <header className="vol"><h2>Overview{data.islands.length ? <em> {data.islands.length} {data.islands.length === 1 ? "Concept" : "Concepts"}</em> : null}</h2></header>
+
+      <GardenStrip wide onOpen={onOpen} version={version} />
 
       {!data.islands.length && (
         <>
