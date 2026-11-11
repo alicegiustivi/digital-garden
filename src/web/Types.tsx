@@ -199,8 +199,8 @@ export function TypesPage({ types, onTypes, go }: Props) {
             <div className="type-head">
               <span className="big"><Icon name={t.key} /></span>
               <div className="type-name">
-                <strong>{t.label}</strong>{t.core && <span className="core-tag">Core</span>}
-                <span className="quiet small"> {t.count} {t.count === 1 ? "Object" : "Objects"}{t.inBin ? ` · ${t.inBin} in the Bin` : ""}</span>
+                <span className="type-title"><strong>{t.label}</strong>{t.core && <span className="core-tag">Core</span>}</span>
+                <span className="quiet small">{t.count} {t.count === 1 ? "Object" : "Objects"}{t.inBin ? ` · ${t.inBin} in the Bin` : ""}</span>
               </div>
               <span className="grow" />
               <button type="button" aria-label={`Move ${t.label} up`} disabled={i === 0} onClick={() => move(t.key, -1)}>↑</button>
