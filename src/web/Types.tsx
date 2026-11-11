@@ -189,7 +189,7 @@ export function TypesPage({ types, onTypes, go }: Props) {
     <main className="wrap contents types-page">
       <header className="vol"><h2>Object Types</h2></header>
       <Hint short="Every Object has a type. Change a core type's colour, or make your own.">
-        <p>Source, Concept, Thought and Person are the core types: you can change their colour. Make your own for anything else (a Book, a Place, a Recipe). A type of your own is a plain Object with the properties you choose. The Archivist never makes a type and never moves an Object into one.</p>
+        <p>Source, Concept, Thought, Person, Project and Piece are the core types: you can change their colour. Make your own for anything else (a Book, a Place, a Recipe). A type of your own is a plain Object with the properties you choose. The Archivist never makes a type and never moves an Object into one.</p>
       </Hint>
       {error && <p className="err" role="alert">{error}</p>}
       <div className="types-grid">

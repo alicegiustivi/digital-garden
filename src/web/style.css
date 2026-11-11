@@ -904,3 +904,17 @@ button:not(:disabled):active, .pill:active, .cap:active, .side-link:active { tra
 /* The panel scrolls, so its hairline sits on the panel itself (a scrolling box would cut off an outline drawn on its content). */
 :root:not([data-scheme="dark"]) .types-page .types-panel { background: #fff; box-shadow: 0 0 0 1px var(--line); }
 :root:not([data-scheme="dark"]) .types-page .types-panel .type-new { box-shadow: none; }
+
+/* Projects and Pieces lists (issue #139): grouped by Stage, one calm row each. */
+.stage-groups { display: grid; gap: var(--s-6); max-width: 760px; }
+.stage-group h3 { font-size: 1.05rem; margin-bottom: 8px; display: flex; gap: 8px; align-items: baseline; }
+.stage-group summary { cursor: pointer; list-style: none; }
+.stage-group summary::-webkit-details-marker { display: none; }
+.stage-group summary h3::before { content: "▸"; color: var(--faint); font-size: .8em; }
+.stage-group[open] summary h3::before { content: "▾"; }
+.stage-rows { list-style: none; margin: 0; padding: 0; display: grid; border-top: 1px solid var(--line); }
+.stage-row { display: grid; gap: 3px; padding: 12px 4px 12px 14px; border-bottom: 1px solid var(--line); text-decoration: none; color: inherit; position: relative; }
+.stage-row::before { content: ""; position: absolute; left: 0; top: 14px; bottom: 14px; width: 3px; border-radius: 3px; background: var(--c); }
+.stage-row:hover .stage-title { text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--c) 55%, transparent); text-underline-offset: 4px; }
+.stage-title { font-weight: 600; font-size: 1.05rem; letter-spacing: -.01em; }
+.stage-about { color: var(--mute); font-size: .95rem; }

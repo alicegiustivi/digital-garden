@@ -3,6 +3,7 @@ import { plainOf } from "../shared/markdown-doc.ts";
 import { randomUUID } from "node:crypto";
 import type Database from "better-sqlite3";
 import { MENTION, syncMentions } from "./mentions.ts";
+import { STAGES, STAGE_FIELDS } from "../shared/palette.ts";
 
 type Db = Database.Database;
 
@@ -100,7 +101,7 @@ export function summarise(db: Db, rows: any[]) {
 }
 
 /** The filters every list and the Search page share (issue #33): type, Tag, date, Unreviewed, No Connections yet. */
-export type Filters = { type?: string; tag?: string; since?: string; until?: string; unreviewed?: string; noConnections?: string };
+export type Filters = { type?: string; tag?: string; since?: string; until?: string; unreviewed?: string; noConnections?: string; /** Idea, Drafting, Active, Paused or Finished: only meaningful with the Piece or Project type (issue #139). */ stage?: string };
 export const SORTS = ["relevance", "changed", "created", "title"] as const;
 export type Sort = (typeof SORTS)[number];
 const sqlTime = (iso: string) => iso.replace("T", " ").replace(/\.\d+Z$|Z$/, "");
@@ -114,6 +115,7 @@ export function filterSql(q: Filters) {
   if (q.since) { where.push("coalesce(o.updated_at, o.created_at) >= ?"); args.push(sqlTime(q.since)); }
   if (q.until) { where.push("coalesce(o.updated_at, o.created_at) < ?"); args.push(sqlTime(q.until)); }
   if (q.unreviewed) where.push("o.unreviewed = 1");
+  if (q.stage) { where.push(`EXISTS (SELECT 1 FROM field_values sv WHERE sv.object_id = o.id AND sv.field IN (${STAGE_FIELDS.map(() => "?").join(",")}) AND sv.value = ?)`); args.push(...STAGE_FIELDS, q.stage); }
   // "No Connections yet" counts only Connections to Objects that are still in the Garden (the same count the cards show).
   if (q.noConnections)
     where.push(`NOT EXISTS (SELECT 1 FROM connections c JOIN objects x ON x.id = CASE WHEN c.from_id = o.id THEN c.to_id ELSE c.from_id END AND x.deleted_at IS NULL WHERE c.from_id = o.id OR c.to_id = o.id)`);
@@ -171,6 +173,8 @@ function setField(db: Db, id: string, key: string, value: string | null) {
   if (!def && key !== "title") throw new BadRequest(`unknown field ${key}`);
   if (def?.kind === "image") throw new BadRequest("A picture is added with the picture button, not typed");
   const v = (value ?? "").trim();
+  const stage = Object.values(STAGES).find((s) => s.field === key);
+  if (stage && v && !stage.stages.includes(v)) throw new BadRequest(`A Stage is one of ${stage.stages.join(", ")}`);
   if (def?.kind === "rating" && v && !/^[1-5]$/.test(v)) throw new BadRequest("A rating is 1 to 5 stars");
   if (!v) {
     db.prepare("DELETE FROM field_values WHERE object_id = ? AND field = ?").run(id, key);
@@ -210,6 +214,9 @@ export function createObject(db: Db, input: { type?: unknown; title?: unknown; p
   db.transaction(() => {
     db.prepare("INSERT INTO objects (id, type, private, updated_at) VALUES (?, ?, ?, datetime('now'))").run(id, input.type, input.private ? 1 : 0);
     if (typeof input.title === "string") setField(db, id, "title", input.title);
+    // A new Piece starts at Idea and a new Project at Active: the owner making it is the owner setting it. Nothing else ever sets a Stage.
+    const st = STAGES[input.type as string];
+    if (st) setField(db, id, st.field, st.first);
   })();
   return getObject(db, id)!;
 }

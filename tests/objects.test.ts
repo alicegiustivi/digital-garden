@@ -16,14 +16,16 @@ const call = async (method: string, path: string, body?: unknown) => {
 const make = async (type: string, title?: string) => (await call("POST", "/api/objects", { type, title })).json;
 
 describe("Object Types", () => {
-  it("lists the four core types with their fields", async () => {
+  it("lists the core types with their fields", async () => {
     const { types } = (await call("GET", "/api/types")).json;
-    expect(types.map((t: any) => t.key)).toEqual(["source", "concept", "thought", "person"]);
+    expect(types.map((t: any) => t.key)).toEqual(["source", "concept", "thought", "person", "project", "piece"]);
     const keys = (t: string) => types.find((x: any) => x.key === t).fields.map((f: any) => f.key);
     expect(keys("source")).toEqual(["captured", "format", "status", "authors", "published", "link", "extraction"]);
     expect(keys("concept")).toEqual(["definition", "aliases"]);
     expect(keys("thought")).toEqual(["kind"]);
     expect(keys("person")).toEqual(["description", "years", "links"]);
+    expect(keys("project")).toEqual(["stage-project", "about"]);
+    expect(keys("piece")).toEqual(["stage-piece", "about"]);
   });
   it("refuses an unknown type", async () => {
     expect((await call("POST", "/api/objects", { type: "recipe" })).status).toBe(400);

@@ -1,6 +1,7 @@
 // Building what the AI is shown. This is where "Private" is kept (CONTEXT.md: Private): an Object marked Private,
 // or in the Bin, is never turned into a prompt, a Mention of one is cut out of the text, and nothing about a Private
 // Object (its title, its Tags, even that it exists) is passed along. Every piece is labelled with its Origin (ADR 0001).
+import { archivistNever } from "../shared/palette.ts";
 import type Database from "better-sqlite3";
 import { MENTION } from "./mentions.ts";
 import { titleOf } from "./objects.ts";
@@ -90,15 +91,15 @@ export type ArchivistPrompt = { messages: any[]; wantsImage: boolean; type: stri
  */
 export function candidatesFor(db: Db, id: string): Candidate[] {
   const me = live(db, id);
-  if (!me || me.private || me.type === "thought") return [];
+  if (!me || me.private || archivistNever(me.type)) return [];
   const connected = new Set((db.prepare("SELECT from_id, to_id FROM connections WHERE from_id = ? OR to_id = ?").all(id, id) as any[]).flatMap((c) => [c.from_id, c.to_id]));
   const turnedDown = new Set((db.prepare("SELECT value FROM ai_rejected WHERE object_id = ? AND kind = 'connection'").all(id) as any[]).map((r) => r.value));
-  const ok = (oid: string) => oid !== id && !connected.has(oid) && !turnedDown.has(oid) && readable(db, oid) && live(db, oid).type !== "thought";
+  const ok = (oid: string) => oid !== id && !connected.has(oid) && !turnedDown.has(oid) && readable(db, oid) && !archivistNever(live(db, oid).type);
   const ids: string[] = [];
   for (const s of sharesWords(db, id) ?? []) if (ok(s.id)) ids.push(s.id);
   const people = db.prepare("SELECT id FROM objects WHERE type = 'person' AND private = 0 AND deleted_at IS NULL ORDER BY coalesce(updated_at, created_at) DESC LIMIT 30").all() as any[];
   for (const p of people) if (ok(p.id) && !ids.includes(p.id)) ids.push(p.id);
-  const recent = db.prepare("SELECT id FROM objects WHERE type <> 'thought' AND private = 0 AND deleted_at IS NULL ORDER BY coalesce(updated_at, created_at) DESC, rowid DESC LIMIT 40").all() as any[];
+  const recent = db.prepare("SELECT id FROM objects WHERE type NOT IN ('thought', 'piece', 'project') AND private = 0 AND deleted_at IS NULL ORDER BY coalesce(updated_at, created_at) DESC, rowid DESC LIMIT 40").all() as any[];
   for (const r of recent) if (ok(r.id) && !ids.includes(r.id)) ids.push(r.id);
   return ids.slice(0, 15).map((oid, i) => ({ ref: `c${i + 1}`, id: oid, type: live(db, oid).type, title: titleOf(db, oid) }));
 }
@@ -124,7 +125,7 @@ Rules:
 /** What the Archivist is shown about one Object, or null if it may not read it. */
 export function archivistPrompt(db: Db, id: string, image?: { dataUrl: string }): ArchivistPrompt | null {
   const o = live(db, id);
-  if (!o || o.private) return null;
+  if (!o || o.private || o.type === "piece" || o.type === "project") return null; // a Piece or Project is the owner's own work: the Archivist never reads it
   const fields = db.prepare("SELECT * FROM field_values WHERE object_id = ? AND field NOT IN ('extraction')").all(id) as any[];
   const blocks = db.prepare("SELECT * FROM blocks WHERE object_id = ? ORDER BY position").all(id) as any[];
   const own = db.prepare("SELECT label, core FROM object_types WHERE key = ?").get(o.type) as any;

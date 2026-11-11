@@ -4,6 +4,7 @@ import { displayTitle, fieldOf, type Types } from "./api";
 import { typeColourCss } from "../shared/palette";
 
 import { ICON } from "./icons";
+import { STAGES } from "../shared/palette";
 
 // Each Object Type's icon, set from the data whenever the types load (applyTypes), so <Icon name={o.type} /> works for a type the owner made.
 let typeIcons: Record<string, string> = {};
@@ -77,7 +78,7 @@ export function TagPill({ tag, onRemove, linked }: { tag: Tag; onRemove?: () => 
 export const formatDay = (iso: string) => new Date(iso).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
 
 export function subOf(o: Summary): string | undefined {
-  const f: Field | undefined = fieldOf(o, o.type === "source" ? "format" : o.type === "thought" ? "kind" : "");
+  const f: Field | undefined = fieldOf(o, o.type === "source" ? "format" : o.type === "thought" ? "kind" : STAGES[o.type]?.field ?? "");
   return f ? f.value[0].toUpperCase() + f.value.slice(1) : undefined;
 }
 
