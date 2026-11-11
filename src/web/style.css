@@ -572,11 +572,14 @@ mark { background: color-mix(in srgb, var(--t-thought) 28%, transparent); color:
 }
 
 /* This week: the stories, and "From your Garden" in the margin */
-.weekgrid:not(:has(.garden-strip)) { grid-template-columns: minmax(0, 1fr); }
 .weekgrid { display: grid; grid-template-columns: minmax(0, 1fr) 270px; gap: 24px; align-items: start; }
 .week-main { min-width: 0; }
 .garden-strip { position: sticky; top: 12px; background: var(--card); border-radius: 22px; padding: 14px 16px; box-shadow: var(--shadow); display: grid; gap: 10px; }
+.garden-strip { min-height: 96px; align-content: start; }
 .garden-strip p { margin: 0; }
+.garden-strip.folded { padding-block: 10px; min-height: 0; }
+.garden-strip.wide { position: static; margin-bottom: 24px; }
+.garden-strip.wide ul { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px 24px; }
 .gs-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .gs-head h3 { margin: 0; font-size: 1rem; }
 .garden-strip ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
