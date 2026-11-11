@@ -101,6 +101,8 @@ export function applyConnections(db: Db, id: string, judged: Judged, candidates:
 
 const norm = (s: string) => s.trim().toLowerCase().replace(/\s+/g, " ");
 const sameName = (a: string, b: string) => norm(a) === norm(b);
+/** Names compared the way a person reads them: "Loss aversion", "loss-aversion" and "loss aversion" are one. (Tags are saved with hyphens.) */
+const loose = (s: string) => norm(s).replace(/[-_]+/g, " ").replace(/\s+/g, " ");
 
 /** Is this name on another Source's authors? (A Person is only proposed when central, or named on two Sources.) */
 function namedOnAnotherSource(db: Db, id: string, name: string): boolean {
@@ -126,15 +128,16 @@ const carriersOf = (db: Db, tagName: string): string[] =>
  */
 function conceptIdea(db: Db, id: string): { name: string; tag: string; count: number } | null {
   const mine = db.prepare("SELECT t.name FROM object_tags ot JOIN tags t ON t.id = ot.tag_id WHERE ot.object_id = ?").all(id) as any[];
-  const concepts = (db.prepare("SELECT id FROM objects WHERE type = 'concept' AND deleted_at IS NULL").all() as any[]).map((r) => norm(titleOf(db, r.id)));
+  const concepts = (db.prepare("SELECT id FROM objects WHERE type = 'concept' AND deleted_at IS NULL").all() as any[]).map((r) => loose(titleOf(db, r.id)));
   let best: { name: string; tag: string; count: number } | null = null;
   for (const { name } of mine) {
     const count = carriersOf(db, name).length;
-    if (count < AI_CONFIG.conceptMinObjects || concepts.includes(norm(name))) continue;
-    const key = `concept:${norm(name)}`;
+    const human = loose(name); // a Concept is named the way it reads, not the way a Tag is saved
+    if (count < AI_CONFIG.conceptMinObjects || concepts.includes(human)) continue;
+    const key = `concept:${human}`;
     if (db.prepare("SELECT 1 FROM ai_rejected WHERE kind = 'object' AND value = ?").get(key)) continue;
-    if (db.prepare("SELECT 1 FROM ai_suggestions WHERE kind = 'object' AND json_extract(data, '$.type') = 'concept' AND lower(json_extract(data, '$.name')) = ? AND object_id <> ?").get(norm(name), id)) continue;
-    if (!best || count > best.count) best = { name, tag: name, count };
+    if (db.prepare("SELECT 1 FROM ai_suggestions WHERE kind = 'object' AND json_extract(data, '$.type') = 'concept' AND lower(json_extract(data, '$.name')) = ? AND object_id <> ?").get(human, id)) continue;
+    if (!best || count > best.count) best = { name: human, tag: name, count };
   }
   return best;
 }
@@ -277,14 +280,15 @@ export function approve(db: Db, suggestionId: number, onMade?: (id: string) => v
       db.prepare("UPDATE objects SET type = ?, type_ai = ? WHERE id = ?").run(d.type, JSON.stringify({ aiRole: s.ai_role, aiModel: s.ai_model, aiDate: s.ai_date }), s.object_id);
     } else if (s.kind === "object" && d.type === "concept") {
       // A Concept from a recurring Tag: made, titled and connected as the AI's (approved), with every Object that carries the Tag. The Tag stays.
-      const existing = (db.prepare("SELECT id FROM objects WHERE type = 'concept' AND deleted_at IS NULL").all() as any[]).find((r) => sameName(titleOf(db, r.id), d.name));
+      const cname = loose(String(d.name)); // (an older Suggestion may still carry the Tag's hyphens)
+      const existing = (db.prepare("SELECT id FROM objects WHERE type = 'concept' AND deleted_at IS NULL").all() as any[]).find((r) => loose(titleOf(db, r.id)) === cname);
       let cid = existing?.id as string | undefined;
       if (!cid) {
         cid = randomUUID();
         madeId = cid;
         db.prepare("INSERT INTO objects (id, type, updated_at) VALUES (?, 'concept', datetime('now'))").run(cid);
-        db.prepare("INSERT INTO field_values (object_id, field, value, origin, ai_role, ai_model, ai_date, approved) VALUES (?, 'title', ?, 'ai', ?, ?, ?, 1)").run(cid, d.name, ...aiCols(s));
-        db.prepare("UPDATE objects SET title = ? WHERE id = ?").run(d.name, cid);
+        db.prepare("INSERT INTO field_values (object_id, field, value, origin, ai_role, ai_model, ai_date, approved) VALUES (?, 'title', ?, 'ai', ?, ?, ?, 1)").run(cid, cname, ...aiCols(s));
+        db.prepare("UPDATE objects SET title = ? WHERE id = ?").run(cname, cid);
       }
       for (const other of [...new Set([s.object_id as string, ...carriersOf(db, d.tag ?? d.name)])]) if (other !== cid && !pairExists(cid, other)) link(cid, other, "related");
     } else if (s.kind === "object") {
