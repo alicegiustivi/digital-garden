@@ -257,7 +257,8 @@ export function createAi(db: Db, opts: { gate: Gate; /** Where the Researcher lo
       const lead = ENTITY_FIELDS[p.type][0];
       const said = (db.prepare("SELECT value FROM field_values WHERE object_id = ? AND field = ?").get(id, lead) as any)?.value as string | undefined;
       const mine = (db.prepare("SELECT t.name FROM object_tags ot JOIN tags t ON t.id = ot.tag_id WHERE ot.object_id = ?").all(id) as any[]).map((r) => r.name as string);
-      await connect(id, { title: titleOf(db, id), summary: said, claims: [], tags: mine }, candidates, AI_CONFIG.models, runId, ctx, subjectTerms(db, id));
+      const stop = await connect(id, { title: titleOf(db, id), summary: said, claims: [], tags: mine }, candidates, AI_CONFIG.models, runId, ctx, subjectTerms(db, id));
+      if (stop) return stop;
     }
     return "done";
   }
@@ -292,24 +293,35 @@ export function createAi(db: Db, opts: { gate: Gate; /** Where the Researcher lo
       const runId = applyFindings(db, id, findings, model, ctx.now);
       const proposals = parseProposals(jsonOf(text));
       applyProposals(db, id, proposals, prompt.candidates, model, ctx.now, runId); // facts, Tags, people, summary and claims are saved now
-      if (prompt.type !== "thought" && prompt.candidates.length)
-        await connect(id, { title: findings.title ?? titleOf(db, id), summary: proposals.summary, claims: proposals.claims, tags: findings.tags }, prompt.candidates, models, runId, ctx);
+      if (prompt.type !== "thought" && prompt.candidates.length) {
+        const stop = await connect(id, { title: findings.title ?? titleOf(db, id), summary: proposals.summary, claims: proposals.claims, tags: findings.tags }, prompt.candidates, models, runId, ctx);
+        if (stop) return stop; // today's calls ran out, or the key stopped working: the job waits and runs again, instead of finishing without its Connections
+      }
       return "done";
     }
     return sawBusy ? { busy: true } : { unusable: true };
   }
 
-  /** The second request. Best effort: if it cannot be answered, what the first request saved stays and "Ask the Archivist" can run it again. */
-  async function connect(id: string, read: { title: string; summary?: string; claims: string[]; tags: string[] }, candidates: any[], models: string[], runId: number | null, ctx: { gate: Gate; now: Date; countCall: () => void }, about: string[] = []) {
+  /**
+   * The Connections request. A busy or unusable answer is best effort (what the first request saved stays, and "Ask the Archivist" runs it
+   * again). But a daily limit or a refused key is not: it is handed back so the job waits and runs again, rather than "done" with no Connections.
+   */
+  async function connect(id: string, read: { title: string; summary?: string; claims: string[]; tags: string[] }, candidates: any[], models: string[], runId: number | null, ctx: { gate: Gate; now: Date; countCall: () => void }, about: string[] = []): Promise<Outcome | null> {
     const messages = connectPrompt(db, id, read, candidates, about);
     for (const model of models) {
       let text: string;
-      try { ctx.countCall(); text = await ctx.gate.chat(model, messages); } catch { continue; }
+      try { ctx.countCall(); text = await ctx.gate.chat(model, messages); }
+      catch (e) {
+        if (e instanceof GateError && e.kind === "daily") return { daily: true, resetAt: e.resetAt };
+        if (e instanceof GateError && (e.kind === "key" || e.kind === "missing")) return { key: true };
+        continue;
+      }
       const j = jsonOf(text);
       if (!j) continue;
       applyConnections(db, id, parseConnections(j), candidates, model, ctx.now, runId);
-      return;
+      return null;
     }
+    return null;
   }
   return api;
 }

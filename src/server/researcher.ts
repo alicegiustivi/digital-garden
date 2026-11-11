@@ -11,7 +11,7 @@ import { randomUUID } from "node:crypto";
 import type Database from "better-sqlite3";
 import { AI_CONFIG } from "./ai-config.ts";
 import { GateError, type Gate } from "./ai-gate.ts";
-import { clip, cleanText, readable } from "./ai-prompt.ts";
+import { clip, cleanText, fence, readable, UNTRUSTED } from "./ai-prompt.ts";
 import { commentForAi } from "./inbox-comments.ts";
 import type { Outcome } from "./ai-queue.ts";
 import { jsonOf } from "./archivist.ts";
@@ -138,10 +138,10 @@ function cardLine(db: Db, c: Card): string {
 export function fullObject(db: Db, ref: string, id: string, cap: number): string {
   const o = live(db, id)!;
   const head: string[] = [`[${ref}] ${o.type}: "${titleOf(db, id)}"`];
-  const long: { label: string; text: string; weight: number }[] = [];
+  const long: { label: string; text: string; weight: number; fenced?: boolean }[] = [];
   const fields = db.prepare("SELECT * FROM field_values WHERE object_id = ? AND field NOT IN ('extraction', 'title')").all(id) as any[];
   for (const f of fields) {
-    if (f.field === "captured") long.push({ label: `the extract, the item's own text (${labelOf(f)})`, text: String(f.value), weight: 3 });
+    if (f.field === "captured") long.push({ label: `the extract, the item's own text (${labelOf(f)})`, text: String(f.value), weight: 3, fenced: true });
     else head.push(`${f.field} (${labelOf(f)}): ${String(f.value).slice(0, 800)}`);
   }
   const comment = commentForAi(db, id); // the owner's phone-capture comment, only ever shown inside its Source (issue #63)
@@ -159,7 +159,7 @@ export function fullObject(db: Db, ref: string, id: string, cap: number): string
   const used = head.join("\n").length;
   const room = Math.max(600, cap - used - 20 * (long.length + 1));
   const total = long.reduce((n, p) => n + p.weight, 0) || 1;
-  const parts = long.map((p) => `- (${p.label}) ${clip(p.text, Math.max(300, Math.floor((room * p.weight) / total)))}`);
+  const parts = long.map((p) => { const t = clip(p.text, Math.max(300, Math.floor((room * p.weight) / total))); return `- (${p.label}) ${p.fenced ? fence(t) : t}`; });
   return [...head, ...(parts.length ? ["Text:", ...parts] : [])].join("\n");
 }
 
@@ -205,6 +205,7 @@ Rules:
 - Length: as long as the answer deserves, usually 250 to 500 words.
 - Format in Markdown, but light, so it reads as thinking and not as a report: start each of the five parts with a short bold lead-in (for example **The big picture.**), **bold** only for the few key terms, a short "- " bullet list when you set out two or more specifics or claims (each with its ref), and "> " for a short phrase quoted from the text, with its ref after it. No headings with #, no tables, no HTML, no links to the web. Separate paragraphs and lists with a blank line.
 - "connections" lists up to 3 pairs of Objects you read that clearly relate. "kind" is one of: related, supports, contradicts, builds on. Use [] if none.
+- ${UNTRUSTED}
 Answer with ONE JSON object and nothing else: {"answer": string, "connections": [{"a": "o1", "b": "o2", "kind": "supports"}]}`;
 
 /** Added only when the owner turned the web on and something was found: the answer keeps the Garden and the web apart. */

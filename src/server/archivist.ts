@@ -5,7 +5,7 @@
 // adds Connections of kind "related" and "authored by" directly (ADR 0003): marked ✦, undone in one click, remembered if undone.
 import type Database from "better-sqlite3";
 import { cleanTagName, tagIdFor } from "./objects.ts";
-import { broadTags, VAGUE_TAGS } from "./ai-prompt.ts";
+import { broadTags, isVague } from "./ai-prompt.ts";
 import { ENTITY_FIELDS } from "./describe.ts";
 import { isCoreType as isCore } from "../shared/palette.ts";
 
@@ -17,11 +17,25 @@ export type Findings = { format?: string; title?: string; authors?: string; publ
 
 /** Reads the model's answer. Anything that isn't a clear JSON object is "unusable" (null), never guessed at. */
 export function jsonOf(text: string): any | null {
-  const start = text.indexOf("{"), end = text.lastIndexOf("}");
-  if (start < 0 || end <= start) return null;
-  let j: any;
-  try { j = JSON.parse(text.slice(start, end + 1)); } catch { return null; }
-  return j && typeof j === "object" && !Array.isArray(j) ? j : null;
+  const whole = (src: string) => { try { const j = JSON.parse(src); return j && typeof j === "object" && !Array.isArray(j) ? j : null; } catch { return null; } };
+  const first = text.indexOf("{"), last = text.lastIndexOf("}");
+  if (first < 0 || last <= first) return null;
+  const all = whole(text.slice(first, last + 1));
+  if (all) return all;
+  // The model "thought aloud" with braces before (or after) the answer: try each balanced {...} and take the last one that parses.
+  let found: any | null = null;
+  for (let i = 0; i < text.length; i++) {
+    if (text[i] !== "{") continue;
+    let depth = 0, inStr = false;
+    for (let j = i; j < text.length; j++) {
+      const c = text[j];
+      if (inStr) { if (c === "\\") j++; else if (c === '"') inStr = false; continue; }
+      if (c === '"') inStr = true;
+      else if (c === "{") depth++;
+      else if (c === "}" && --depth === 0) { const o = whole(text.slice(i, j + 1)); if (o) { found = o; i = j; } break; }
+    }
+  }
+  return found;
 }
 
 export function parseFindings(text: string): Findings | null {
@@ -30,7 +44,7 @@ export function parseFindings(text: string): Findings | null {
   const str = (v: unknown, max: number) => (typeof v === "string" && v.trim() && v.trim().length <= max ? v.trim() : undefined);
   const format = typeof j.format === "string" && FORMATS.includes(j.format.trim().toLowerCase()) ? j.format.trim().toLowerCase() : undefined;
   const published = str(j.published, 10);
-  const tags = Array.isArray(j.tags) ? [...new Set((j.tags as unknown[]).map(cleanTagName).filter((t) => t && t.length <= 40 && !VAGUE_TAGS.has(t)))].slice(0, 4) : [];
+  const tags = Array.isArray(j.tags) ? [...new Set((j.tags as unknown[]).map(cleanTagName).filter((t) => t && t.length <= 40 && !isVague(t)))].slice(0, 4) : [];
   const props: Record<string, string> = {};
   if (j.properties && typeof j.properties === "object" && !Array.isArray(j.properties))
     for (const [k, v] of Object.entries(j.properties)) { const t = str(v, 1500); if (t) props[k] = t; }
