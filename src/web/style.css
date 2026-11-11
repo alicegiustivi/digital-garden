@@ -873,3 +873,10 @@ button:not(:disabled):active, .pill:active, .cap:active, .side-link:active { tra
 
 /* Edit and Editing take the same width, so the arrows in every row line up. */
 .type-head > .pill[aria-expanded] { min-width: 84px; justify-content: center; }
+
+/* Every type row has the same two-line name block (name and Core tag, then the count), so the icon, arrows and Edit sit at the same height in all of them. */
+.type-title { display: flex; align-items: baseline; gap: var(--s-2); }
+.type-head > .pill[aria-expanded] { box-shadow: 0 0 0 1px var(--line); }
+
+/* The arrows sat at the left of their circles (buttons align their text left by default): centre them. */
+.type-head button[aria-label^="Move"] { display: grid; place-items: center; text-align: center; padding: 0; line-height: 1; }
