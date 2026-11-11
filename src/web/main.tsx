@@ -40,7 +40,7 @@ const useHash = () => {
 };
 const go = (h: string) => { location.hash = h; };
 
-// A type's list lives at #/sources etc. for the four core types (as always) and at #/t/<key> for a type the owner made.
+// A type's list lives at #/sources etc. for the core types (as always) and at #/t/<key> for a type the owner made.
 const listHash = (t: { key: string; plural: string; core: boolean }) => (t.core ? `#/${t.plural.toLowerCase()}` : `#/t/${t.key}`);
 const typeOfRoute = (types: Types, parts: string[]) => (parts[0] === "t" ? types.types.find((t) => t.key === parts[1]) : types.types.find((t) => t.core && t.plural.toLowerCase() === parts[0]));
 

@@ -43,6 +43,7 @@ const hashOf = (q: string, f: FilterState, sort: string) => {
   if (f.date) p.set("date", f.date);
   if (f.unreviewed) p.set("unreviewed", "1");
   if (f.noConnections) p.set("nolinks", "1");
+  if (f.stage) p.set("stage", f.stage);
   if (sort) p.set("sort", sort);
   return "#/search" + (p.toString() ? "?" + p : "");
 };
@@ -51,7 +52,7 @@ export const searchHash = (q: string) => hashOf(q, noFilters, "");
 export function SearchPage({ hash, types, version, onOpen }: { hash: string; types: Types; version: number; onOpen: (id: string, ids: string[]) => void }) {
   const p = new URLSearchParams(hash.split("?")[1] ?? "");
   const [q, setQ] = useState(p.get("q") ?? "");
-  const [filters, setFilters] = useState<FilterState>({ type: p.get("type") ?? "", tag: p.get("tag") ?? "", date: p.get("date") ?? "", unreviewed: p.has("unreviewed"), noConnections: p.has("nolinks") });
+  const [filters, setFilters] = useState<FilterState>({ type: p.get("type") ?? "", tag: p.get("tag") ?? "", date: p.get("date") ?? "", unreviewed: p.has("unreviewed"), noConnections: p.has("nolinks"), stage: p.get("stage") ?? "" });
   const [sort, setSort] = useSort(`search:${filters.type || "all"}`, q ? "relevance" : "changed", true);
   const query = useFilterQuery(filters, sort);
   const [res, setRes] = useState<FindResult | null>(null);

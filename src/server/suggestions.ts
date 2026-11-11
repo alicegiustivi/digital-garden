@@ -10,6 +10,7 @@
 import { randomUUID } from "node:crypto";
 import type Database from "better-sqlite3";
 import { BadRequest, titleOf } from "./objects.ts";
+import { archivistNever } from "../shared/palette.ts";
 import { readable, type Candidate } from "./ai-prompt.ts";
 import { renderRefs, sourceOfNote } from "./researcher.ts";
 import { AI_CONFIG } from "./ai-config.ts";
@@ -68,7 +69,7 @@ export function parseConnections(j: any): Judged {
  */
 export function applyConnections(db: Db, id: string, judged: Judged, candidates: Candidate[], model: string, now: Date, runId: number | null): number {
   const obj = db.prepare("SELECT type FROM objects WHERE id = ? AND deleted_at IS NULL AND private = 0").get(id) as any;
-  if (!obj || obj.type === "thought") return 0;
+  if (!obj || archivistNever(obj.type)) return 0;
   const date = now.toISOString().slice(0, 10);
   const shown = new Map(candidates.map((c) => [c.ref, c]));
   const turnedDown = (otherId: string) => !!db.prepare("SELECT 1 FROM ai_rejected WHERE object_id = ? AND kind = 'connection' AND value = ?").get(id, otherId);
@@ -146,7 +147,8 @@ type Stored = { kind: "connection" | "type" | "object" | "title"; data: Record<s
  */
 export function applyProposals(db: Db, id: string, p: Proposals, candidates: Candidate[], model: string, now: Date, runId: number | null = null): number {
   const obj = db.prepare("SELECT type FROM objects WHERE id = ? AND deleted_at IS NULL AND private = 0").get(id) as any;
-  if (!obj) return 0; // gone, or made Private while the AI was thinking: nothing is written
+  if (!obj || obj.type === "piece" || obj.type === "project") return 0; // a Piece or Project is the owner's own work (issue #139)
+  // gone, or made Private while the AI was thinking: nothing is written
   const date = now.toISOString().slice(0, 10);
   const isThought = obj.type === "thought";
   const turnedDown = (kind: string, value: string) => !!db.prepare("SELECT 1 FROM ai_rejected WHERE object_id = ? AND kind = ? AND value = ?").get(id, kind, value);

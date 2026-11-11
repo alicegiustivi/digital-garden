@@ -48,10 +48,20 @@ export const TYPE_ICONS: { key: string; label: string }[] = [
 export const ICON_KEYS = TYPE_ICONS.map((i) => i.key);
 export const isTypeIcon = (k: unknown): k is string => typeof k === "string" && ICON_KEYS.includes(k);
 
-/** The four Core Object Types and the colour each had before the owner could choose (CONTEXT.md: Object Type). */
-export const CORE_TYPES = ["source", "concept", "thought", "person"] as const;
+/** The six Core Object Types and the colour each starts with (CONTEXT.md: Object Type). Project and Piece are the Express types (issue #139). */
+export const CORE_TYPES = ["source", "concept", "thought", "person", "project", "piece"] as const;
 export const isCoreType = (key: string) => (CORE_TYPES as readonly string[]).includes(key);
-export const DEFAULT_COLOUR: Record<string, string> = { source: "ocean", concept: "violet", thought: "gold", person: "coral" };
+export const DEFAULT_COLOUR: Record<string, string> = { source: "ocean", concept: "violet", thought: "gold", person: "coral", project: "green", piece: "orange" };
+
+/** A Piece and a Project are the owner's own work: the Archivist never reads, tags, connects or fills them, and never offers one as a Connection candidate (CONTEXT.md: Piece, Project). */
+export const ARCHIVIST_NEVER = ["thought", "piece", "project"] as const;
+export const archivistNever = (type: string) => (ARCHIVIST_NEVER as readonly string[]).includes(type);
+/** The Stages the owner can set, per type, and the field that holds each. Stage is only ever set by the owner and carries no date. */
+export const STAGES: Record<string, { field: string; stages: string[]; first: string; /** the order a list shows them in; Finished is last and folded away */ listOrder: string[] }> = {
+  project: { field: "stage-project", stages: ["Active", "Paused", "Finished"], first: "Active", listOrder: ["Active", "Paused", "Finished"] },
+  piece: { field: "stage-piece", stages: ["Idea", "Drafting", "Finished"], first: "Idea", listOrder: ["Drafting", "Idea", "Finished"] },
+};
+export const STAGE_FIELDS = Object.values(STAGES).map((s) => s.field);
 
 /** The CSS the screen needs so `var(--t-<key>)` is each type's ink and `var(--tf-<key>)` its fill, light and dark. Types only ever come from the database, and keys and colours are checked on the way in. */
 export function typeColourCss(types: { key: string; color: string }[]): string {

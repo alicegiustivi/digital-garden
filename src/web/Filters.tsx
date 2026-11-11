@@ -1,9 +1,10 @@
 // The filters and sort order every list and the Search page share (issue #33): type, Tag, date, Unreviewed, No Connections yet.
 import { useEffect, useMemo, useState } from "react";
+import { STAGES } from "../shared/palette";
 import { api, type Filters, type TagRow, type Types } from "./api";
 
-export type FilterState = { type: string; tag: string; date: string; unreviewed: boolean; noConnections: boolean };
-export const noFilters: FilterState = { type: "", tag: "", date: "", unreviewed: false, noConnections: false };
+export type FilterState = { type: string; tag: string; date: string; unreviewed: boolean; noConnections: boolean; stage: string };
+export const noFilters: FilterState = { type: "", tag: "", date: "", unreviewed: false, noConnections: false, stage: "" };
 
 const DATES: [string, string][] = [["", "Any time"], ["today", "Today"], ["7", "Past 7 days"], ["30", "Past 30 days"], ["365", "Past year"]];
 const SORTS: [string, string][] = [["relevance", "Best match"], ["changed", "Recently changed"], ["created", "Newest captured"], ["title", "A to Z"]];
@@ -14,8 +15,8 @@ const sinceOf = (date: string) => (date === "today" ? new Date(new Date().setHou
 export function useFilterQuery(f: FilterState, sort: string): Filters {
   const since = useMemo(() => sinceOf(f.date), [f.date]);
   return useMemo(
-    () => ({ type: f.type || undefined, tag: f.tag || undefined, since, unreviewed: f.unreviewed ? "1" : undefined, noConnections: f.noConnections ? "1" : undefined, sort: sort || undefined }),
-    [f.type, f.tag, since, f.unreviewed, f.noConnections, sort],
+    () => ({ type: f.type || undefined, tag: f.tag || undefined, since, unreviewed: f.unreviewed ? "1" : undefined, noConnections: f.noConnections ? "1" : undefined, stage: STAGES[f.type] ? f.stage || undefined : undefined, sort: sort || undefined }),
+    [f.type, f.tag, f.stage, since, f.unreviewed, f.noConnections, sort],
   );
 }
 
@@ -34,7 +35,7 @@ export function useSort(scope: string, fallback: string, allowRelevance: boolean
 }
 
 export function FilterBar({ value, onChange, types, sort, onSort, relevance = false, lock = [] }: {
-  value: FilterState; onChange: (f: FilterState) => void; types: Types; sort: string; onSort: (s: string) => void; relevance?: boolean; lock?: ("type" | "tag")[];
+  value: FilterState; onChange: (f: FilterState) => void; types: Types; sort: string; onSort: (s: string) => void; relevance?: boolean; lock?: ("type" | "tag" | "stage")[];
 }) {
   const [tags, setTags] = useState<TagRow[]>([]);
   useEffect(() => { api.tags().then(setTags); }, []);
@@ -43,9 +44,17 @@ export function FilterBar({ value, onChange, types, sort, onSort, relevance = fa
     <div className="filters" role="group" aria-label="Filters">
       {!lock.includes("type") && (
         <label>Type
-          <select value={value.type} onChange={(e) => set({ type: e.target.value })}>
+          <select value={value.type} onChange={(e) => set({ type: e.target.value, stage: "" })}>
             <option value="">All</option>
             {types.types.map((t) => <option key={t.key} value={t.key}>{t.plural}</option>)}
+          </select>
+        </label>
+      )}
+      {STAGES[value.type] && !lock.includes("stage") && (
+        <label>Stage
+          <select value={value.stage} onChange={(e) => set({ stage: e.target.value })}>
+            <option value="">Any</option>
+            {STAGES[value.type].listOrder.map((s) => <option key={s} value={s}>{s}</option>)}
           </select>
         </label>
       )}

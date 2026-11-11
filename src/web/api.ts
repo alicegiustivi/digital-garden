@@ -57,7 +57,7 @@ export type AiSummary = {
 };
 export type AiRun = { id: number; model: string; at: string; facts: string[]; tags: string[]; connections: number };
 export type AiStatus = { pending?: number; state: "none" | "private" | "waiting" | "working" | "busy" | "tomorrow" | "failed" | "done"; run: AiRun | null; canRun: boolean; nextTryAt?: string; needsKey?: boolean };
-export type Filters = { type?: string; tag?: string; since?: string; until?: string; unreviewed?: string; noConnections?: string; sort?: string };
+export type Filters = { type?: string; tag?: string; since?: string; until?: string; unreviewed?: string; noConnections?: string; stage?: string; sort?: string };
 export type Hit = Summary & { title: string; match: { where: "title" | "tag" | "body" | "field" | "note" | "comment"; label: string; text: string; origin: OriginInfo } | null };
 export type FindResult = { hits: Hit[]; total: number; terms: string[]; corrected: { from: string; to: string[] }[]; sort: string };
 export type Brief2 = { id: string; type: string; title: string; private: boolean };

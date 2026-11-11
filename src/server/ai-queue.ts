@@ -61,16 +61,18 @@ export function createAi(db: Db, opts: { gate: Gate; /** Where the Researcher lo
     const t = iso(now());
     return Number(db.prepare("INSERT INTO ai_jobs (role, object_id, lane, status, run_after, created_at, updated_at) VALUES (?, ?, ?, 'waiting', ?, ?, ?)").run(role, objectId, lane, iso(runAfter), t, t).lastInsertRowid);
   };
+  /** A Piece or Project is the owner's own work: the Archivist never works on one (issue #139). */
+  const ownWork = (id: string) => ["piece", "project"].includes((db.prepare("SELECT type FROM objects WHERE id = ?").get(id) as any)?.type);
   const active = (id: string) => db.prepare("SELECT 1 FROM ai_jobs WHERE object_id = ? AND role = 'archivist' AND status IN ('waiting', 'working', 'busy', 'tomorrow')").get(id);
 
   const api = {
     /** Newly captured Objects: the Archivist looks at them in about 2 minutes (or sooner, when the Capture window closes). Private ones are never queued. */
     enqueueCaptured(ids: string[]) {
-      for (const id of ids) if (readable(db, id) && !active(id)) insert("archivist", id, 2, addMin(now(), AI_CONFIG.captureWaitMinutes));
+      for (const id of ids) if (readable(db, id) && !ownWork(id) && !active(id)) insert("archivist", id, 2, addMin(now(), AI_CONFIG.captureWaitMinutes));
     },
     /** The owner asked (Retry, or "Ask the Archivist"). Goes ahead of captures. */
     request(id: string) {
-      if (!readable(db, id)) return false;
+      if (!readable(db, id) || ownWork(id)) return false;
       db.prepare("UPDATE ai_jobs SET status = 'cancelled' WHERE object_id = ? AND role = 'archivist' AND status IN ('waiting', 'busy', 'tomorrow', 'failed')").run(id);
       insert("archivist", id, 1, now());
       return true;
@@ -100,6 +102,7 @@ export function createAi(db: Db, opts: { gate: Gate; /** Where the Researcher lo
       if (!o) return null;
       const run = lastRun(db, id);
       if (o.private) return { state: "private" as const, run, canRun: false, pending: 0 };
+      if (ownWork(id)) return { state: "none" as const, run, canRun: false, pending: 0 };
       const pending = pendingCount(db, id);
       const j = db.prepare("SELECT * FROM ai_jobs WHERE object_id = ? AND role = 'archivist' AND status <> 'cancelled' ORDER BY id DESC LIMIT 1").get(id) as JobRow | undefined;
       if (!j) return { state: "none" as const, run, canRun: true, pending };
@@ -235,6 +238,7 @@ export function createAi(db: Db, opts: { gate: Gate; /** Where the Researcher lo
   async function archivistHandler(job: JobRow, ctx: { gate: Gate; now: Date; countCall: () => void }): Promise<Outcome> {
     const id = job.object_id!;
     const kind = (db.prepare("SELECT type FROM objects WHERE id = ?").get(id) as any)?.type;
+    if (kind === "piece" || kind === "project") return "skip";
     if (kind === "person" || kind === "concept") return describeHandler(id, ctx);
     const photo = db.prepare("SELECT file FROM source_images WHERE object_id = ?").get(id) as any;
     let image: { dataUrl: string } | undefined;

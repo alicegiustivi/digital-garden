@@ -84,7 +84,7 @@ export function createApp(sqlite: Database.Database, opts: Options = {}) {
   app.delete("/api/types/:key/fields/:field", (c) => { const gone = ty.removeField(sqlite, c.req.param("key"), c.req.param("field")); return typesNow(c, 200, { removed: gone }); });
 
   // The filters and sort every list shares (issue #33).
-  const filtersOf = (c: any) => ({ type: c.req.query("type"), tag: c.req.query("tag"), since: c.req.query("since"), until: c.req.query("until"), unreviewed: c.req.query("unreviewed"), noConnections: c.req.query("noConnections"), sort: c.req.query("sort") });
+  const filtersOf = (c: any) => ({ type: c.req.query("type"), tag: c.req.query("tag"), since: c.req.query("since"), until: c.req.query("until"), unreviewed: c.req.query("unreviewed"), noConnections: c.req.query("noConnections"), stage: c.req.query("stage"), sort: c.req.query("sort") });
   app.get("/api/objects", (c) => c.json(o.listObjects(sqlite, filtersOf(c))));
   // The owner's search over everything they can see, Private included, and the recent items for ⌘K.
   app.get("/api/find", (c) => c.json(search(sqlite, { ...filtersOf(c), q: c.req.query("q"), limit: Number(c.req.query("limit")) || undefined })));

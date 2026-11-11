@@ -6,6 +6,7 @@ import { BackupNote } from "./Backup";
 import { api, inboxApi, displayTitle, TAG_COLORS, type Filters, type Summary, type TagRow, type Types } from "./api";
 import { FilterBar, noFilters, useFilterQuery, useSort, type FilterState } from "./Filters";
 import { showToast } from "./toast";
+import { STAGES } from "../shared/palette";
 import { Hint, Icon, Stories, Portrait, TagPill, TypeChip, formatDay, subOf, typeVar, tagVar } from "./ui";
 
 export function useList(q: Filters, version: number) {
@@ -70,9 +71,45 @@ export function TypeList({ typeKey, types, version, onNew, onOpen }: {
         <h2>{def.plural}{rows ? <em> {rows.length}</em> : null}</h2>
         <NewButtons types={types} only={typeKey} onNew={onNew} />
       </header>
-      <FilterBar value={filters} onChange={setFilters} types={types} sort={sort} onSort={setSort} lock={["type"]} />
-      <Grid rows={rows} types={types} onOpen={onOpen} empty={filtered ? "Nothing matches these filters." : `No ${def.plural.toLowerCase()} yet. Make the first one with the button above.`} />
+      <FilterBar value={filters} onChange={setFilters} types={types} sort={sort} onSort={setSort} lock={["type", "stage"]} />
+      {STAGES[typeKey]
+        ? <StageGroups typeKey={typeKey} rows={rows} types={types} onOpen={onOpen} empty={filtered ? "Nothing matches these filters." : `No ${def.plural.toLowerCase()} yet. Make the first one with the button above.`} />
+        : <Grid rows={rows} types={types} onOpen={onOpen} empty={filtered ? "Nothing matches these filters." : `No ${def.plural.toLowerCase()} yet. Make the first one with the button above.`} />}
     </main>
+  );
+}
+
+/** The Projects or Pieces list (issue #139): grouped by Stage, working Stages first and Finished folded away. Each row is the title and the About line. */
+export function StageGroups({ typeKey, rows, types, onOpen, empty }: { typeKey: string; rows: Summary[] | null; types: Types; onOpen: (id: string, ids: string[]) => void; empty: string }) {
+  if (!rows) return <p className="quiet">Opening…</p>;
+  if (!rows.length) return <p className="quiet">{empty}</p>;
+  const st = STAGES[typeKey];
+  const stageOf = (o: Summary) => { const v = o.fields.find((f) => f.key === st.field)?.value; return v && st.stages.includes(v) ? v : st.first; };
+  const ids = st.listOrder.flatMap((s) => rows.filter((o) => stageOf(o) === s)).map((o) => o.id); // the order they appear on the page
+  return (
+    <div className="stage-groups">
+      {st.listOrder.map((s) => {
+        const list = rows.filter((o) => stageOf(o) === s);
+        if (!list.length) return null;
+        const body = <ul className="stage-rows">{list.map((o) => <StageRow key={o.id} o={o} onOpen={() => onOpen(o.id, ids)} />)}</ul>;
+        return s === "Finished"
+          ? <details key={s} className="stage-group" style={typeVar(typeKey)}><summary><h3>{s} <span className="quiet">{list.length}</span></h3></summary>{body}</details>
+          : <section key={s} className="stage-group" style={typeVar(typeKey)}><h3>{s} <span className="quiet">{list.length}</span></h3>{body}</section>;
+      })}
+    </div>
+  );
+}
+
+function StageRow({ o, onOpen }: { o: Summary; onOpen: () => void }) {
+  const about = o.fields.find((f) => f.key === "about")?.value;
+  return (
+    <li>
+      <a className="stage-row" href={`#/o/${o.id}`} onClick={(e) => { if (e.metaKey || e.ctrlKey || e.shiftKey || e.button) return; e.preventDefault(); onOpen(); }}>
+        <span className="stage-title">{displayTitle(o)}{o.private && <span title="Private: no AI reads this"> <Icon name="lock" /></span>}</span>
+        {about && <span className="stage-about">{about}</span>}
+        {o.tags.length > 0 && <span className="tags">{o.tags.map((t) => <TagPill key={t.id} tag={t} />)}</span>}
+      </a>
+    </li>
   );
 }
 
