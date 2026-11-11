@@ -218,6 +218,15 @@ export function createAi(db: Db, opts: { gate: Gate; /** Where the Researcher lo
    * best effort, like a Source's; both are applied directly, marked and undoable (ADR 0003).
    */
   async function describeHandler(id: string, ctx: { gate: Gate; now: Date; countCall: () => void }): Promise<Outcome> {
+    const now = ctx.now.toISOString().slice(0, 10);
+    // A Person's own Sources first (a Source that lists them among its authors, matched on this Mac, no request), so what follows can use them.
+    if ((db.prepare("SELECT 1 FROM objects WHERE id = ? AND type = 'person' AND deleted_at IS NULL AND private = 0").get(id))) {
+      const added = authoredSources(db, id).flatMap((sid) => {
+        const cid = addDirectConnection(db, sid, id, "authored by", "matched on this Mac", now);
+        return cid ? [{ kind: "connection" as const, connectionId: cid, otherId: sid, connKind: "authored by" }] : [];
+      });
+      if (added.length) recordInRun(db, id, "matched on this Mac", ctx.now, null, added);
+    }
     const p = entityPrompt(db, id);
     if (!p) return "skip"; // Private, or in the Bin: the AI never reads it
     let runId: number | null = null;
@@ -233,24 +242,13 @@ export function createAi(db: Db, opts: { gate: Gate; /** Where the Researcher lo
           if (e.kind === "busy") sawBusy = true;
           continue;
         }
-        const read = parseEntity(text, p.type, p.evidence);
+        const read = parseEntity(text, p.type, p.evidence, p.tagsOnly);
         if (!read) continue;
         runId = applyFindings(db, id, { tags: read.tags, facts: read.facts }, model, ctx.now);
         fine = true;
         break;
       }
       if (!fine) return sawBusy ? { busy: true } : { unusable: true };
-    }
-    const date = ctx.now.toISOString().slice(0, 10);
-    if (p.type === "person") { // a Source that lists this Person among its authors: matched on this Mac, no request
-      const added = authoredSources(db, id).flatMap((sid) => {
-        const cid = addDirectConnection(db, sid, id, "authored by", "matched on this Mac", date);
-        return cid ? [{ kind: "connection" as const, connectionId: cid, otherId: sid, connKind: "authored by" }] : [];
-      });
-      if (added.length) {
-        recordInRun(db, id, "matched on this Mac", ctx.now, runId, added);
-        runId = (db.prepare("SELECT id FROM ai_runs WHERE object_id = ? AND undone_at IS NULL ORDER BY id DESC LIMIT 1").get(id) as any).id as number;
-      }
     }
     const candidates = candidatesFor(db, id);
     if (candidates.length) {

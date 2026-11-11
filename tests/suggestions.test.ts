@@ -581,12 +581,12 @@ describe("People and Concepts still get Tags and Connections (the Archivist did 
     expect(await tagsOf(person.id)).toEqual(["cover-crops", "soil-carbon"]); // the vague "article" is dropped
     expect((await conns(person.id)).map((c: any) => c.other.id).sort()).toEqual([linked.id, naming.id].sort());
   });
-  it("connects a Source that lists the Person as an author, authored by, with no request at all", async () => {
+  it("connects a Source that lists the Person as an author, authored by, by name match (the one request is for Tags)", async () => {
     const person = await make("person", "Ada Green");
     const book = await make("source", "Living soil");
     await setFields(book.id, { authors: "Ada Green, Bo Lane" });
     await look(person.id, {});
-    expect(sent).toHaveLength(0);
+    expect(sent).toHaveLength(1); // the connection itself needed no request; the Tags, from the book's title, do
     expect(await conns(book.id)).toMatchObject([{ label: "authored by", origin: "ai", approved: false, other: { id: person.id } }]); // read from the Source, like the Archivist's other "authored by"
     expect(await conns(person.id)).toMatchObject([{ origin: "ai", approved: false, other: { id: book.id } }]);
     await call("POST", `/api/objects/${person.id}/ai/undo`);
@@ -671,5 +671,60 @@ describe("review fixes: names, vague Tags, hardening", () => {
     await ai.tick();
     const job = sqlite.prepare("SELECT status FROM ai_jobs WHERE object_id = ? ORDER BY id DESC LIMIT 1").get(a.id) as any;
     expect(job.status).toBe("tomorrow");
+  });
+});
+
+describe("People and Concepts get Tags even when no Source has text to read", () => {
+  const tagsOf = async (id: string) => ((await call("GET", `/api/objects/${id}`)).json.tags as any[]).map((t) => t.name).sort();
+  const fieldOf = async (id: string, key: string) => ((await call("GET", `/api/objects/${id}`)).json.fields as any[]).find((f) => f.key === key);
+
+  it("tags a Person from the titles and Tags of the Sources connected to them (book cards have no text), and writes no description from that", async () => {
+    const person = await make("person", "Sylvia Plath");
+    const book = await make("source", "The Bell Jar");
+    await call("POST", `/api/objects/${book.id}/tags`, { name: "confessional poetry" });
+    await call("POST", "/api/connections", { a: book.id, b: person.id });
+    await look(person.id, { tags: ["confessional poetry", "mid-century american literature", "writing"], description: "Made up from general knowledge." });
+    expect(sent).toHaveLength(1);
+    const prompt = JSON.stringify(sent[0].body.messages);
+    expect(prompt).toContain("The Bell Jar");
+    expect(prompt).toContain("confessional-poetry");
+    expect(await tagsOf(person.id)).toEqual(["confessional-poetry", "mid-century-american-literature", "writing"]);
+    expect(await fieldOf(person.id, "description")).toBeUndefined(); // no passage to write it from: no description
+  });
+  it("tags a Person from the description the owner wrote, with no Source at all", async () => {
+    const person = await make("person", "Zygmunt Bauman");
+    await setFields(person.id, { description: "Sociologist who wrote about liquid modernity." });
+    await look(person.id, { tags: ["liquid modernity", "sociology of consumption"] });
+    expect(JSON.stringify(sent[0].body.messages)).toContain("Sociologist who wrote about liquid modernity.");
+    expect(await tagsOf(person.id)).toEqual(["liquid-modernity", "sociology-of-consumption"]);
+    expect(await fieldOf(person.id, "description")).toMatchObject({ origin: "owner" });
+  });
+  it("tags a Person whose book was only just matched by author name, and does not ask when there is nothing to go on", async () => {
+    const person = await make("person", "Ada Green");
+    await look(person.id, { tags: ["soil"] });
+    expect(sent).toHaveLength(0); // only a name: tagging it would take outside knowledge
+    const book = await make("source", "Living soil");
+    await setFields(book.id, { authors: "Ada Green" });
+    await look(person.id, { tags: ["soil ecology"] });
+    expect(await tagsOf(person.id)).toEqual(["soil-ecology"]);
+  });
+  it("does the same for a Concept whose Sources have no passage to read", async () => {
+    const concept = await make("concept", "Flow");
+    const src = await make("source", "Finding deep focus");
+    await call("POST", `/api/objects/${src.id}/tags`, { name: "attention" });
+    await call("POST", "/api/connections", { a: src.id, b: concept.id });
+    await look(concept.id, { tags: ["attention", "optimal experience"] });
+    expect(await tagsOf(concept.id)).toEqual(["attention", "optimal-experience"]);
+  });
+  it("never shows a Private Source's title when tagging", async () => {
+    const person = await make("person", "Ada Green");
+    const open = await make("source", "Open book");
+    const secret = await make("source", "Secret diary", { private: true });
+    await call("POST", "/api/connections", { a: open.id, b: person.id });
+    await call("POST", "/api/connections", { a: secret.id, b: person.id });
+    await look(person.id, { tags: ["soil"] });
+    const prompt = JSON.stringify(sent[0].body.messages);
+    expect(prompt).toContain("Open book");
+    expect(prompt).not.toContain("Secret diary");
   });
 });
