@@ -293,6 +293,7 @@ export function mergeObjects(db: Db, keepId: string, dropId: string, picks: Reco
     db.prepare("DELETE FROM blocks WHERE object_id = ?").run(dropId);
     db.prepare("UPDATE OR IGNORE source_images SET object_id = ? WHERE object_id = ?").run(keepId, dropId);
     db.prepare("UPDATE OR IGNORE person_portraits SET object_id = ? WHERE object_id = ?").run(keepId, dropId);
+    db.prepare("UPDATE OR IGNORE property_images SET object_id = ? WHERE object_id = ?").run(keepId, dropId);
     db.prepare("UPDATE OR IGNORE open_questions SET object_id = ? WHERE object_id = ?").run(keepId, dropId);
     db.prepare("DELETE FROM open_questions WHERE object_id = ?").run(dropId);
     // Mentions of the merged Object, anywhere, now point at the kept one.

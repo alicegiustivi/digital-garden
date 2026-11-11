@@ -4,6 +4,7 @@ import { serveStatic } from "@hono/node-server/serve-static";
 import type Database from "better-sqlite3";
 import * as o from "./objects.ts";
 import * as ty from "./types.ts";
+import { propImageFile, removePropImage, restorePropImage, setPropImage } from "./prop-images.ts";
 import { capture } from "./capture.ts";
 import * as k from "./connections.ts";
 import { graph } from "./graph.ts";
@@ -125,6 +126,25 @@ export function createApp(sqlite: Database.Database, opts: Options = {}) {
     return portraitAnswer(c, c.req.param("id"), await setPortrait(sqlite, c.req.param("id"), f.name || "Portrait", Buffer.from(await f.arrayBuffer())));
   });
   app.delete("/api/objects/:id/portrait", async (c) => portraitAnswer(c, c.req.param("id"), await removePortrait(sqlite, c.req.param("id"))));
+  // A picture on an "image" property of a type of the owner's own (a book cover): add or replace, remove, Undo. The owner's act; no AI reads it.
+  const imageAnswer = (c: any, id: string, r: { previous: unknown } | null) => {
+    if (!r) return c.json({ error: "Not found" }, 404);
+    const obj = o.getObject(sqlite, id);
+    return obj ? c.json({ ...obj, mentions: k.mentionInfo(sqlite, id), previous: r.previous }) : c.json({ error: "Not found" }, 404);
+  };
+  app.put("/api/objects/:id/images/:field", async (c) => {
+    const form = await c.req.formData().catch(() => null);
+    const f = form?.get("image");
+    if (!f || typeof f === "string") throw new o.BadRequest("Choose a picture first");
+    return imageAnswer(c, c.req.param("id"), await setPropImage(sqlite, c.req.param("id"), c.req.param("field"), f.name || "Picture", Buffer.from(await f.arrayBuffer())));
+  });
+  app.delete("/api/objects/:id/images/:field", async (c) => imageAnswer(c, c.req.param("id"), await removePropImage(sqlite, c.req.param("id"), c.req.param("field"))));
+  app.post("/api/objects/:id/images/:field/restore", async (c) => imageAnswer(c, c.req.param("id"), await restorePropImage(sqlite, c.req.param("id"), c.req.param("field"), (await c.req.json().catch(() => ({}))).back ?? null)));
+  app.get("/api/prop-images/:stem/:kind", async (c) => {
+    const file = propImageFile(c.req.param("stem"), c.req.param("kind") === "thumb");
+    if (!file) return c.json({ error: "Not found" }, 404);
+    try { return new Response(new Uint8Array(await readFile(file)), { headers: { "content-type": "image/jpeg", "cache-control": "max-age=31536000, immutable" } }); } catch { return c.json({ error: "Not found" }, 404); }
+  });
   app.post("/api/objects/:id/portrait/restore", async (c) => portraitAnswer(c, c.req.param("id"), await restorePortrait(sqlite, c.req.param("id"), (await c.req.json().catch(() => ({}))).back ?? null)));
   app.get("/api/portraits/:stem/:kind", async (c) => {
     const file = portraitFile(c.req.param("stem"), c.req.param("kind") === "thumb");

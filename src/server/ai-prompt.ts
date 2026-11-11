@@ -130,7 +130,7 @@ export function archivistPrompt(db: Db, id: string, image?: { dataUrl: string })
   const own = db.prepare("SELECT label, core FROM object_types WHERE key = ?").get(o.type) as any;
   const lines: string[] = [`Kind of Object: ${own && !own.core ? own.label : o.type}`];
   if (own && !own.core) {
-    const props = db.prepare("SELECT fd.key, fd.label, fd.input, fd.options FROM type_fields tf JOIN field_definitions fd ON fd.key = tf.field WHERE tf.type = ? ORDER BY tf.position").all(o.type) as any[];
+    const props = db.prepare("SELECT fd.key, fd.label, fd.input, fd.options FROM type_fields tf JOIN field_definitions fd ON fd.key = tf.field WHERE tf.type = ? AND fd.kind IS NULL ORDER BY tf.position").all(o.type) as any[];
     // A kind the owner made is a plain Object: tags and Connections like any other, plus its own properties to fill from the text.
     if (props.length) lines.push(`Properties of this kind (key: name, how it is filled):\n${props.map((p) => `- ${p.key}: ${p.label}, ${p.input === "select" ? `one of ${p.options}` : p.input === "longtext" ? "a short description of 1 to 3 sentences" : "a short value"}`).join("\n")}`);
   }

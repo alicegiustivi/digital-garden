@@ -9,15 +9,19 @@ import { isColour, isTypeIcon } from "../shared/palette.ts";
 type Db = Database.Database;
 const MAX_TYPES = 40;
 const MAX_FIELDS = 12;
-const INPUTS = ["text", "longtext", "select"] as const;
+/** What the owner picks for a property. A rating and an image are stored as kinds of a short text (see migration 0016). */
+const INPUTS = ["text", "longtext", "select", "rating", "image"] as const;
+const KINDS = ["rating", "image"] as const;
 const LOOKUPS = ["summary", "year", "link"] as const;
-/** "May be looked up" (issue #108): which fact from the web a property of a type the owner made may take. Only a short or long text can. */
-const lookupOf = (input: unknown, lookup: unknown): string | null => {
-  if (lookup === undefined || lookup === null || lookup === "") return null;
-  if (!LOOKUPS.includes(lookup as any)) throw new BadRequest("Choose a short description, a year or a link");
-  if (input === "select") throw new BadRequest("A choice can’t be filled from the web");
-  if (input === "text" || input === "longtext") return lookup as string;
-  throw new BadRequest("A choice can’t be filled from the web");
+const BOOK_LOOKUPS = ["authors", "published"] as const;
+/** "May be looked up" (issues #108, #107 follow-up): which fact from the web a property of a type the owner made may take. Only a short or long text can.
+ *  Answers the two columns {lookup, lookup_book}: a book's authors or first year (Open Library) are kept apart from the three Wikipedia kinds. */
+const lookupOf = (input: unknown, lookup: unknown): { lookup: string | null; lookup_book: string | null } => {
+  if (lookup === undefined || lookup === null || lookup === "") return { lookup: null, lookup_book: null };
+  const book = BOOK_LOOKUPS.includes(lookup as any), wiki = LOOKUPS.includes(lookup as any);
+  if (!book && !wiki) throw new BadRequest("Choose a short description, a year, a link, an author or a first publication year");
+  if (input !== "text" && input !== "longtext") throw new BadRequest("Only a text can be filled from the web");
+  return book ? { lookup: null, lookup_book: lookup as string } : { lookup: lookup as string, lookup_book: null };
 };
 
 const name = (v: unknown, what: string) => {
@@ -119,18 +123,20 @@ const optionsOf = (input: unknown, options: unknown) => {
 export function addField(db: Db, type: string, input: { label?: unknown; input?: unknown; options?: unknown; lead?: unknown; lookup?: unknown }) {
   custom(db, type);
   const label = name(input.label, "property");
-  if (!INPUTS.includes(input.input as any)) throw new BadRequest("A property is short text, long text or a choice");
+  if (!INPUTS.includes(input.input as any)) throw new BadRequest("A property is short text, long text, a choice, a rating or an image");
   if (fieldKeys(db, type).length >= MAX_FIELDS) throw new BadRequest(`A type can have ${MAX_FIELDS} properties at most`);
   const taken = db.prepare("SELECT 1 FROM type_fields tf JOIN field_definitions fd ON fd.key = tf.field WHERE tf.type = ? AND lower(fd.label) = lower(?)").get(type, label);
   if (taken) throw new BadRequest("This type already has a property with that name");
   const options = optionsOf(input.input, input.options);
   const lookup = lookupOf(input.input, input.lookup);
+  const kind = (KINDS as readonly string[]).includes(input.input as string) ? (input.input as string) : null;
+  const stored = kind ? "text" : (input.input as string); // a rating and an image are kinds of short text in the database
   const key = `c-${randomBytes(5).toString("hex")}`; // properties are keyed by their own id, so renaming never loses a value
   const position = (db.prepare("SELECT coalesce(max(position), -1) + 1 AS p FROM type_fields WHERE type = ?").get(type) as any).p;
   db.transaction(() => {
-    db.prepare("INSERT INTO field_definitions (key, label, input, options, lookup) VALUES (?, ?, ?, ?, ?)").run(key, label, input.input, options, lookup);
+    db.prepare("INSERT INTO field_definitions (key, label, input, options, lookup, lookup_book, kind) VALUES (?, ?, ?, ?, ?, ?, ?)").run(key, label, stored, options, lookup.lookup, lookup.lookup_book, kind);
     db.prepare("INSERT INTO type_fields (type, field, position, lead) VALUES (?, ?, ?, 0)").run(type, key, position);
-    if (input.lead) setLead(db, type, key);
+    if (input.lead) { if (kind) throw new BadRequest("A rating or an image can't be the one shown under the title"); setLead(db, type, key); }
   })();
   return key;
 }
@@ -154,8 +160,8 @@ export function updateField(db: Db, type: string, field: string, patch: { label?
       if (f.input !== "select") throw new BadRequest("Only a choice has options");
       db.prepare("UPDATE field_definitions SET options = ? WHERE key = ?").run(optionsOf("select", patch.options), field);
     }
-    if (patch.lookup !== undefined) db.prepare("UPDATE field_definitions SET lookup = ? WHERE key = ?").run(lookupOf(f.input, patch.lookup), field);
-    if (patch.lead === true) setLead(db, type, field);
+    if (patch.lookup !== undefined) { const l = lookupOf(f.kind ? "rating" : f.input, patch.lookup); db.prepare("UPDATE field_definitions SET lookup = ?, lookup_book = ? WHERE key = ?").run(l.lookup, l.lookup_book, field); }
+    if (patch.lead === true) { if (f.kind) throw new BadRequest("A rating or an image can't be the one shown under the title"); setLead(db, type, field); }
     if (patch.lead === false) db.prepare("UPDATE type_fields SET lead = 0 WHERE type = ? AND field = ?").run(type, field);
   })();
 }
@@ -176,6 +182,7 @@ export function fieldRemoval(db: Db, type: string, field: string) {
 }
 
 function dropField(db: Db, type: string, field: string) {
+  db.prepare("DELETE FROM property_images WHERE field = ?").run(field);
   db.prepare("DELETE FROM field_values WHERE field = ?").run(field);
   db.prepare("DELETE FROM type_fields WHERE type = ? AND field = ?").run(type, field);
   db.prepare("DELETE FROM field_definitions WHERE key = ?").run(field);

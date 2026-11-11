@@ -53,7 +53,7 @@ const squash = (t: string) => t.toLowerCase().replace(/\s+/g, " ").trim();
  * A long text is not matched word for word (it is a short description), so the prompt asks for it to stay close to the text.
  */
 export function statedProps(db: Db, id: string, type: string, props: Record<string, string>): Record<string, string> {
-  const defs = db.prepare("SELECT fd.key, fd.input, fd.options FROM type_fields tf JOIN field_definitions fd ON fd.key = tf.field WHERE tf.type = ?").all(type) as any[];
+  const defs = db.prepare("SELECT fd.key, fd.input, fd.options FROM type_fields tf JOIN field_definitions fd ON fd.key = tf.field WHERE tf.type = ? AND fd.kind IS NULL").all(type) as any[];
   const own = squash([
     ...(db.prepare("SELECT value FROM field_values WHERE object_id = ?").all(id) as any[]).map((r) => r.value),
     ...(db.prepare("SELECT text FROM blocks WHERE object_id = ?").all(id) as any[]).map((r) => r.text),

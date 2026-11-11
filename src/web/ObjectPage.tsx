@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { api, fieldOf, type PortraitBack, type FieldDef, type Obj, type TagRow, type Types } from "./api";
 import { BodyEditor } from "./BodyEditor";
 import { Editable } from "./Editable";
+import { PictureProp, Stars } from "./PropKinds";
 import { AiStatusLine } from "./Ai";
 import { AiNotes, ArchivistSuggestions, WebLookup } from "./Suggestions";
 import { ConnectionsPanel, MergeDialog } from "./Connections";
@@ -176,6 +177,7 @@ export function ObjectPage({ id, types, fresh, onChanged, beside, onDeleted }: P
             defs={pills}
             obj={obj}
             onSave={(key, v) => saveFields({ [key]: v })}
+            onObj={update}
             tags={<div className="tags">
               {obj.tags.map((t) => <TagPill key={t.id} tag={t} linked onRemove={() => removeTagHere(t)} />)}
               <TagInput known={allTags} onAdd={addTag} />
@@ -254,7 +256,7 @@ export function ObjectPage({ id, types, fresh, onChanged, beside, onDeleted }: P
 }
 
 /** An Object's properties as quiet rows: only the ones with a value, plus Tags, and one "Add property" for the rest (no empty dashed chips). */
-function Properties({ defs, obj, onSave, tags }: { defs: FieldDef[]; obj: Obj; onSave: (key: string, v: string) => void; tags: React.ReactNode }) {
+function Properties({ defs, obj, onSave, onObj, tags }: { defs: FieldDef[]; obj: Obj; onSave: (key: string, v: string) => void; onObj: (o: Obj) => void; tags: React.ReactNode }) {
   const [added, setAdded] = useState<string[]>([]); // chosen from "Add property", kept on screen while still empty
   const [menu, setMenu] = useState(false);
   const box = useRef<HTMLDivElement>(null);
@@ -267,7 +269,8 @@ function Properties({ defs, obj, onSave, tags }: { defs: FieldDef[]; obj: Obj; o
     document.addEventListener("keydown", esc);
     return () => { document.removeEventListener("mousedown", out); document.removeEventListener("keydown", esc); };
   }, [menu]);
-  const shown = defs.filter((d) => fieldOf(obj, d.key) || added.includes(d.key));
+  const has = (d: FieldDef) => (d.input === "image" ? !!obj.images?.[d.key] : !!fieldOf(obj, d.key));
+  const shown = defs.filter((d) => has(d) || added.includes(d.key));
   const rest = defs.filter((d) => !shown.includes(d));
   return (
     <dl className="props">
@@ -277,14 +280,16 @@ function Properties({ defs, obj, onSave, tags }: { defs: FieldDef[]; obj: Obj; o
           <div className="prop" key={d.key}>
             <dt>{d.label}</dt>
             <dd>
-              <Editable
+              {d.input === "rating" ? <Stars value={Number(f?.value) || 0} label={d.label} onSave={(v) => onSave(d.key, v)} />
+              : d.input === "image" ? <PictureProp obj={obj} field={d.key} label={d.label} onChanged={onObj} />
+              : <Editable
                 value={f?.value ?? ""}
                 origin={f}
                 options={d.input === "select" ? d.options : null}
                 startEditing={!f && added[added.length - 1] === d.key}
                 placeholder={`Add ${d.label.toLowerCase()}`}
                 onSave={(v) => onSave(d.key, v)}
-              />
+              />}
             </dd>
           </div>
         );

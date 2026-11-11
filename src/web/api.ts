@@ -4,7 +4,7 @@ export type Field = { key: string; value: string } & OriginInfo;
 export type Tag = { id: number; name: string; color: string } & OriginInfo;
 export type Block = { id: number; text: string } & OriginInfo;
 export type Summary = {
-  id: string; type: string; private: boolean; unreviewed: boolean; hasImage: boolean; portrait: string | null; createdAt: string; updatedAt: string;
+  id: string; type: string; private: boolean; unreviewed: boolean; hasImage: boolean; /** Pictures on the Object's own image properties: property key -> file stem. */ images: Record<string, string>; portrait: string | null; createdAt: string; updatedAt: string;
   fields: Field[]; firstLine: string; tags: Tag[]; connectionCount: number;
 };
 export type PortraitBack = { stem: string; width: number | null; height: number | null } | null;
@@ -42,7 +42,7 @@ export type Connection = {
 export type KindChoice = { kind: string; subject: boolean; label: string };
 export type Shares = Brief & { shared: string[]; sharedTags: string[] };
 export type MergeAsk = { otherId: string; other: Brief; keep: { kind: string; label: string; note: string }; drop: { kind: string; label: string; note: string } };
-export type FieldDef = { key: string; label: string; input: "text" | "longtext" | "select"; options: string[] | null; lead?: boolean; /** "May be looked up": which fact from the web this property takes (issue #108). */ lookup?: "summary" | "year" | "link" | null };
+export type FieldDef = { key: string; label: string; input: "text" | "longtext" | "select" | "rating" | "image"; options: string[] | null; lead?: boolean; /** "May be looked up": which fact from the web this property takes (issue #108), or a book's author / first year (Open Library). */ lookup?: "summary" | "year" | "link" | "authors" | "published" | null };
 export type TypeDef = { key: string; label: string; plural: string; /** A palette colour key (src/shared/palette.ts). */ color: string; /** An icon key (src/web/icons.ts). */ icon: string; /** One of the four types that keep every special behaviour. */ core: boolean; /** Objects of this type, and how many more are in the Bin. */ count: number; inBin: number; fields: FieldDef[] };
 export type Types = { types: TypeDef[]; fieldLabels: Record<string, FieldDef> };
 export type TypesAnswer = Types & { key?: string; field?: string; moved?: number; removed?: { values: number; inBin: number } };
@@ -194,6 +194,16 @@ export const api = {
     if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error ?? res.statusText);
     return res.json();
   },
+  // A picture on an image property of a type of the owner's own (ADR 0010). Each answer carries "previous", what Undo sets back.
+  setPropImage: async (id: string, field: string, file: File): Promise<Obj & { previous: { stem: string; width: number | null; height: number | null } | null }> => {
+    const form = new FormData();
+    form.set("image", file, file.name || "Picture");
+    const res = await fetch(`/api/objects/${id}/images/${field}`, { method: "PUT", body: form });
+    if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error ?? res.statusText);
+    return res.json();
+  },
+  removePropImage: (id: string, field: string) => call<Obj & { previous: { stem: string; width: number | null; height: number | null } | null }>("DELETE", `/api/objects/${id}/images/${field}`),
+  restorePropImage: (id: string, field: string, back: { stem: string; width: number | null; height: number | null } | null) => call<Obj & { previous: { stem: string; width: number | null; height: number | null } | null }>("POST", `/api/objects/${id}/images/${field}/restore`, { back }),
   removePortrait: (id: string) => call<Obj & { previous: PortraitBack }>("DELETE", `/api/objects/${id}/portrait`),
   restorePortrait: (id: string, back: PortraitBack) => call<Obj & { previous: PortraitBack }>("POST", `/api/objects/${id}/portrait/restore`, { back }),
   deleteObject: (id: string) => call<unknown>("DELETE", `/api/objects/${id}`),
