@@ -841,3 +841,17 @@ button:not(:disabled):active, .pill:active, .cap:active, .side-link:active { tra
 .web-switch { display: inline-flex; gap: 6px; align-items: center; margin: 6px 0 0; }
 .web-sources ol { margin: 2px 0 6px; padding-left: 1.4em; }
 .web-sources p { margin: 2px 0; }
+
+/* Rating and picture properties on a type of the owner's own (ADR 0010). */
+.stars { display: inline-flex; gap: 2px; color: var(--ct, var(--ink)); }
+.stars button { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 8px; color: var(--ct, var(--ink)); }
+.stars button .ic, .stars.view .ic { width: 18px; height: 18px; }
+.stars button:not(.on) .ic, .stars.view span:not(.on) .ic { opacity: .35; }
+.stars button.on .ic, .stars.view span.on .ic { fill: currentColor; }
+.stars.view { gap: 0; }
+.stars.view .ic { width: 14px; height: 14px; }
+.pic-prop { display: flex; align-items: center; gap: var(--s-3); flex-wrap: wrap; border-radius: 14px; }
+.pic-prop.over { outline: 2px dashed var(--c, var(--ink)); outline-offset: 4px; }
+.pic-pick { position: relative; display: grid; place-items: center; min-width: 88px; min-height: 120px; max-width: 220px; border-radius: 10px; overflow: hidden; background: var(--wash); box-shadow: var(--shadow); }
+.pic-pick img { display: block; max-width: 220px; max-height: 300px; object-fit: contain; }
+.pic-empty .ic { width: 28px; height: 28px; color: var(--mute); }

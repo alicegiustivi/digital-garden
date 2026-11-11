@@ -90,6 +90,7 @@ export function gatherGarden(db: Db, opts: ExportOptions = {}, now = new Date())
   const blocks = by(all("SELECT * FROM blocks ORDER BY object_id, position"));
   const images = new Map(all("SELECT * FROM source_images").map((i) => [i.object_id, i]));
   const portraits = new Map(all("SELECT * FROM person_portraits").map((i) => [i.object_id, i]));
+  const propPics = by(all("SELECT * FROM property_images ORDER BY object_id, field"));
   const questions = new Map(all("SELECT * FROM open_questions").map((q) => [q.object_id, q]));
   const versions = by(all("SELECT * FROM concept_versions ORDER BY object_id, day DESC"));
   const notes = by(all("SELECT * FROM ai_notes ORDER BY id"));
@@ -110,6 +111,8 @@ export function gatherGarden(db: Db, opts: ExportOptions = {}, now = new Date())
       tags: (objTags.get(o.id) ?? []).filter((t) => tagRows.has(t.tag_id)).map((t) => ({ name: tagRows.get(t.tag_id).name as string, color: tagRows.get(t.tag_id).color as string, ...originOf(t, false) })),
       body: (blocks.get(o.id) ?? []).map((b) => ({ position: b.position as number, text: b.text as string, ...originOf(b) })),
       image: img ? { file: img.file as string, width: img.width as number | null, height: img.height as number | null } : null,
+      // pictures the owner added to image properties of a type of their own (a book cover): the property's key and name, and the file
+      propertyImages: (propPics.get(o.id) ?? []).map((p) => ({ field: p.field as string, label: (defs.get(p.field)?.label ?? p.field) as string, file: `${p.stem}.jpg` as string, width: p.width as number | null, height: p.height as number | null, origin: "owner" as const })),
       portrait: por ? { file: `${por.stem}.jpg` as string, width: por.width as number | null, height: por.height as number | null, origin: "owner" as const } : null,
       openQuestion: q ? { openedAt: q.opened_at as string, settledAt: (q.settled_at ?? null) as string | null, settledBy: (q.settled_by ?? null) as string | null } : null,
       conceptVersions: (versions.get(o.id) ?? []).map((v) => ({ day: v.day as string, savedAt: v.saved_at as string, origin: "owner", paragraphs: json<string[]>(v.paragraphs, []) })),
@@ -220,6 +223,7 @@ function markdownFor(g: Garden, L: ReturnType<typeof layout>, privateIds: Set<st
     }
     if (lines[lines.length - 1] !== "") lines.push("");
     for (const l of lead) lines.push(l, "");
+    for (const p of o.propertyImages) lines.push(`![${p.label.replace(/[\[\]]/g, "")} of ${o.displayTitle.replace(/[\[\]]/g, "")}](${rel(here, "images/" + p.file)})`, "");
     if (o.portrait) lines.push(`![Portrait of ${o.displayTitle.replace(/[\[\]]/g, "")}](${rel(here, "images/" + o.portrait.file)})`, "");
     if (o.image) lines.push(`![${o.displayTitle.replace(/[\[\]]/g, "")}](${rel(here, "images/" + o.image.file)})`, "");
     // body
@@ -330,7 +334,7 @@ async function writeFolder(db: Db, tmp: string, opts: ExportOptions, deps: Expor
   const L = layout(g);
   const leftOut = new Set<string>(opts.leaveOutPrivate ? (db.prepare("SELECT id FROM objects WHERE private = 1 AND deleted_at IS NULL").all() as any[]).map((r) => r.id) : []); // only the ids, to say "[a Private Object]"; their content is never read
   const M = markdownFor(g, L, leftOut);
-  const imgs = g.objects.flatMap((o) => [o.image, o.portrait].filter((x): x is NonNullable<typeof x> => !!x));
+  const imgs = g.objects.flatMap((o) => [o.image, o.portrait, ...o.propertyImages].filter((x): x is NonNullable<typeof x> => !!x));
   const total = g.objects.length + g.inquiries.length + L.days.size + imgs.length + 3;
   let n = 0;
   const step = async (path: string) => { await deps.beforeFile?.(n, path); onProgress({ done: ++n, total }); if (n % 20 === 0) await new Promise((r) => setImmediate(r)); }; // let the Garden answer the owner meanwhile

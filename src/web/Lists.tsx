@@ -1,5 +1,6 @@
 import { CardStatus } from "./Ai";
 import { GardenStrip } from "./Garden";
+import { StarsView } from "./PropKinds";
 import { useEffect, useState } from "react";
 import { BackupNote } from "./Backup";
 import { api, inboxApi, displayTitle, TAG_COLORS, type Filters, type Summary, type TagRow, type Types } from "./api";
@@ -15,16 +16,23 @@ export function useList(q: Filters, version: number) {
 }
 
 export function Card({ o, types, onOpen }: { o: Summary; types: Types; onOpen: () => void }) {
-  const label = types.types.find((t) => t.key === o.type)!.label;
+  const def = types.types.find((t) => t.key === o.type)!;
+  const label = def.label;
+  // A type of the owner's own: its first picture is the cover (a book cover), and a rating shows as stars.
+  const cover = def.fields.map((f) => (f.input === "image" ? o.images?.[f.key] : undefined)).find(Boolean);
+  const rated = def.fields.find((f) => f.input === "rating");
+  const stars = rated ? Number(o.fields.find((x) => x.key === rated.key)?.value) || 0 : 0;
   return (
     <article className={`story t-${o.type}`} style={typeVar(o.type)} tabIndex={0} role="button" onClick={onOpen} onKeyDown={(e) => e.key === "Enter" && onOpen()}>
       {o.type === "source" && o.hasImage && <img className="story-img" src={`/api/images/${o.id}/thumb`} alt="" loading="lazy" />}
+      {cover && <img className="story-img cover-pic-card" src={`/api/prop-images/${cover}/thumb`} alt="" loading="lazy" />}
       {o.type === "person" && <Portrait stem={o.portrait} size={56} name={displayTitle(o)} />}
       <div className="story-text">
         <span className="kk"><Icon name={o.type} /> {label}{subOf(o) ? ` · ${subOf(o)}` : ""}</span>
         <h4>{displayTitle(o)}</h4>
         <div className="m">
           <span>{formatDay(o.updatedAt)}</span>
+          {stars > 0 && <StarsView value={stars} />}
           {o.connectionCount > 0 && <span>{o.connectionCount} {o.connectionCount === 1 ? "Connection" : "Connections"}</span>}
           {o.private && <span title="Private: no AI reads this"><Icon name="lock" /> Private</span>}
         </div>

@@ -47,17 +47,19 @@ export function targetOf(db: Db, id: string): Target {
   if (!o || o.deleted_at) return { ok: false, why: "That Object is in the Bin or gone, so nothing is looked up for it." };
   if (o.private || !readable(db, id)) return { ok: false, why: "This one is Private, so nothing about it is ever sent out." };
   let fields: Record<string, Kind> | undefined = CORE_KINDS[o.type];
+  let bookType = false; // a type of the owner's own with an author or first-year property is looked up as a book (Open Library)
   if (!fields) {
-    const rows = db.prepare("SELECT fd.key, fd.lookup FROM type_fields tf JOIN field_definitions fd ON fd.key = tf.field WHERE tf.type = ? AND fd.lookup IS NOT NULL ORDER BY tf.position").all(o.type) as any[];
-    const kind = (l: string): Kind => (l === "year" ? "year" : l === "link" ? "link" : "summary");
-    fields = Object.fromEntries(rows.map((r) => [r.key as string, kind(r.lookup)]));
+    const rows = db.prepare("SELECT fd.key, fd.lookup, fd.lookup_book FROM type_fields tf JOIN field_definitions fd ON fd.key = tf.field WHERE tf.type = ? AND (fd.lookup IS NOT NULL OR fd.lookup_book IS NOT NULL) ORDER BY tf.position").all(o.type) as any[];
+    const kind = (r: any): Kind => (r.lookup_book === "authors" ? "authors" : r.lookup_book === "published" ? "published" : r.lookup === "year" ? "year" : r.lookup === "link" ? "link" : "summary");
+    fields = Object.fromEntries(rows.map((r) => [r.key as string, kind(r)]));
+    bookType = rows.some((r) => r.lookup_book);
     if (o.type === "thought" || !Object.keys(fields).length) return { ok: false, why: o.type === "thought" ? "A Thought is your own words, so it is never looked up." : "No property of this type is marked “may be looked up”. You can turn that on in Types." };
   }
   // Only the title the Object itself carries: the Garden's fallback (the start of the body) is never used as a name.
   const name = String(o.title ?? "").replace(/\s+/g, " ").trim();
   if (!name) return { ok: false, why: "Give it a title first: the title is the only thing looked up." };
   if (name.length > 150 || /^https?:\/\//i.test(name)) return { ok: false, why: "The title is a web address or too long to look up. Give it a real name first." };
-  let route: Route = "wikidata";
+  let route: Route = bookType ? "openlibrary" : "wikidata";
   if (o.type === "source") {
     const format = String((db.prepare("SELECT value FROM field_values WHERE object_id = ? AND field = 'format'").get(id) as any)?.value ?? "");
     if (format && format !== "book") return { ok: false, why: "The Garden can look up books for now. This isn’t one." };

@@ -70,7 +70,7 @@ export function bringBack(spare: Db, live: Db, day: string, query: string, opts:
       copyRows(spare, live, "type_fields", "type = ?", m.type);
     }
     tables.objects = copyRows(spare, live, "objects", "id = ?", m.id, false, { deleted_at: null });
-    for (const t of ["field_values", "blocks", "ai_notes", "open_questions", "concept_versions", "source_images", "person_portraits"]) {
+    for (const t of ["field_values", "blocks", "ai_notes", "open_questions", "concept_versions", "source_images", "person_portraits", "property_images"]) {
       tables[t] = copyRows(spare, live, t, "object_id = ?", m.id, t === "field_values" || t === "blocks" || t === "ai_notes");
     }
     // Tags are matched by name, so the Garden's own Tag colours win; Tags that are gone are made again.
@@ -97,6 +97,12 @@ export function bringBack(spare: Db, live: Db, day: string, query: string, opts:
   for (const f of [img?.file, img?.thumb].filter(Boolean)) {
     const from = join(opts.spareImages, f);
     if (existsSync(from)) { copyFileSync(from, join(opts.liveImages, f)); images++; }
+  }
+  for (const p of live.prepare("SELECT stem FROM property_images WHERE object_id = ?").all(m.id) as any[]) {
+    for (const f of [`${p.stem}.jpg`, `${p.stem}.thumb.jpg`]) {
+      const from = join(opts.spareImages, f);
+      if (existsSync(from)) { copyFileSync(from, join(opts.liveImages, f)); images++; }
+    }
   }
   const por = live.prepare("SELECT stem FROM person_portraits WHERE object_id = ?").get(m.id) as any;
   for (const f of por ? [`${por.stem}.jpg`, `${por.stem}.thumb.jpg`] : []) {

@@ -13,7 +13,7 @@ A single item in the Garden with its own identity and an Object Type, such as a 
 _Avoid_: Note, entry, record, card, page
 
 **Object Type**:
-The kind an Object belongs to (Source, Concept, Thought, Person, or one the owner made), which decides what fields it has. The owner can make their own Object Types (a Book, a Place) with a name, a colour from the Garden's palette, an icon and properties of short text, long text or a choice, and can change the colour of any type. A type the owner made is a plain Object type: title, body, Tags, Connections and its own properties, none of the Core types' special rules. Only the owner makes or changes a type; the AI never does and never moves an Object into one. A type that still has Objects, the Bin included, can't be removed until they are moved.
+The kind an Object belongs to (Source, Concept, Thought, Person, or one the owner made), which decides what fields it has. The owner can make their own Object Types (a Book, a Place) with a name, a colour from the Garden's palette, an icon and properties of short text, long text, a choice, a rating (1 to 5 stars) or a picture (such as a book cover), and can change the colour of any type. A rating and a picture are always the owner's own: the Archivist never fills either, and a picture is never sent to any AI. A type the owner made is a plain Object type: title, body, Tags, Connections and its own properties, none of the Core types' special rules. Only the owner makes or changes a type; the AI never does and never moves an Object into one. A type that still has Objects, the Bin included, can't be removed until they are moved.
 _Avoid_: Category, class, template
 
 ### Core Object Types

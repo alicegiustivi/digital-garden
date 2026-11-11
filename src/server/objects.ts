@@ -20,12 +20,13 @@ export function listTypes(db: Db) {
   const used = new Map((db.prepare("SELECT type, count(*) AS total, coalesce(sum(deleted_at IS NOT NULL), 0) AS bin FROM objects GROUP BY type").all() as any[]).map((r) => [r.type as string, r]));
   const fields = db
     .prepare(
-      `SELECT tf.type, tf.lead, fd.key, fd.label, fd.input, fd.options, fd.lookup
+      `SELECT tf.type, tf.lead, fd.key, fd.label, fd.input, fd.options, fd.lookup, fd.lookup_book, fd.kind
        FROM type_fields tf JOIN field_definitions fd ON fd.key = tf.field ORDER BY tf.type, tf.position`,
     )
     .all() as any[];
-  const all = db.prepare("SELECT key, label, input, options FROM field_definitions").all() as any[];
-  const shape = (f: any) => ({ key: f.key, label: f.label, input: f.input, options: f.options ? JSON.parse(f.options) : null });
+  const all = db.prepare("SELECT key, label, input, options, kind FROM field_definitions").all() as any[];
+  // A rating and an image are kinds of short text in the database; the screen sees them as their own kind of property.
+  const shape = (f: any) => ({ key: f.key, label: f.label, input: (f.kind ?? f.input) as string, options: f.options ? JSON.parse(f.options) : null });
   return {
     types: types.map((t) => ({
       ...t,
@@ -33,7 +34,7 @@ export function listTypes(db: Db) {
       /** Objects of this type, and how many of those are in the Bin (a type with any cannot be removed). */
       count: (used.get(t.key)?.total ?? 0) - (used.get(t.key)?.bin ?? 0),
       inBin: used.get(t.key)?.bin ?? 0,
-      fields: fields.filter((f) => f.type === t.key).map((f) => ({ ...shape(f), lead: !!f.lead, lookup: (f.lookup ?? null) as string | null })),
+      fields: fields.filter((f) => f.type === t.key).map((f) => ({ ...shape(f), lead: !!f.lead, lookup: (f.lookup ?? f.lookup_book ?? null) as string | null })),
     })),
     fieldLabels: Object.fromEntries(all.map((f) => [f.key, shape(f)])),
   };
@@ -78,12 +79,16 @@ export function summarise(db: Db, rows: any[]) {
   const withImage = new Set((db.prepare(`SELECT object_id FROM source_images WHERE object_id IN (${marks})`).all(...ids) as any[]).map((r) => r.object_id));
   const portraits = new Map((db.prepare(`SELECT object_id, stem FROM person_portraits WHERE object_id IN (${marks})`).all(...ids) as any[]).map((r) => [r.object_id, r.stem as string]));
   const tags = tagsFor(db, ids);
+  // Pictures the owner added to properties of a type of their own (a book cover): property key -> file stem. Never sent to an AI.
+  const pics = new Map<string, Record<string, string>>();
+  for (const p of db.prepare(`SELECT object_id, field, stem FROM property_images WHERE object_id IN (${marks})`).all(...ids) as any[]) pics.set(p.object_id, { ...(pics.get(p.object_id) ?? {}), [p.field]: p.stem });
   return rows.map((r) => ({
     id: r.id,
     type: r.type,
     private: !!r.private,
     unreviewed: !!r.unreviewed,
     hasImage: withImage.has(r.id),
+    images: pics.get(r.id) ?? {},
     portrait: r.type === "person" ? (portraits.get(r.id) ?? null) : null, // a Person's Portrait (issue #69): the owner's photo, never sent to an AI
     createdAt: iso(r.created_at),
     updatedAt: iso(r.updated_at ?? r.created_at),
@@ -162,8 +167,11 @@ export function deleteObject(db: Db, id: string) {
 const touch = (db: Db, id: string) => db.prepare("UPDATE objects SET updated_at = datetime('now') WHERE id = ?").run(id);
 
 function setField(db: Db, id: string, key: string, value: string | null) {
-  if (!db.prepare("SELECT 1 FROM field_definitions WHERE key = ?").get(key) && key !== "title") throw new BadRequest(`unknown field ${key}`);
+  const def = db.prepare("SELECT kind FROM field_definitions WHERE key = ?").get(key) as any;
+  if (!def && key !== "title") throw new BadRequest(`unknown field ${key}`);
+  if (def?.kind === "image") throw new BadRequest("A picture is added with the picture button, not typed");
   const v = (value ?? "").trim();
+  if (def?.kind === "rating" && v && !/^[1-5]$/.test(v)) throw new BadRequest("A rating is 1 to 5 stars");
   if (!v) {
     db.prepare("DELETE FROM field_values WHERE object_id = ? AND field = ?").run(id, key);
   } else {

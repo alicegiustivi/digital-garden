@@ -8,7 +8,7 @@ import { showToast } from "./toast";
 
 type Props = { types: Types; onTypes: (t: Types) => void; go: (hash: string) => void };
 
-const KIND: Record<string, string> = { text: "Short text", longtext: "Long text", select: "Choice" };
+const KIND: Record<string, string> = { text: "Short text", longtext: "Long text", select: "Choice", rating: "Rating", image: "Picture" };
 const listHash = (t: TypeDef) => (t.core ? `#/${t.plural.toLowerCase()}` : `#/t/${t.key}`);
 
 /** The twelve colours. The chosen one carries a tick, so colour is never the only signal. */
@@ -49,14 +49,14 @@ function PropertyRow({ type, f, first, last, run }: { type: TypeDef; f: FieldDef
       <div className="tprop-main">
         <input aria-label="Property name" value={name} maxLength={40} onChange={(e) => setName(e.target.value)} onBlur={() => name.trim() !== f.label && run(() => api.updateTypeField(type.key, f.key, { label: name }))} />
         <span className="quiet small">{KIND[f.input]}</span>
-        {f.input !== "select" && (
+        {(f.input === "text" || f.input === "longtext") && (
           <label className="small">May be looked up
             <select aria-label={`Fill ${f.label} from the web`} value={f.lookup ?? ""} onChange={(e) => run(() => api.updateTypeField(type.key, f.key, { lookup: e.target.value }))}>
-              <option value="">No</option><option value="summary">A short description</option><option value="year">A year</option><option value="link">A link</option>
+              <option value="">No</option><option value="summary">A short description</option><option value="year">A year</option><option value="link">A link</option><option value="authors">A book's author</option><option value="published">A book's first year</option>
             </select>
           </label>
         )}
-        <label className="small"><input type="checkbox" checked={!!f.lead} onChange={(e) => run(() => api.updateTypeField(type.key, f.key, { lead: e.target.checked }))} /> Show under the title</label>
+        {f.input !== "rating" && f.input !== "image" && <label className="small"><input type="checkbox" checked={!!f.lead} onChange={(e) => run(() => api.updateTypeField(type.key, f.key, { lead: e.target.checked }))} /> Show under the title</label>}
         <span className="grow" />
         <button type="button" aria-label={`Move ${f.label} up`} disabled={first} onClick={() => move(-1)}>↑</button>
         <button type="button" aria-label={`Move ${f.label} down`} disabled={last} onClick={() => move(1)}>↓</button>
@@ -90,7 +90,7 @@ function NewProperty({ type, run }: { type: TypeDef; run: (job: () => Promise<Ty
     <form className="tprop-new" onSubmit={(e) => { e.preventDefault(); void submit(); }}>
       <input aria-label="New property name" placeholder="New property, e.g. Author" value={label} maxLength={40} onChange={(e) => setLabel(e.target.value)} />
       <select aria-label="Kind of property" value={input} onChange={(e) => setInput(e.target.value)}>
-        <option value="text">Short text</option><option value="longtext">Long text</option><option value="select">Choice from a list</option>
+        <option value="text">Short text</option><option value="longtext">Long text</option><option value="select">Choice from a list</option><option value="rating">Rating (1 to 5 stars)</option><option value="image">Picture (a cover, a photo)</option>
       </select>
       {input === "select" && <input aria-label="Choices, separated by commas" placeholder="Choices, separated by commas" value={options} onChange={(e) => setOptions(e.target.value)} />}
       <button type="submit" className="pill action" disabled={!label.trim()}><Icon name="plus" /> Add property</button>
