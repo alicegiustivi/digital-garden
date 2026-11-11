@@ -757,6 +757,9 @@ p.inbox-warn { margin: 10px 0; padding: 8px 14px; border-radius: 10px; backgroun
 .add-prop:hover { color: var(--ink); }
 .prop-add .menu { transform-origin: top left; right: auto; left: 0; min-width: 160px; }
 .prop-add .menu button { text-align: left; }
+/* Light mode is pure white: panels, quotes and selected rows are white with a hairline instead of a pale grey fill. (Dark keeps its own surfaces.) */
+:root:not([data-scheme="dark"]) :is(.type-new, .b-src, .archivist-block, .pic-pick, .lead-img, .side-link.on, .side-look, .kind, .side-look button.on, .gx-seg button.on, .gx-btn.on, .mp-row.on, .finder-rows li.on, .prow.on) { background: #fff; box-shadow: 0 0 0 1px var(--line); }
+
 /* Object page rhythm: tight inside a group, generous between groups. */
 .cover .in { gap: var(--s-2); }
 .cover .title { margin-bottom: var(--s-3); }
@@ -897,3 +900,7 @@ button:not(:disabled):active, .pill:active, .cap:active, .side-link:active { tra
 
 /* The arrows sat at the left of their circles (buttons align their text left by default): centre them. */
 .type-head button[aria-label^="Move"] { display: grid; place-items: center; text-align: center; padding: 0; line-height: 1; }
+
+/* The panel scrolls, so its hairline sits on the panel itself (a scrolling box would cut off an outline drawn on its content). */
+:root:not([data-scheme="dark"]) .types-page .types-panel { background: #fff; box-shadow: 0 0 0 1px var(--line); }
+:root:not([data-scheme="dark"]) .types-page .types-panel .type-new { box-shadow: none; }
