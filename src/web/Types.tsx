@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { api, type FieldDef, type TypeDef, type Types, type TypesAnswer } from "./api";
 import { PALETTE, TYPE_ICONS } from "../shared/palette";
-import { Icon, typeVar } from "./ui";
+import { Hint, Icon, typeVar } from "./ui";
 import { showToast } from "./toast";
 
 type Props = { types: Types; onTypes: (t: Types) => void; go: (hash: string) => void };
@@ -22,6 +22,16 @@ export function Swatches({ value, onPick, label }: { value: string; onPick: (key
         </button>
       ))}
     </div>
+  );
+}
+
+/** The icon choice folded away: the current icon and a "Change" link, so the long grid only opens when wanted. */
+function IconFold({ value, onPick }: { value: string; onPick: (key: string) => void }) {
+  return (
+    <details className="icon-fold">
+      <summary><Icon name={value} /> <span>Icon</span> <span className="quiet small">Change</span></summary>
+      <IconPicker value={value} onPick={onPick} />
+    </details>
   );
 }
 
@@ -48,19 +58,21 @@ function PropertyRow({ type, f, first, last, run }: { type: TypeDef; f: FieldDef
     <li className="tprop">
       <div className="tprop-main">
         <input aria-label="Property name" value={name} maxLength={40} onChange={(e) => setName(e.target.value)} onBlur={() => name.trim() !== f.label && run(() => api.updateTypeField(type.key, f.key, { label: name }))} />
-        <span className="quiet small">{KIND[f.input]}</span>
+        <span className="tprop-kind quiet small">{KIND[f.input]}</span>
+        <button type="button" className="round" aria-label={`Move ${f.label} up`} disabled={first} onClick={() => move(-1)}>↑</button>
+        <button type="button" className="round" aria-label={`Move ${f.label} down`} disabled={last} onClick={() => move(1)}>↓</button>
+      </div>
+      <div className="tprop-extra small">
         {(f.input === "text" || f.input === "longtext") && (
-          <label className="small">May be looked up
+          <label>May be looked up
             <select aria-label={`Fill ${f.label} from the web`} value={f.lookup ?? ""} onChange={(e) => run(() => api.updateTypeField(type.key, f.key, { lookup: e.target.value }))}>
               <option value="">No</option><option value="summary">A short description</option><option value="year">A year</option><option value="link">A link</option><option value="authors">A book's author</option><option value="published">A book's first year</option>
             </select>
           </label>
         )}
-        {f.input !== "rating" && f.input !== "image" && <label className="small"><input type="checkbox" checked={!!f.lead} onChange={(e) => run(() => api.updateTypeField(type.key, f.key, { lead: e.target.checked }))} /> Show under the title</label>}
+        {f.input !== "rating" && f.input !== "image" && <label className="check"><input type="checkbox" checked={!!f.lead} onChange={(e) => run(() => api.updateTypeField(type.key, f.key, { lead: e.target.checked }))} /> Show under the title</label>}
         <span className="grow" />
-        <button type="button" aria-label={`Move ${f.label} up`} disabled={first} onClick={() => move(-1)}>↑</button>
-        <button type="button" aria-label={`Move ${f.label} down`} disabled={last} onClick={() => move(1)}>↓</button>
-        <button type="button" className="pill" onClick={async () => setAsk(await api.typeFieldRemoval(type.key, f.key))}>Remove</button>
+        <button type="button" className="linkish" onClick={async () => setAsk(await api.typeFieldRemoval(type.key, f.key))}>Remove</button>
       </div>
       {f.input === "select" && (
         <label className="tprop-opts small">Choices, separated by commas
@@ -114,14 +126,13 @@ function TypeEditor({ t, types, run, go }: { t: TypeDef; types: Types; run: (job
             <label>Name<input value={label} maxLength={40} onChange={(e) => setLabel(e.target.value)} onBlur={() => label.trim() !== t.label && run(() => api.updateType(t.key, { label }))} /></label>
             <label>Plural<input value={plural} maxLength={40} onChange={(e) => setPlural(e.target.value)} onBlur={() => plural.trim() !== t.plural && run(() => api.updateType(t.key, { plural }))} /></label>
           </div>
-          <h4 className="small-h">Icon</h4>
-          <IconPicker value={t.icon} onPick={(icon) => run(() => api.updateType(t.key, { icon }))} />
           <h4 className="small-h">Properties</h4>
-          <p className="quiet small">Every {t.label} also has a title, a body, Tags and Connections. These are the extra things it carries.</p>
+          <p className="quiet small">Extra things a {t.label} carries, besides its title, body, Tags and Connections.</p>
           {t.fields.length > 0 && (
             <ul className="tprops">{t.fields.map((f, i) => <PropertyRow key={f.key} type={t} f={f} first={i === 0} last={i === t.fields.length - 1} run={run} />)}</ul>
           )}
           <NewProperty type={t} run={run} />
+          <IconFold value={t.icon} onPick={(icon) => run(() => api.updateType(t.key, { icon }))} />
           <h4 className="small-h">Removing this type</h4>
           {all > 0 ? (
             <p className="small">{t.plural} has {all} {all === 1 ? "Object" : "Objects"}{t.inBin ? ` (${t.inBin} in the Bin)` : ""}. Move {all === 1 ? "it" : "them"} to another type first, then this type can be removed.
@@ -159,8 +170,7 @@ function NewType({ run, onMade }: { run: (job: () => Promise<TypesAnswer>) => Pr
       </div>
       <h4 className="small-h">Colour</h4>
       <Swatches value={color} onPick={setColor} label="Colour of the new type" />
-      <h4 className="small-h">Icon</h4>
-      <IconPicker value={icon} onPick={setIcon} />
+      <IconFold value={icon} onPick={setIcon} />
       <p><button type="submit" className="pill action" disabled={!label.trim()}><Icon name="plus" /> Make this type</button></p>
     </form>
   );
@@ -178,7 +188,9 @@ export function TypesPage({ types, onTypes, go }: Props) {
   return (
     <main className="wrap contents types-page">
       <header className="vol"><h2>Object Types</h2></header>
-      <p className="quiet">Every Object has a type. Source, Concept, Thought and Person are the core types: you can change their colour. Make your own for anything else (a Book, a Place, a Recipe). A type of your own is a plain Object with the properties you choose. The Archivist never makes a type and never moves an Object into one.</p>
+      <Hint short="Every Object has a type. Change a core type's colour, or make your own.">
+        <p>Source, Concept, Thought and Person are the core types: you can change their colour. Make your own for anything else (a Book, a Place, a Recipe). A type of your own is a plain Object with the properties you choose. The Archivist never makes a type and never moves an Object into one.</p>
+      </Hint>
       {error && <p className="err" role="alert">{error}</p>}
       <div className="types-grid">
       <ul className="type-rows">
