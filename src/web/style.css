@@ -207,7 +207,8 @@ select.edit { font-size: 13.5px; }
 .kept { margin: 0; }
 .cover p.small { margin: 0; }
 
-.art { padding: var(--s-6) var(--s-7) 0; display: flex; justify-content: flex-start; }
+/* The body, tabs and Connections start at the same left edge as the title above them (the cover pads 40px). */
+.art { padding: var(--s-6) 40px 0; display: flex; justify-content: flex-start; }
 .body { width: 100%; max-width: 52rem; font-size: 17px; line-height: 1.72; color: color-mix(in srgb, var(--ink) 92%, var(--ground)); }
 .body-editor .ProseMirror { outline: none; min-height: 8rem; }
 .body-editor .ProseMirror p { margin: 0 0 1em; }
@@ -756,6 +757,22 @@ p.inbox-warn { margin: 10px 0; padding: 8px 14px; border-radius: 10px; backgroun
 .add-prop:hover { color: var(--ink); }
 .prop-add .menu { transform-origin: top left; right: auto; left: 0; min-width: 160px; }
 .prop-add .menu button { text-align: left; }
+/* Object page rhythm: tight inside a group, generous between groups. */
+.cover .in { gap: var(--s-2); }
+.cover .title { margin-bottom: var(--s-3); }
+.cover .props { margin-bottom: var(--s-1); }
+.cover .byline { margin-bottom: var(--s-3); }
+.cover .ai-status { margin: var(--s-2) 0 0; }
+.cover .dates { margin: var(--s-3) 0 0; }
+
+/* On the cover the property rows form one white card with hairlines between them, instead of a stack of separate bars. */
+.cover .props { gap: 0; }
+.cover .prop { border-radius: 0; box-shadow: inset 0 1px 0 var(--line); }
+.cover .prop:first-child { border-radius: 14px 14px 0 0; box-shadow: none; }
+.cover .prop:last-child, .cover .prop:has(+ .prop-add) { border-radius: 0 0 14px 14px; }
+.cover .prop:first-child:last-child, .cover .prop:first-child:has(+ .prop-add) { border-radius: 14px; }
+.cover .prop-add { margin-top: var(--s-2); }
+.cover .standfirst { margin-bottom: var(--s-2); }
 
 /* ---------- Motion (issue #74) ----------
    Lively, chosen by the owner: a small bounce on things that arrive (Peek, Capture window, Undo message, menus),
