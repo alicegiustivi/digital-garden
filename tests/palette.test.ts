@@ -42,6 +42,6 @@ describe("the type colour palette (issue #107)", () => {
     expect(icons).toMatch(/Hugeicons "stroke rounded" \(MIT licence/);
     for (const i of TYPE_ICONS) expect(icons, i.key).toMatch(new RegExp(`^\\s+${i.key}: "<`, "m"));
     expect(TYPE_ICONS.length).toBeGreaterThanOrEqual(20);
-    expect(TYPE_ICONS.length).toBeLessThanOrEqual(30);
+    expect(TYPE_ICONS.length).toBeLessThanOrEqual(60);
   });
 });

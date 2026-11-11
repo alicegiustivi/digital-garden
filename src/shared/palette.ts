@@ -29,7 +29,7 @@ export const PALETTE: PaletteColour[] = [
 export const COLOUR_KEYS = PALETTE.map((c) => c.key);
 export const isColour = (k: unknown): k is string => typeof k === "string" && COLOUR_KEYS.includes(k);
 
-/** The icons an owner-made type can pick: Hugeicons "stroke rounded" (MIT), a small set kept in src/web/icons.ts. */
+/** The icons an owner-made type can pick: Hugeicons "stroke rounded" (MIT), a set kept in src/web/icons.ts. */
 export const TYPE_ICONS: { key: string; label: string }[] = [
   { key: "book", label: "Book" }, { key: "place", label: "Place" }, { key: "folder", label: "Project" }, { key: "recipe", label: "Recipe" },
   { key: "film", label: "Film" }, { key: "music", label: "Music" }, { key: "idea", label: "Idea" }, { key: "tool", label: "Tool" },
@@ -38,6 +38,12 @@ export const TYPE_ICONS: { key: string; label: string }[] = [
   { key: "car", label: "Car" }, { key: "art", label: "Art" }, { key: "coffee", label: "Drink" }, { key: "health", label: "Health" },
   { key: "globe", label: "Web" }, { key: "star", label: "Favourite" }, { key: "gift", label: "Gift" }, { key: "learn", label: "Course" },
   { key: "box", label: "Thing" }, { key: "code", label: "Code" }, { key: "puzzle", label: "Puzzle" }, { key: "tree", label: "Nature" },
+  { key: "pen", label: "Writing" }, { key: "notebook", label: "Journal" }, { key: "news", label: "Article" }, { key: "listen", label: "Listen" },
+  { key: "heart", label: "Heart" }, { key: "mind", label: "Mind" }, { key: "fitness", label: "Fitness" }, { key: "bike", label: "Bike" },
+  { key: "money", label: "Money" }, { key: "building", label: "Building" }, { key: "pet", label: "Pet" }, { key: "flower", label: "Flower" },
+  { key: "language", label: "Language" }, { key: "explore", label: "Explore" }, { key: "mountain", label: "Mountain" }, { key: "sunny", label: "Sun" },
+  { key: "laptop", label: "Computer" }, { key: "mail", label: "Letter" }, { key: "science", label: "Science" }, { key: "guitar", label: "Instrument" },
+  { key: "rocket", label: "Launch" },
 ];
 export const ICON_KEYS = TYPE_ICONS.map((i) => i.key);
 export const isTypeIcon = (k: unknown): k is string => typeof k === "string" && ICON_KEYS.includes(k);
