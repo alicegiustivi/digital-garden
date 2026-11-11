@@ -30,6 +30,9 @@ export const AI_CONFIG = {
   broadTagMin: 8,
   /** A Tag on this many Objects (Private and Bin ones not counted) is a reason for the Archivist to suggest a Concept. A Suggestion only: the owner decides. */
   conceptMinObjects: 3,
+  /** How many Objects the Archivist is shown to connect an item to; a Person or Concept is shown more, because its Sources can be anywhere in the Garden. */
+  maxCandidates: 15,
+  maxCandidatesEntity: 30,
   /** A model that answers but gives nothing usable is tried this many times before "Couldn't read this". */
   maxUnusable: 3,
 };

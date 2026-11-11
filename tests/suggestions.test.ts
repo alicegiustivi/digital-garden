@@ -728,3 +728,40 @@ describe("People and Concepts get Tags even when no Source has text to read", ()
     expect(prompt).not.toContain("Secret diary");
   });
 });
+
+describe("a Concept finds the Sources that talk about it in other words", () => {
+  const extract = (id: string, text: string) => sqlite.prepare("INSERT INTO field_values (object_id, field, value, origin) VALUES (?, 'captured', ?, 'source') ON CONFLICT (object_id, field) DO UPDATE SET value = excluded.value").run(id, text);
+  const candidates = (id: string) => archivistPrompt(sqlite, id)!.candidates;
+  const noteOn = (id: string, text: string) => sqlite.prepare("INSERT INTO ai_notes (object_id, kind, text, ai_role, ai_model, ai_date, created_at) VALUES (?, 'summary', ?, 'Archivist', 'm', '2026-11-07', '2026-11-07')").run(id, text);
+
+  it("matches the words of a multi-word Concept and their stems, not only the exact phrase", async () => {
+    const concept = await make("concept", "Fear of failure");
+    for (let i = 0; i < 20; i++) await make("source", `Recent filler ${i}`); // newer, unrelated
+    const old = await make("source", "now what am i going to do with all this potential?");
+    extract(old.id, "She was afraid of everything, and she feared failing in front of others more than anything.");
+    const other = await make("source", "On gardens");
+    extract(other.id, "Compost, soil and bees.");
+    const c = candidates(concept.id);
+    expect(c[0].id).toBe(old.id); // it comes first, before twenty newer Sources
+    expect(c.map((x) => x.id)).toContain(old.id);
+    expect(c.length).toBeGreaterThan(15); // a Concept is shown a wider pool
+    await look(concept.id, { related: [{ ref: c[0].ref, why: "about fearing to fail" }] });
+    expect(JSON.stringify(sent[sent.length - 1].body.messages)).toContain("feared failing");
+    expect(await ((async () => (await call("GET", `/api/objects/${concept.id}/connections`)).json)())).toMatchObject([{ origin: "ai", other: { id: old.id } }]);
+  });
+  it("also finds a Source whose summary (not its text) is about the Concept", async () => {
+    const concept = await make("concept", "Fear of failure");
+    const src = await make("source", "A photo essay");
+    noteOn(src.id, "The essay is about why we avoid trying: the dread of failing keeps people from starting.");
+    for (let i = 0; i < 20; i++) await make("source", `Recent filler ${i}`); // newer, unrelated
+    expect(candidates(concept.id)[0].id).toBe(src.id);
+  });
+  it("shows the AI each candidate's summary as well as the start of its text", async () => {
+    const concept = await make("concept", "Fear of failure");
+    const src = await make("source", "Quiet courage");
+    extract(src.id, "An opening about the weather in spring.");
+    noteOn(src.id, "Argues that courage is acting despite fear of failure.");
+    await look(concept.id, { related: [] });
+    expect(JSON.stringify(sent[0].body.messages)).toContain("Argues that courage is acting despite fear of failure.");
+  });
+});

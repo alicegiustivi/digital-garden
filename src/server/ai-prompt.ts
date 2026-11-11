@@ -81,21 +81,31 @@ export function subjectTerms(db: Db, id: string): string[] {
   const surname = o.type === "person" ? title.split(/\s+/).slice(-1).filter((p) => p.length >= 5) : [];
   const all = [...names, ...surname].map((x) => x.toLowerCase().replace(/[-_]+/g, " ").replace(/\s+/g, " ").trim());
   // A single word also matches its stem ("reflection" finds "reflecting"), so a Source that uses another form of the word is still found.
-  const stems = all.filter((x) => !x.includes(" ") && x.length >= 6).map((x) => x.replace(/(ations?|ings?|ions?|ness|ment|ies|ed|es|s|y|ly|al)$/, "")).filter((x) => x.length >= 5);
-  return [...new Set([...all, ...stems])].filter((x) => x.length >= 4);
+  // A Concept named by several words ("Fear of failure") is also found by each of its content words, so a Source that says "afraid of failing" is not missed.
+  const words = o.type === "concept" ? all.flatMap((x) => x.split(" ")).filter((w) => w.length >= 4 && !SMALL_WORDS.has(w)) : [];
+  const stems = o.type === "concept" ? [...all.filter((x) => !x.includes(" ")), ...words].filter((x) => x.length >= 6).map(stemOf).filter((x) => x.length >= 4) : []; // (not for a name: "Williams" must not find "William")
+  return [...new Set([...all, ...words, ...stems])].filter((x) => x.length >= 4);
 }
+const SMALL_WORDS = new Set("about from with into over under that this than then them they what when where which while your their there these those della dello degli delle nella nello sulla sulle come anche perch quando dove cosa".split(" "));
+/** A rough stem: "reflection" → "reflect", "failure" → "fail", "writing" → "writ". Only used to match, never shown. */
+const stemOf = (w: string) => w.replace(/(ations?|ments?|ings?|ions?|ness|ures?|ers?|ies|ied|ed|es|s|y|ly|al)$/, "");
 
+const MENTIONING = 20;
 /** Sources whose own text names this Person or Concept, most mentions first (found on this Mac, so nothing is sent anywhere). Connected ones included. */
 export function mentioningSources(db: Db, id: string): string[] {
   const terms = subjectTerms(db, id);
   if (!terms.length) return [];
+  const full = titleOf(db, id).toLowerCase().replace(/[-_]+/g, " ");
+  // What a Source says about itself: its text, its summary (written by the Archivist from that text) and its title. Matched on this Mac only.
   const rows = db.prepare(
-    `SELECT o.id, f.value FROM objects o JOIN field_values f ON f.object_id = o.id AND f.field = 'captured'
-     WHERE o.type = 'source' AND o.deleted_at IS NULL AND o.private = 0 AND o.id <> ?`,
+    `SELECT o.id, coalesce(o.title, '') || ' ' || coalesce((SELECT value FROM field_values WHERE object_id = o.id AND field = 'captured'), '') || ' ' ||
+            coalesce((SELECT group_concat(text, ' ') FROM ai_notes WHERE object_id = o.id AND kind = 'summary'), '') AS hay
+     FROM objects o WHERE o.type = 'source' AND o.deleted_at IS NULL AND o.private = 0 AND o.id <> ?`,
   ).all(id) as any[];
+  const hits = (hay: string, t: string) => hay.split(t).length - 1;
   return rows
-    .map((r) => ({ id: r.id as string, n: terms.reduce((n, t) => n + (String(r.value).toLowerCase().split(t).length - 1), 0) }))
-    .filter((r) => r.n > 0).sort((a, b) => b.n - a.n).slice(0, 8).map((r) => r.id);
+    .map((r) => { const hay = String(r.hay).toLowerCase(); return { id: r.id as string, n: terms.reduce((n, t) => n + hits(hay, t) * (t === full ? 4 : 1), 0) }; })
+    .filter((r) => r.n > 0).sort((a, b) => b.n - a.n).slice(0, MENTIONING).map((r) => r.id);
 }
 
 /** Sources that list this Person among their authors (a plain match on the name, no AI). */
@@ -127,9 +137,12 @@ export function excerptOf(db: Db, id: string, cap: number, about: string[] = [])
     const at = about.map((t) => flat.toLowerCase().indexOf(t)).filter((i) => i >= 0).sort((a, b) => a - b)[0];
     parts.push(at === undefined ? `text starts: ${flat}` : `passage naming it: …${flat.slice(Math.max(0, at - 120))}`);
   }
+  // Its summary (written by the Archivist, from the whole text) says in a few words what the Source is about: a better guide to a Connection than its opening.
+  const summary = (db.prepare("SELECT text FROM ai_notes WHERE object_id = ? AND kind = 'summary' ORDER BY id DESC LIMIT 1").get(id) as any)?.text as string | undefined;
+  if (summary) parts.push(`summary (written by AI): ${summary.replace(/\s+/g, " ").slice(0, 360)}`);
   const tags = (db.prepare("SELECT t.name FROM object_tags ot JOIN tags t ON t.id = ot.tag_id WHERE ot.object_id = ?").all(id) as any[]).map((r) => r.name);
   if (tags.length) parts.push(`tags: ${tags.slice(0, 6).join(", ")}`);
-  return parts.join(" | ").slice(0, cap + 80);
+  return parts.join(" | ").slice(0, cap + 460);
 }
 export type ArchivistPrompt = { messages: any[]; wantsImage: boolean; type: string; candidates: Candidate[] };
 
@@ -153,7 +166,8 @@ export function candidatesFor(db: Db, id: string): Candidate[] {
   for (const p of people) if (ok(p.id) && !ids.includes(p.id)) ids.push(p.id);
   const recent = db.prepare("SELECT id FROM objects WHERE type NOT IN ('thought', 'piece', 'project') AND private = 0 AND deleted_at IS NULL ORDER BY coalesce(updated_at, created_at) DESC, rowid DESC LIMIT 40").all() as any[];
   for (const r of recent) if (ok(r.id) && !ids.includes(r.id)) ids.push(r.id);
-  return ids.slice(0, 15).map((oid, i) => ({ ref: `c${i + 1}`, id: oid, type: live(db, oid).type, title: titleOf(db, oid) }));
+  const cap = me.type === "person" || me.type === "concept" ? AI_CONFIG.maxCandidatesEntity : AI_CONFIG.maxCandidates;
+  return ids.slice(0, cap).map((oid, i) => ({ ref: `c${i + 1}`, id: oid, type: live(db, oid).type, title: titleOf(db, oid) }));
 }
 
 const SYSTEM = `You are the Archivist in a personal knowledge Garden. You READ one newly captured item carefully, all of it, and describe what it contributes.
