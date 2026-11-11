@@ -560,3 +560,43 @@ describe("the Archivist describes a Person or a Concept from the Garden's Source
     expect(sqlite.prepare("SELECT count(*) AS n FROM ai_jobs WHERE object_id = ? AND role = 'archivist' AND status <> 'cancelled'").get(person.id)).toEqual({ n: 1 });
   });
 });
+
+describe("People and Concepts still get Tags and Connections (the Archivist did not stop at the description)", () => {
+  const extract = (id: string, text: string) => sqlite.prepare("INSERT INTO field_values (object_id, field, value, origin) VALUES (?, 'captured', ?, 'source') ON CONFLICT (object_id, field) DO UPDATE SET value = excluded.value").run(id, text);
+  const tagsOf = async (id: string) => ((await call("GET", `/api/objects/${id}`)).json.tags as any[]).map((t) => t.name).sort();
+  const refFor = (id: string, title: string) => archivistPrompt(sqlite, id)?.candidates.find((c) => c.title === title)?.ref;
+
+  it("gives a Person specific Tags, and connects a Source that names them (not yet connected) in a second request that shows the passage", async () => {
+    const person = await make("person", "Ada Green");
+    const linked = await make("source", "Soil weekly");
+    extract(linked.id, "Ada Green is a soil scientist who studies carbon.");
+    await call("POST", "/api/connections", { a: linked.id, b: person.id });
+    const naming = await make("source", "Carbon farming today");
+    extract(naming.id, `${"Intro words about farms. ".repeat(30)} Ada Green argues that cover crops rebuild soil.`);
+    await look(person.id, { description: "A soil scientist.", tags: ["soil carbon", "article", "cover crops"], related: [{ ref: refFor(person.id, "Carbon farming today"), why: "discusses her work" }] });
+    expect(sent).toHaveLength(2);
+    expect(JSON.stringify(sent[1].body.messages)).toContain("passage naming it");
+    expect(JSON.stringify(sent[1].body.messages)).toContain("Ada Green argues that cover crops rebuild soil.");
+    expect(await tagsOf(person.id)).toEqual(["cover-crops", "soil-carbon"]); // the vague "article" is dropped
+    expect((await conns(person.id)).map((c: any) => c.other.id).sort()).toEqual([linked.id, naming.id].sort());
+  });
+  it("connects a Source that lists the Person as an author, authored by, with no request at all", async () => {
+    const person = await make("person", "Ada Green");
+    const book = await make("source", "Living soil");
+    await setFields(book.id, { authors: "Ada Green, Bo Lane" });
+    await look(person.id, {});
+    expect(sent).toHaveLength(0);
+    expect(await conns(book.id)).toMatchObject([{ label: "authored by", origin: "ai", approved: false, other: { id: person.id } }]); // read from the Source, like the Archivist's other "authored by"
+    expect(await conns(person.id)).toMatchObject([{ origin: "ai", approved: false, other: { id: book.id } }]);
+    await call("POST", `/api/objects/${person.id}/ai/undo`);
+    expect(await conns(person.id)).toEqual([]);
+  });
+  it("connects a Concept to a Source that names it, even before any Source is connected to it", async () => {
+    const concept = await make("concept", "Soil carbon");
+    const naming = await make("source", "Carbon farming today");
+    extract(naming.id, "Soil carbon is the carbon stored in soil organic matter.");
+    await look(concept.id, { related: [{ ref: refFor(concept.id, "Carbon farming today"), why: "defines it" }] });
+    expect(sent).toHaveLength(1); // nothing to describe from yet, so only the connection request
+    expect(await conns(concept.id)).toMatchObject([{ label: "related", origin: "ai", other: { id: naming.id } }]);
+  });
+});

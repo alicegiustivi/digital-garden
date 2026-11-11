@@ -8,13 +8,13 @@ import { join } from "node:path";
 import { AI_CONFIG, type AiRole } from "./ai-config.ts";
 import { GateError, readKey, type Gate } from "./ai-gate.ts";
 import { createWebGate, type WebGate } from "./web-gate.ts";
-import { archivistPrompt, connectPrompt, readable } from "./ai-prompt.ts";
-import { applyFindings, jsonOf, lastRun, parseFindings, undoRun } from "./archivist.ts";
+import { archivistPrompt, authoredSources, candidatesFor, connectPrompt, readable, subjectTerms } from "./ai-prompt.ts";
+import { addDirectConnection, applyFindings, jsonOf, lastRun, parseFindings, recordInRun, undoRun } from "./archivist.ts";
 import { applyConnections, applyProposals, parseConnections, parseProposals, pendingCount } from "./suggestions.ts";
 import { titleOf } from "./objects.ts";
 import { imagesDir } from "./paths.ts";
 import { cancelJobs, researcherHandler } from "./researcher.ts";
-import { entityPrompt, parseEntity } from "./describe.ts";
+import { ENTITY_FIELDS, entityPrompt, parseEntity } from "./describe.ts";
 
 type Db = Database.Database;
 export type Lane = 0 | 1 | 2;
@@ -211,28 +211,55 @@ export function createAi(db: Db, opts: { gate: Gate; /** Where the Researcher lo
     }
   }
 
-  /** A Person or a Concept: described from what the Garden's Sources say about it. One request, and none when there is nothing to read or nothing left open. */
+  /**
+   * A Person or a Concept. Request 1 (when something is open and the Garden has words about it): describe it from what the Sources
+   * say, and give it specific Tags. Then, without a request, a Source that lists this Person among its authors is connected
+   * "authored by". Request 2: judge Connections against what the candidates say, the Sources that name it first. Request 2 is
+   * best effort, like a Source's; both are applied directly, marked and undoable (ADR 0003).
+   */
   async function describeHandler(id: string, ctx: { gate: Gate; now: Date; countCall: () => void }): Promise<Outcome> {
     const p = entityPrompt(db, id);
     if (!p) return "skip"; // Private, or in the Bin: the AI never reads it
-    if (!p.messages) return "done"; // the owner has filled everything, or no connected Source has words about it yet
-    let sawBusy = false;
-    for (const model of AI_CONFIG.models) {
-      let text: string;
-      try { ctx.countCall(); text = await ctx.gate.chat(model, p.messages); }
-      catch (e) {
-        if (!(e instanceof GateError)) throw e;
-        if (e.kind === "daily") return { daily: true, resetAt: e.resetAt };
-        if (e.kind === "key" || e.kind === "missing") return { key: true };
-        if (e.kind === "busy") sawBusy = true;
-        continue;
+    let runId: number | null = null;
+    if (p.messages) {
+      let sawBusy = false, fine = false;
+      for (const model of AI_CONFIG.models) {
+        let text: string;
+        try { ctx.countCall(); text = await ctx.gate.chat(model, p.messages); }
+        catch (e) {
+          if (!(e instanceof GateError)) throw e;
+          if (e.kind === "daily") return { daily: true, resetAt: e.resetAt };
+          if (e.kind === "key" || e.kind === "missing") return { key: true };
+          if (e.kind === "busy") sawBusy = true;
+          continue;
+        }
+        const read = parseEntity(text, p.type, p.evidence);
+        if (!read) continue;
+        runId = applyFindings(db, id, { tags: read.tags, facts: read.facts }, model, ctx.now);
+        fine = true;
+        break;
       }
-      const facts = parseEntity(text, p.type, p.evidence);
-      if (!facts) continue;
-      applyFindings(db, id, { tags: [], facts }, model, ctx.now);
-      return "done";
+      if (!fine) return sawBusy ? { busy: true } : { unusable: true };
     }
-    return sawBusy ? { busy: true } : { unusable: true };
+    const date = ctx.now.toISOString().slice(0, 10);
+    if (p.type === "person") { // a Source that lists this Person among its authors: matched on this Mac, no request
+      const added = authoredSources(db, id).flatMap((sid) => {
+        const cid = addDirectConnection(db, sid, id, "authored by", "matched on this Mac", date);
+        return cid ? [{ kind: "connection" as const, connectionId: cid, otherId: sid, connKind: "authored by" }] : [];
+      });
+      if (added.length) {
+        recordInRun(db, id, "matched on this Mac", ctx.now, runId, added);
+        runId = (db.prepare("SELECT id FROM ai_runs WHERE object_id = ? AND undone_at IS NULL ORDER BY id DESC LIMIT 1").get(id) as any).id as number;
+      }
+    }
+    const candidates = candidatesFor(db, id);
+    if (candidates.length) {
+      const lead = ENTITY_FIELDS[p.type][0];
+      const said = (db.prepare("SELECT value FROM field_values WHERE object_id = ? AND field = ?").get(id, lead) as any)?.value as string | undefined;
+      const mine = (db.prepare("SELECT t.name FROM object_tags ot JOIN tags t ON t.id = ot.tag_id WHERE ot.object_id = ?").all(id) as any[]).map((r) => r.name as string);
+      await connect(id, { title: titleOf(db, id), summary: said, claims: [], tags: mine }, candidates, AI_CONFIG.models, runId, ctx, subjectTerms(db, id));
+    }
+    return "done";
   }
 
   async function archivistHandler(job: JobRow, ctx: { gate: Gate; now: Date; countCall: () => void }): Promise<Outcome> {
@@ -273,8 +300,8 @@ export function createAi(db: Db, opts: { gate: Gate; /** Where the Researcher lo
   }
 
   /** The second request. Best effort: if it cannot be answered, what the first request saved stays and "Ask the Archivist" can run it again. */
-  async function connect(id: string, read: { title: string; summary?: string; claims: string[]; tags: string[] }, candidates: any[], models: string[], runId: number | null, ctx: { gate: Gate; now: Date; countCall: () => void }) {
-    const messages = connectPrompt(db, id, read, candidates);
+  async function connect(id: string, read: { title: string; summary?: string; claims: string[]; tags: string[] }, candidates: any[], models: string[], runId: number | null, ctx: { gate: Gate; now: Date; countCall: () => void }, about: string[] = []) {
+    const messages = connectPrompt(db, id, read, candidates, about);
     for (const model of models) {
       let text: string;
       try { ctx.countCall(); text = await ctx.gate.chat(model, messages); } catch { continue; }

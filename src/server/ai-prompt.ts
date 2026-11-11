@@ -63,10 +63,45 @@ export function clip(text: string, cap: number): string {
   return `${text.slice(0, head)}\n[… middle of the text left out …]\n${text.slice(text.length - tail)}`;
 }
 
+const fieldOf = (db: Db, id: string, f: string) => (db.prepare("SELECT value FROM field_values WHERE object_id = ? AND field = ?").get(id, f) as any)?.value as string | undefined;
+
+/** Words that stand for a Person or a Concept: its title (and a Concept's aliases), and for a Person its surname. Matched on this Mac only. */
+export function subjectTerms(db: Db, id: string): string[] {
+  const o = live(db, id);
+  if (!o) return [];
+  const title = titleOf(db, id);
+  const names = [title, ...(o.type === "concept" ? String(fieldOf(db, id, "aliases") ?? "").split(/[,;]/) : [])].map((x) => x.trim()).filter(Boolean);
+  const surname = o.type === "person" ? title.split(/\s+/).slice(-1).filter((p) => p.length >= 5) : [];
+  return [...new Set([...names, ...surname].map((x) => x.toLowerCase()))].filter((x) => x.length >= 4);
+}
+
+/** Sources whose own text names this Person or Concept, most mentions first (found on this Mac, so nothing is sent anywhere). Connected ones included. */
+export function mentioningSources(db: Db, id: string): string[] {
+  const terms = subjectTerms(db, id);
+  if (!terms.length) return [];
+  const rows = db.prepare(
+    `SELECT o.id, f.value FROM objects o JOIN field_values f ON f.object_id = o.id AND f.field = 'captured'
+     WHERE o.type = 'source' AND o.deleted_at IS NULL AND o.private = 0 AND o.id <> ?`,
+  ).all(id) as any[];
+  return rows
+    .map((r) => ({ id: r.id as string, n: terms.reduce((n, t) => n + (String(r.value).toLowerCase().split(t).length - 1), 0) }))
+    .filter((r) => r.n > 0).sort((a, b) => b.n - a.n).slice(0, 8).map((r) => r.id);
+}
+
+/** Sources that list this Person among their authors (a plain match on the name, no AI). */
+export function authoredSources(db: Db, id: string): string[] {
+  const name = titleOf(db, id).trim().toLowerCase();
+  if (name.length < 4) return [];
+  return (db.prepare(
+    `SELECT o.id, f.value FROM objects o JOIN field_values f ON f.object_id = o.id AND f.field = 'authors'
+     WHERE o.type = 'source' AND o.deleted_at IS NULL AND o.private = 0`,
+  ).all() as any[]).filter((r) => String(r.value).toLowerCase().includes(name)).map((r) => r.id as string);
+}
+
 export type Candidate = { ref: string; id: string; type: string; title: string };
 
 /** What an Object says in its own words, briefly, so a Connection can be judged on content and not only on the title. Never for a Private Object. */
-export function excerptOf(db: Db, id: string, cap: number): string {
+export function excerptOf(db: Db, id: string, cap: number, about: string[] = []): string {
   if (!readable(db, id)) return "";
   const own = db.prepare("SELECT text FROM blocks WHERE object_id = ? AND origin = 'owner' ORDER BY position").all(id) as any[];
   const field = (f: string) => (db.prepare("SELECT value FROM field_values WHERE object_id = ? AND field = ?").get(id, f) as any)?.value as string | undefined;
@@ -76,7 +111,12 @@ export function excerptOf(db: Db, id: string, cap: number): string {
   const mine = cleanText(db, own.map((b) => b.text).join(" ")).replace(/\s+/g, " ");
   if (mine) parts.push(`the owner wrote: ${mine}`);
   const extract = field("captured");
-  if (extract) parts.push(`text starts: ${extract.replace(/\s+/g, " ")}`);
+  if (extract) {
+    // When judging a Connection to a Person or Concept, the passage that names it is what matters, not the opening.
+    const flat = extract.replace(/\s+/g, " ");
+    const at = about.map((t) => flat.toLowerCase().indexOf(t)).filter((i) => i >= 0).sort((a, b) => a - b)[0];
+    parts.push(at === undefined ? `text starts: ${flat}` : `passage naming it: …${flat.slice(Math.max(0, at - 120))}`);
+  }
   const tags = (db.prepare("SELECT t.name FROM object_tags ot JOIN tags t ON t.id = ot.tag_id WHERE ot.object_id = ?").all(id) as any[]).map((r) => r.name);
   if (tags.length) parts.push(`tags: ${tags.slice(0, 6).join(", ")}`);
   return parts.join(" | ").slice(0, cap + 80);
@@ -96,7 +136,8 @@ export function candidatesFor(db: Db, id: string): Candidate[] {
   const turnedDown = new Set((db.prepare("SELECT value FROM ai_rejected WHERE object_id = ? AND kind = 'connection'").all(id) as any[]).map((r) => r.value));
   const ok = (oid: string) => oid !== id && !connected.has(oid) && !turnedDown.has(oid) && readable(db, oid) && !archivistNever(live(db, oid).type);
   const ids: string[] = [];
-  for (const s of sharesWords(db, id) ?? []) if (ok(s.id)) ids.push(s.id);
+  if (me.type === "person" || me.type === "concept") for (const sid of mentioningSources(db, id)) if (ok(sid)) ids.push(sid); // Sources that name it come first
+  for (const s of sharesWords(db, id) ?? []) if (ok(s.id) && !ids.includes(s.id)) ids.push(s.id);
   const people = db.prepare("SELECT id FROM objects WHERE type = 'person' AND private = 0 AND deleted_at IS NULL ORDER BY coalesce(updated_at, created_at) DESC LIMIT 30").all() as any[];
   for (const p of people) if (ok(p.id) && !ids.includes(p.id)) ids.push(p.id);
   const recent = db.prepare("SELECT id FROM objects WHERE type NOT IN ('thought', 'piece', 'project') AND private = 0 AND deleted_at IS NULL ORDER BY coalesce(updated_at, created_at) DESC, rowid DESC LIMIT 40").all() as any[];
@@ -166,12 +207,13 @@ Rules:
 - Never write opinions or anything in the owner's voice.`;
 
 /** The second Archivist request: the item just read (its summary, claims and Tags) against what the candidates actually say. */
-export function connectPrompt(db: Db, id: string, read: { title?: string; summary?: string; claims: string[]; tags: string[] }, candidates: Candidate[]) {
+export function connectPrompt(db: Db, id: string, read: { title?: string; summary?: string; claims: string[]; tags: string[] }, candidates: Candidate[], about: string[] = []) {
   const o = live(db, id);
-  const lines = [`The new item: "${read.title ?? titleOf(db, id)}" (${o?.type ?? "source"})`];
+  const lines = [`The ${o?.type === "person" || o?.type === "concept" ? "subject" : "new item"}: "${read.title ?? titleOf(db, id)}" (${o?.type ?? "source"})`];
+  if (about.length) lines.push("Judge each Object by the passage that names the subject: connect only Objects that really discuss it, not ones that merely share a word.");
   if (read.summary) lines.push(`What it says (written by you): ${read.summary}`);
   if (read.claims.length) lines.push(`Its main claims:\n${read.claims.map((c) => `- ${c}`).join("\n")}`);
   if (read.tags.length) lines.push(`Its Tags: ${read.tags.join(", ")}`);
-  lines.push(`Objects it could be connected to:\n${candidates.map((c) => `${c.ref}: "${c.title}" (${c.type}) — ${excerptOf(db, c.id, AI_CONFIG.candidateChars) || "no text"}`).join("\n")}`);
+  lines.push(`Objects it could be connected to:\n${candidates.map((c) => `${c.ref}: "${c.title}" (${c.type}) — ${excerptOf(db, c.id, AI_CONFIG.candidateChars, about) || "no text"}`).join("\n")}`);
   return [{ role: "system" as const, content: CONNECT_SYSTEM }, { role: "user" as const, content: lines.join("\n") }];
 }
