@@ -5,7 +5,7 @@
 // (ADR 0001, 0003). The owner's own values are never touched, and an earlier AI value is only replaced by a newer one (so the
 // description can grow as more Sources are connected). Private Objects are never read, as a Source or as the subject.
 import type Database from "better-sqlite3";
-import { readable, clip, fence, isVague, knownTags, subjectTerms, UNTRUSTED } from "./ai-prompt.ts";
+import { cleanText, readable, clip, fence, isVague, knownTags, subjectTerms, UNTRUSTED } from "./ai-prompt.ts";
 import { jsonOf } from "./archivist.ts";
 import { cleanTagName, titleOf } from "./objects.ts";
 
@@ -75,14 +75,56 @@ Rules:
 - ${UNTRUSTED}`,
 } as const;
 
-/** The request for a Person or Concept, or null when the Archivist may not read it, has nothing open to fill, or the Garden has nothing to read. */
+const TAGS_ONLY = (type: "person" | "concept") => `You are the Archivist in a personal knowledge Garden. You choose Tags for ONE ${type === "person" ? "person" : "concept"}, using ONLY the material below: what is already written about it, and the titles and Tags of the Sources the owner connected to it. You know nothing else about it.
+Answer with ONE JSON object and nothing else: {"tags": [string]}
+Rules:
+- "tags" are 2 to 4 lowercase noun phrases of 1 to 3 words, each naming something SPECIFIC the material shows this ${type} is about or connected with: an idea, field, school of thought, period or technique. When a connected Source's Tag fits, reuse it. Never a vague word (ideas, culture, business, writing alone), never a role alone (author, expert), never ${type === "person" ? "the person's own name" : "the concept's own name"}, never a tag that would fit most items. [] if the material says too little.
+- Never use outside knowledge, never guess, never invent. No opinions.
+- ${UNTRUSTED}`;
+
+/**
+ * What the Garden holds about a Person or Concept when no Source has passages to read: the description or definition already there (with whose
+ * words it is), the owner's own words on its page, and the title, author and Tags of each Source connected to it. Null when there is none of that.
+ */
+function materialFor(db: Db, id: string, type: "person" | "concept"): string | null {
+  const lines: string[] = [`${type === "person" ? "Person" : "Concept"}: ${titleOf(db, id)}`];
+  const aliases = type === "concept" ? field(db, id, "aliases")?.value : "";
+  if (aliases) lines.push(`Also called: ${aliases}`);
+  const lead = field(db, id, ENTITY_FIELDS[type][0]);
+  let any = false;
+  if (lead?.value) { lines.push(`${ENTITY_FIELDS[type][0]} (${lead.origin === "owner" ? "the owner's words" : lead.origin === "ai" ? "written by AI" : "from a Source"}): ${String(lead.value).slice(0, 900)}`); any = true; }
+  const own = (db.prepare("SELECT text FROM blocks WHERE object_id = ? AND origin = 'owner' ORDER BY position").all(id) as any[]).map((b) => cleanText(db, b.text)).filter(Boolean).join("\n");
+  if (own) { lines.push(`The owner's words on its page: ${own.slice(0, 1500)}`); any = true; }
+  const sources = db
+    .prepare(
+      `SELECT o.id FROM connections c JOIN objects o ON o.id = CASE WHEN c.from_id = ? THEN c.to_id ELSE c.from_id END
+       WHERE (c.from_id = ? OR c.to_id = ?) AND o.type = 'source' AND o.deleted_at IS NULL AND o.private = 0 ORDER BY c.id DESC LIMIT 10`,
+    )
+    .all(id, id, id) as any[];
+  const cards = sources.filter((s) => readable(db, s.id)).map((s) => {
+    const tags = (db.prepare("SELECT t.name FROM object_tags ot JOIN tags t ON t.id = ot.tag_id WHERE ot.object_id = ?").all(s.id) as any[]).map((t) => t.name);
+    const by = String(field(db, s.id, "authors")?.value ?? "");
+    return `- "${titleOf(db, s.id)}"${by ? ` by ${by}` : ""}${tags.length ? ` — Tags: ${tags.slice(0, 6).join(", ")}` : ""}`;
+  });
+  if (cards.length) { lines.push(`Connected Sources:\n${fence(cards.join("\n"))}`); any = true; }
+  if (!any) return null;
+  const known = knownTags(db);
+  if (known.length) lines.push(`Known Tags in the Garden (use count): ${known.join(", ")}`);
+  return lines.join("\n\n");
+}
+
+/** The request for a Person or Concept, or null when the Archivist may not read it or the Garden holds nothing to go on. `tagsOnly`: no passage to describe it from, so only Tags are asked for. */
 export function entityPrompt(db: Db, id: string) {
   const o = db.prepare("SELECT type FROM objects WHERE id = ? AND deleted_at IS NULL AND private = 0").get(id) as any;
   const type = o?.type as "person" | "concept" | undefined;
   if (!type || !ENTITY_FIELDS[type]) return null;
   const open = openFields(db, id, type);
   const evidence = open.length ? evidenceFor(db, id, type) : [];
-  if (!open.length || !evidence.length) return { type, open, evidence, messages: null };
+  if (!open.length || !evidence.length) {
+    // Nothing to write a description from (book cards without text, no Source yet, or the owner filled it in): Tags can still come from what is held.
+    const material = materialFor(db, id, type);
+    return { type, open, evidence, tagsOnly: true as boolean, messages: material ? [{ role: "system" as const, content: TAGS_ONLY(type) }, { role: "user" as const, content: material }] : null };
+  }
   const lines = [`${type === "person" ? "Person" : "Concept"}: ${titleOf(db, id)}`];
   const aliases = type === "concept" ? field(db, id, "aliases")?.value : "";
   if (aliases) lines.push(`Also called: ${aliases}`);
@@ -90,11 +132,11 @@ export function entityPrompt(db: Db, id: string) {
   evidence.forEach((e, i) => lines.push(`[s${i + 1}] "${e.title}"${e.by ? ` by ${e.by}` : ""}${e.published ? ` (${e.published})` : ""}${e.opening ? " (no passage names it; its opening)" : ""}:\n${fence(e.text)}`));
   const known = knownTags(db);
   if (known.length) lines.push(`Known Tags in the Garden (use count): ${known.join(", ")}`);
-  return { type, open, evidence, messages: [{ role: "system" as const, content: SYSTEM[type] }, { role: "user" as const, content: lines.join("\n\n") }] };
+  return { type, open, evidence, tagsOnly: false as boolean, messages: [{ role: "system" as const, content: SYSTEM[type] }, { role: "user" as const, content: lines.join("\n\n") }] };
 }
 
 /** What the model said, kept only where the passages back it: a year or a link not found in them is dropped. */
-export function parseEntity(text: string, type: string, evidence: Evidence[]): { facts: Record<string, string>; tags: string[] } | null {
+export function parseEntity(text: string, type: string, evidence: Evidence[], tagsOnly = false): { facts: Record<string, string>; tags: string[] } | null {
   const j = jsonOf(text);
   if (!j) return null;
   const said = evidence.map((e) => e.text).join("\n");
@@ -110,5 +152,5 @@ export function parseEntity(text: string, type: string, evidence: Evidence[]): {
     if (links.length) out.links = [...new Set(links)].join(", ");
   }
   const tags = Array.isArray(j.tags) ? [...new Set((j.tags as unknown[]).map(cleanTagName).filter((t) => t && t.length <= 40 && !isVague(t)))].slice(0, 4) : [];
-  return { facts: out, tags };
+  return { facts: tagsOnly ? {} : out, tags }; // with no passage to write from, nothing is written but Tags, whatever the model returned
 }
